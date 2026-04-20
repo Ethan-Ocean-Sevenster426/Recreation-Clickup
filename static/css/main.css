@@ -1,0 +1,658 @@
+/* Main CSS for E-click Django Project */
+
+/* Critical CSS for immediate rendering - prevents FOUC */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #fff;
+  overflow-x: hidden;
+}
+
+
+
+/* CSS Variables for Theme Support */
+:root {
+  --accent: #ef4444;
+  --accent-dark: #dc2626;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --panel-bg: rgba(255, 255, 255, 0.9);
+  --panel-border: rgba(226, 232, 240, 0.8);
+  --panel-control: rgba(226, 232, 240, 0.8);
+  --panel-secondary: rgba(203, 213, 225, 0.6);
+}
+
+.dark {
+  --accent: #f87171;
+  --accent-dark: #ef4444;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --panel-bg: rgba(30, 41, 59, 0.9);
+  --panel-border: rgba(51, 65, 85, 0.5);
+  --panel-control: rgba(51, 65, 85, 0.6);
+  --panel-secondary: rgba(71, 85, 105, 0.4);
+}
+
+/* Smooth transitions */
+* {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Text and background utilities */
+.theme-text {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+.theme-bg {
+  background: radial-gradient(circle at 70% 30%, var(--bg-primary), var(--bg-secondary));
+}
+
+.theme-gradient-text {
+  background-image: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Panel and card styles */
+.theme-panel, .theme-card {
+  background-color: var(--panel-bg);
+  border-color: var(--panel-border);
+}
+
+.theme-card {
+  height: 260px;
+  position: relative;
+}
+
+.theme-panel-control {
+  background-color: var(--panel-control);
+}
+
+/* Badge styling */
+.theme-badge {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.dark .theme-badge {
+  background-color: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+/* Button styles */
+.theme-button-primary {
+  background: linear-gradient(to right, var(--accent) 0%, var(--accent-dark) 50%, var(--accent) 100%);
+  color: white;
+}
+
+/* Animation classes */
+.reveal-element {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  will-change: opacity, transform;
+}
+
+.reveal-element.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Floating animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Gradient backgrounds for different sections */
+.theme-gradient-1 {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+}
+
+.theme-gradient-2 {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.1), rgba(239, 68, 68, 0.05));
+}
+
+.theme-gradient-3 {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.1));
+}
+
+/* Dashboard UI elements */
+.theme-dashboard {
+  background: var(--bg-primary);
+  border: 1px solid var(--panel-border);
+}
+
+.theme-chart-bar {
+  background: var(--accent);
+}
+
+.theme-indicator-1 {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.theme-indicator-2 {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.theme-indicator-3 {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.theme-indicator-dot-1 {
+  background: var(--accent);
+}
+
+.theme-indicator-dot-2 {
+  background: #22c55e;
+}
+
+.theme-indicator-dot-3 {
+  background: #3b82f6;
+}
+
+.theme-progress-1 {
+  background: var(--accent);
+}
+
+.theme-progress-2 {
+  background: #22c55e;
+}
+
+.theme-progress-3 {
+  background: #3b82f6;
+}
+
+.theme-progress-bar {
+  background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+}
+
+.theme-control-button {
+  background: var(--panel-control);
+}
+
+.theme-action-button {
+  background: var(--accent);
+}
+
+.theme-data-item {
+  background: var(--panel-secondary);
+}
+
+/* Floating elements */
+.theme-floating-element-1 {
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+}
+
+.theme-floating-element-2 {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(220, 38, 38, 0.6));
+}
+
+.theme-floating-element-3 {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.7), rgba(239, 68, 68, 0.5));
+}
+
+.theme-floating-inner-1,
+.theme-floating-inner-2,
+.theme-floating-inner-3 {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.theme-floating-center-1 {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.theme-floating-center-dot-1 {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* Scroll animations */
+.scroll-animate {
+  transform: translateY(0px);
+  transition: transform 0.1s ease-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-dark);
+}
+
+/* Hide scrollbar for Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--bg-secondary);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .theme-card {
+    height: auto;
+    min-height: 200px;
+  }
+  
+  .reveal-element {
+    transform: translateY(10px);
+  }
+}
+
+/* Performance optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Backdrop blur support */
+.backdrop-blur-md {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.backdrop-blur-lg {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Focus states for accessibility */
+.focus-visible:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+
+
+/* Error states */
+.error {
+  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+/* Success states */
+.success {
+  border-color: #22c55e;
+  background-color: rgba(34, 197, 94, 0.05);
+}
+
+/* Fix for content sections not showing */
+section {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure proper visibility */
+.reveal-element {
+  visibility: visible;
+}
+
+/* Fix background logo visibility */
+.background-logo {
+  opacity: 0.1;
+  filter: blur(2px);
+}
+
+/* Hero section specific fixes */
+#home {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+/* Ensure text is visible */
+.hero-title,
+.hero-description,
+.client-stats {
+  position: relative;
+  z-index: 10;
+}
+
+/* Fix gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Particle positioning */
+.tech-particle-0 { top: 15%; left: 10%; }
+.tech-particle-1 { top: 25%; right: 15%; }
+.tech-particle-2 { top: 60%; left: 20%; }
+.tech-particle-3 { bottom: 30%; right: 10%; }
+.tech-particle-4 { bottom: 15%; left: 15%; }
+.tech-particle-5 { top: 40%; left: 50%; }
+.tech-particle-6 { top: 70%; right: 30%; }
+
+/* Logo particle positioning */
+.logo-particle-0 { top: 15%; left: 65%; opacity: 0.05; }
+.logo-particle-1 { top: 35%; left: 75%; opacity: 0.05; }
+.logo-particle-2 { top: 55%; left: 70%; opacity: 0.05; }
+.logo-particle-3 { top: 75%; left: 80%; opacity: 0.05; }
+.logo-particle-4 { top: 25%; left: 85%; opacity: 0.05; }/* Main CSS for E-click Django Project */
+
+/* CSS Variables for Theme Support */
+:root {
+  --accent: #ef4444;
+  --accent-dark: #dc2626;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --panel-bg: rgba(255, 255, 255, 0.9);
+  --panel-border: rgba(226, 232, 240, 0.8);
+  --panel-control: rgba(226, 232, 240, 0.8);
+  --panel-secondary: rgba(203, 213, 225, 0.6);
+}
+
+.dark {
+  --accent: #f87171;
+  --accent-dark: #ef4444;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --panel-bg: rgba(30, 41, 59, 0.9);
+  --panel-border: rgba(51, 65, 85, 0.5);
+  --panel-control: rgba(51, 65, 85, 0.6);
+  --panel-secondary: rgba(71, 85, 105, 0.4);
+}
+
+/* Smooth transitions */
+* {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Text and background utilities */
+.theme-text {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+.theme-bg {
+  background: radial-gradient(circle at 70% 30%, var(--bg-primary), var(--bg-secondary));
+}
+
+.theme-gradient-text {
+  background-image: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Panel and card styles */
+.theme-panel, .theme-card {
+  background-color: var(--panel-bg);
+  border-color: var(--panel-border);
+}
+
+.theme-card {
+  height: 260px;
+  position: relative;
+}
+
+.theme-panel-control {
+  background-color: var(--panel-control);
+}
+
+/* Badge styling */
+.theme-badge {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.dark .theme-badge {
+  background-color: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+/* Button styles */
+.theme-button-primary {
+  background: linear-gradient(to right, var(--accent) 0%, var(--accent-dark) 50%, var(--accent) 100%);
+  color: white;
+}
+
+/* Animation classes */
+.reveal-element {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  will-change: opacity, transform;
+}
+
+.reveal-element.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Floating animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Gradient backgrounds for different sections */
+.theme-gradient-1 {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+}
+
+.theme-gradient-2 {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.1), rgba(239, 68, 68, 0.05));
+}
+
+.theme-gradient-3 {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.1));
+}
+
+/* Dashboard UI elements */
+.theme-dashboard {
+  background: var(--bg-primary);
+  border: 1px solid var(--panel-border);
+}
+
+.theme-chart-bar {
+  background: var(--accent);
+}
+
+.theme-indicator-1 {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.theme-indicator-2 {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.theme-indicator-3 {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.theme-indicator-dot-1 {
+  background: var(--accent);
+}
+
+.theme-indicator-dot-2 {
+  background: #22c55e;
+}
+
+.theme-indicator-dot-3 {
+  background: #3b82f6;
+}
+
+.theme-progress-1 {
+  background: var(--accent);
+}
+
+.theme-progress-2 {
+  background: #22c55e;
+}
+
+.theme-progress-3 {
+  background: #3b82f6;
+}
+
+.theme-progress-bar {
+  background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+}
+
+.theme-control-button {
+  background: var(--panel-control);
+}
+
+.theme-action-button {
+  background: var(--accent);
+}
+
+.theme-data-item {
+  background: var(--panel-secondary);
+}
+
+/* Floating elements */
+.theme-floating-element-1 {
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+}
+
+.theme-floating-element-2 {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(220, 38, 38, 0.6));
+}
+
+.theme-floating-element-3 {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.7), rgba(239, 68, 68, 0.5));
+}
+
+.theme-floating-inner-1,
+.theme-floating-inner-2,
+.theme-floating-inner-3 {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.theme-floating-center-1 {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.theme-floating-center-dot-1 {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* Scroll animations */
+.scroll-animate {
+  transform: translateY(0px);
+  transition: transform 0.1s ease-out;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-dark);
+}
+
+/* Hide scrollbar for Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--bg-secondary);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .theme-card {
+    height: auto;
+    min-height: 200px;
+  }
+  
+  .reveal-element {
+    transform: translateY(10px);
+  }
+}
+
+/* Performance optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Backdrop blur support */
+.backdrop-blur-md {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.backdrop-blur-lg {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Focus states for accessibility */
+.focus-visible:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+
+
+/* Error states */
+.error {
+  border-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+/* Success states */
+.success {
+  border-color: #22c55e;
+  background-color: rgba(34, 197, 94, 0.05);
+}

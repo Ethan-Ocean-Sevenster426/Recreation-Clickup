@@ -1,0 +1,417 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics - E-Click{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Project insights and performance metrics</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleTheme()" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300">
+                        <svg id="theme-icon" class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    <button onclick="refreshAnalytics()" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg font-medium transition-all duration-300 hover:scale-105">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Analytics Content -->
+    <main class="p-4 sm:p-6 lg:p-8">
+        
+        <!-- Overview Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Projects</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ total_projects }}</p>
+                        <p class="text-xs text-green-600 dark:text-green-400">+12% from last month</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-600 transition-all duration-300 shadow-lg hover:shadow-xl">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ completed_projects }}</p>
+                        <p class="text-xs text-green-600 dark:text-green-400">+8% from last month</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:border-yellow-300 dark:hover:border-yellow-600 transition-all duration-300 shadow-lg hover:shadow-xl">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">In Progress</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ in_progress_projects }}</p>
+                        <p class="text-xs text-yellow-600 dark:text-yellow-400">+15% from last month</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-xl bg-gradient-to-r from-purple-500 to-purple-600">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Progress</p>
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ avg_progress }}%</p>
+                        <p class="text-xs text-purple-600 dark:text-purple-400">+5% from last month</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Project Status Chart -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Project Status Distribution</h3>
+                    <div class="flex gap-2">
+                        <button onclick="updateChart('weekly')" class="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-lg">Week</button>
+                        <button onclick="updateChart('monthly')" class="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg">Month</button>
+                        <button onclick="updateChart('yearly')" class="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg">Year</button>
+                    </div>
+                </div>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="projectStatusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Task Status Chart -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Task Status Distribution</h3>
+                    <div class="flex gap-2">
+                        <button onclick="updateTaskChart('weekly')" class="px-3 py-1 text-xs bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 rounded-lg">Week</button>
+                        <button onclick="updateTaskChart('monthly')" class="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg">Month</button>
+                        <button onclick="updateTaskChart('yearly')" class="px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg">Year</button>
+                    </div>
+                </div>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="taskStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- Progress Timeline -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6">Progress Timeline</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">Project Alpha</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Completed 2 days ago</div>
+                        </div>
+                        <div class="text-sm font-bold text-green-600">100%</div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">Project Beta</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">In progress</div>
+                        </div>
+                        <div class="text-sm font-bold text-blue-600">75%</div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">Project Gamma</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Planning phase</div>
+                        </div>
+                        <div class="text-sm font-bold text-yellow-600">25%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6">Recent Activities</h3>
+                <div class="space-y-4">
+                    {% for activity in recent_activities|slice:":5" %}
+                    <div class="flex items-start space-x-3">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ activity.name }}</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">{{ activity.project.name }} • {{ activity.created_at|date:"M d" }}</div>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full 
+                            {% if activity.status == 'completed' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                            {% elif activity.status == 'in-progress' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                            {% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200{% endif %}">
+                            {{ activity.status|title }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Performance Stats -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6">Performance Stats</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Total Tasks</span>
+                        <span class="text-lg font-bold text-gray-900 dark:text-white">{{ total_tasks }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Completed Tasks</span>
+                        <span class="text-lg font-bold text-green-600">{{ completed_tasks }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">In Progress</span>
+                        <span class="text-lg font-bold text-blue-600">{{ in_progress_tasks }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Not Started</span>
+                        <span class="text-lg font-bold text-yellow-600">{{ not_started_tasks }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Export Analytics</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Download your analytics data in various formats</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="exportData('pdf')" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-300">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        PDF Report
+                    </button>
+                    <button onclick="exportData('csv')" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all duration-300">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        CSV Export
+                    </button>
+                    <button onclick="exportData('json')" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-all duration-300">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        JSON Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Chart.js configuration
+    Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#9ca3af' : '#6b7280';
+    Chart.defaults.borderColor = document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb';
+
+    // Project Status Chart
+    const projectStatusCtx = document.getElementById('projectStatusChart').getContext('2d');
+    const projectStatusChart = new Chart(projectStatusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'In Progress', 'Planning', 'On Hold'],
+            datasets: [{
+                data: [{{ completed_projects }}, {{ in_progress_projects }}, {{ planning_projects }}, {{ on_hold_projects }}],
+                backgroundColor: [
+                    '#10b981',
+                    '#3b82f6',
+                    '#f59e0b',
+                    '#ef4444'
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+
+    // Task Status Chart
+    const taskStatusCtx = document.getElementById('taskStatusChart').getContext('2d');
+    const taskStatusChart = new Chart(taskStatusCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Completed', 'In Progress', 'Not Started'],
+            datasets: [{
+                label: 'Tasks',
+                data: [{{ completed_tasks }}, {{ in_progress_tasks }}, {{ not_started_tasks }}],
+                backgroundColor: [
+                    '#10b981',
+                    '#3b82f6',
+                    '#f59e0b'
+                ],
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Theme toggle functionality
+    function toggleTheme() {
+        const html = document.documentElement;
+        const themeIcon = document.getElementById('theme-icon');
+        
+        if (html.classList.contains('dark')) {
+            html.classList.remove('dark');
+            localStorage.theme = 'light';
+            themeIcon.innerHTML = '<path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd"/>';
+        } else {
+            html.classList.add('dark');
+            localStorage.theme = 'dark';
+            themeIcon.innerHTML = '<path d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/>';
+        }
+        
+        // Update chart colors
+        updateChartColors();
+    }
+
+    function updateChartColors() {
+        const isDark = document.documentElement.classList.contains('dark');
+        Chart.defaults.color = isDark ? '#9ca3af' : '#6b7280';
+        Chart.defaults.borderColor = isDark ? '#374151' : '#e5e7eb';
+        
+        // Update existing charts
+        projectStatusChart.update();
+        taskStatusChart.update();
+    }
+
+    function refreshAnalytics() {
+        // Simulate refresh
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<svg class="animate-spin w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Refreshing...';
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            // Here you would typically reload the data
+        }, 2000);
+    }
+
+    function updateChart(period) {
+        // Update chart buttons
+        const buttons = event.target.parentElement.children;
+        for (let button of buttons) {
+            button.className = 'px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg';
+        }
+        event.target.className = 'px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-lg';
+        
+        // Here you would update the chart data based on the period
+        console.log('Updating chart for period:', period);
+    }
+
+    function updateTaskChart(period) {
+        // Update chart buttons
+        const buttons = event.target.parentElement.children;
+        for (let button of buttons) {
+            button.className = 'px-3 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg';
+        }
+        event.target.className = 'px-3 py-1 text-xs bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400 rounded-lg';
+        
+        // Here you would update the chart data based on the period
+        console.log('Updating task chart for period:', period);
+    }
+
+    function exportData(format) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<svg class="animate-spin w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Exporting...';
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            alert(`${format.toUpperCase()} export completed!`);
+        }, 2000);
+    }
+
+    // Initialize theme
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        document.getElementById('theme-icon').innerHTML = '<path d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/>';
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+</script>
+{% endblock %} 

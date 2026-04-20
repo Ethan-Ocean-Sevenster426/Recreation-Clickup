@@ -1,0 +1,18 @@
+[Unit]
+Description=E-Click Django Application
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/eclick
+Environment=PATH=/var/www/eclick/venv/bin
+ExecStart=/var/www/eclick/venv/bin/gunicorn --config gunicorn.conf.py eclick_project.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

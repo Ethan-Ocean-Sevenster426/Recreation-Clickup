@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Week - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-900 text-white">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-white mb-2">{{ action }} Week {{ week.week_number }}</h1>
+                <p class="text-slate-400">Project: {{ project.name }}</p>
+            </div>
+
+            <!-- Form -->
+            <div class="bg-slate-800 rounded-xl shadow-2xl p-6">
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="{{ form.week_number.id_for_label }}" class="block text-sm font-medium text-slate-300 mb-2">
+                                Week Number
+                            </label>
+                            {{ form.week_number }}
+                            {% if form.week_number.errors %}
+                                <div class="text-red-400 text-sm mt-1">{{ form.week_number.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-medium text-slate-300 mb-2">
+                                Start Date
+                            </label>
+                            {{ form.start_date }}
+                            {% if form.start_date.errors %}
+                                <div class="text-red-400 text-sm mt-1">{{ form.start_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label for="{{ form.end_date.id_for_label }}" class="block text-sm font-medium text-slate-300 mb-2">
+                                End Date
+                            </label>
+                            {{ form.end_date }}
+                            {% if form.end_date.errors %}
+                                <div class="text-red-400 text-sm mt-1">{{ form.end_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="bg-red-900/20 border border-red-500 rounded-lg p-4">
+                            <div class="text-red-400 text-sm">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-700">
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                            {{ action }} Week
+                        </button>
+                        <a href="{% url 'main:project_detail' project.id %}" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 px-4 rounded-lg transition-colors text-center">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Info Box -->
+            <div class="mt-6 bg-blue-900/20 border border-blue-500 rounded-lg p-4">
+                <h3 class="text-blue-300 font-medium mb-2">💡 Tip</h3>
+                <p class="text-sm text-slate-300">
+                    Changing the week dates will automatically update the project's overall timeline. 
+                    The project's start and end dates will be adjusted to match the earliest and latest week dates.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

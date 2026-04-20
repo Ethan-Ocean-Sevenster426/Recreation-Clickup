@@ -1,0 +1,36 @@
+<button
+    id="scroll-to-top-btn"
+    class="fixed bottom-5 right-24 bg-red-600 hover:bg-red-700 text-white w-12 h-12 p-3 rounded-full shadow-md transition-opacity duration-300 z-40 opacity-0 pointer-events-none flex items-center justify-center"
+    aria-label="Scroll to top"
+>
+    &uarr;
+</button>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const scrollToTopButton = document.getElementById('scroll-to-top-btn');
+    const bottomThreshold = 100; // Show button after scrolling 100 pixels from bottom
+
+    // Show/hide button on scroll
+    window.addEventListener('scroll', function() {
+        // Check if the user is near the bottom of the page
+        const isAtBottom = (window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - bottomThreshold;
+
+        if (isAtBottom) {
+            scrollToTopButton.classList.add('opacity-100');
+            scrollToTopButton.classList.remove('opacity-0', 'pointer-events-none');
+        } else {
+            scrollToTopButton.classList.add('opacity-0', 'pointer-events-none');
+            scrollToTopButton.classList.remove('opacity-100');
+        }
+    });
+
+    // Scroll to top on button click
+    scrollToTopButton.addEventListener('click', function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth' // Smooth scroll animation
+        });
+    });
+});
+</script> 

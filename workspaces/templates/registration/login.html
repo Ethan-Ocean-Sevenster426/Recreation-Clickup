@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign in</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: {
+            'ms-blue': '#0078D4',
+            'ms-blue-dark': '#106EBE',
+            'ms-neutral-10': '#F3F2F1',
+            'ms-neutral-30': '#E1DFDD',
+            'ms-neutral-60': '#605E5C',
+            'ms-neutral-80': '#323130',
+        }}}}
+    </script>
+    <style> body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif; } </style>
+</head>
+<body class="min-h-screen bg-ms-neutral-10 flex items-center justify-center px-4">
+    <div class="bg-white w-full max-w-md border border-ms-neutral-30 shadow-xl rounded-lg p-8">
+        <h1 class="text-2xl font-semibold text-ms-neutral-80 mb-1">Sign in</h1>
+        <p class="text-sm text-ms-neutral-60 mb-6">Access your workspaces</p>
+
+        {% if form.errors %}
+        <div class="mb-4 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded text-sm">
+            Username or password is incorrect.
+        </div>
+        {% endif %}
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <label class="block text-sm text-ms-neutral-60">
+                Username
+                <input name="username" type="text" required autofocus
+                       class="mt-1 w-full px-3 py-2 border border-ms-neutral-30 rounded focus:ring-2 focus:ring-ms-blue focus:border-ms-blue outline-none text-ms-neutral-80">
+            </label>
+            <label class="block text-sm text-ms-neutral-60">
+                Password
+                <input name="password" type="password" required
+                       class="mt-1 w-full px-3 py-2 border border-ms-neutral-30 rounded focus:ring-2 focus:ring-ms-blue focus:border-ms-blue outline-none text-ms-neutral-80">
+            </label>
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit"
+                    class="w-full px-4 py-2 rounded bg-ms-blue hover:bg-ms-blue-dark text-white font-medium">Sign in</button>
+        </form>
+    </div>
+</body>
+</html>

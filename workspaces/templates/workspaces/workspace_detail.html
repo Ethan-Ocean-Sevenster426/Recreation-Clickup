@@ -1,0 +1,81 @@
+{% extends 'workspaces/base.html' %}
+
+{% block title %}{{ workspace.name }}{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-auto px-8 py-6">
+    <div class="flex items-center gap-2 text-ms-neutral-80 mb-1">
+        <span class="text-sm text-ms-neutral-60">Workspaces</span>
+        <span class="text-ms-neutral-30">/</span>
+        <span class="font-semibold">{{ workspace.name }}</span>
+    </div>
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-ms-neutral-80">{{ workspace.name }}</h1>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'workspaces:members' workspace.id %}"
+               class="inline-flex items-center gap-1 px-3 py-2 rounded border border-ms-neutral-30 text-ms-neutral-80 hover:bg-ms-neutral-10 text-sm font-medium">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Members
+            </a>
+            <button type="button" onclick="document.getElementById('newListModal').classList.remove('hidden')"
+                    class="inline-flex items-center gap-1 px-4 py-2 rounded bg-ms-blue hover:bg-ms-blue-dark text-white text-sm font-medium">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New list
+            </button>
+        </div>
+    </div>
+
+    {% if workspace.lists.all %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for tl in workspace.lists.all %}
+        <div class="bg-white rounded-lg border border-ms-neutral-30 p-4 hover:shadow-sm transition group"
+             data-list-id="{{ tl.id }}" data-list-name="{{ tl.name }}" data-list-color="{{ tl.color }}">
+            <a href="{% url 'workspaces:list_detail' tl.id %}" class="flex items-center gap-3 mb-3">
+                {% include 'workspaces/_list_chip.html' with tl=tl size='lg' %}
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-base font-semibold text-ms-neutral-80 truncate">{{ tl.name }}</h2>
+                    <p class="text-xs text-ms-neutral-60">{{ tl.tasks.count }} task{{ tl.tasks.count|pluralize }}</p>
+                </div>
+            </a>
+            <div class="flex items-center justify-between text-xs">
+                <button type="button" onclick="openEditListModal({{ tl.id }}, '{{ tl.name|escapejs }}', '{{ tl.color }}')"
+                        class="text-ms-neutral-60 hover:text-ms-blue inline-flex items-center gap-1">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    Edit
+                </button>
+                <form method="post" action="{% url 'workspaces:list_delete' tl.id %}"
+                      onsubmit="return confirm('Delete this list and all its tasks?');">
+                    {% csrf_token %}
+                    <button class="text-ms-neutral-40 hover:text-red-500 inline-flex items-center gap-1">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20 text-ms-neutral-60">No lists in this workspace yet. Click <strong>New list</strong> to add one (e.g. MOC, AWA, Condor Cargo).</div>
+    {% endif %}
+</div>
+
+<!-- New list modal -->
+<div id="newListModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl border border-ms-neutral-30">
+        <h2 class="text-lg font-semibold mb-4 text-ms-neutral-80">New list</h2>
+        <form method="post" action="{% url 'workspaces:list_create' workspace.id %}" class="space-y-3">
+            {% csrf_token %}
+            <input name="name" required autofocus placeholder="List name (e.g. MOC, AWA)"
+                   class="w-full px-3 py-2 border border-ms-neutral-30 rounded focus:ring-2 focus:ring-ms-blue outline-none">
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('newListModal').classList.add('hidden')"
+                        class="px-4 py-2 text-sm text-ms-neutral-80 border border-ms-neutral-30 rounded hover:bg-ms-neutral-10">Cancel</button>
+                <button type="submit"
+                        class="px-4 py-2 text-sm rounded bg-ms-blue hover:bg-ms-blue-dark text-white font-medium">Create list</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

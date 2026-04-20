@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10 p-6 bg-gray-800 rounded-lg border border-gray-700 text-white">
+  <h1 class="text-2xl font-bold mb-4">Client Project Report</h1>
+
+  {% if projects %}
+    {% for project in projects %}
+      <div class="mb-6 p-4 bg-gray-900 rounded-lg border border-gray-600">
+        <h2 class="text-xl font-semibold">{{ project.title }}</h2>
+        <p><strong>Status:</strong> {{ project.get_status_display }}</p>
+        <p><strong>Description:</strong> {{ project.description }}</p>
+        <p><strong>Start Date:</strong> {{ project.start_date }}</p>
+        <p><strong>End Date:</strong> {{ project.end_date }}</p>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No projects found for your client profile.</p>
+  {% endif %}
+</div>
+{% endblock %}

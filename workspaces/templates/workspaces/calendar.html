@@ -1,0 +1,88 @@
+{% extends 'workspaces/base.html' %}
+{% load ws_extras %}
+
+{% block title %}{{ workspace.name }} - Calendar{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-full">
+    {% include 'workspaces/_view_tabs.html' %}
+
+    <!-- Toolbar -->
+    <div class="px-6 py-3 flex items-center justify-between border-b border-ms-neutral-30">
+        <div class="flex items-center gap-2 text-sm">
+            <a href="{% url 'workspaces:list_calendar' task_list.id %}"
+               class="px-3 py-1 border border-ms-neutral-30 rounded hover:bg-ms-neutral-10">Today</a>
+            <span class="inline-flex items-center gap-1 px-3 py-1 border border-ms-neutral-30 rounded text-ms-neutral-60">
+                Month
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+            <a href="?year={{ prev_year }}&month={{ prev_month }}" class="w-8 h-8 rounded hover:bg-ms-neutral-10 text-ms-neutral-60 inline-flex items-center justify-center" title="Previous month">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </a>
+            <a href="?year={{ next_year }}&month={{ next_month }}" class="w-8 h-8 rounded hover:bg-ms-neutral-10 text-ms-neutral-60 inline-flex items-center justify-center" title="Next month">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+            <span class="ml-2 font-semibold text-ms-neutral-80">{{ month_name }}</span>
+        </div>
+        <button type="button" onclick="document.getElementById('newTaskModal').classList.remove('hidden')"
+                class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-ms-blue hover:bg-ms-blue-dark text-white text-xs font-medium">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New task
+        </button>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Calendar grid -->
+        <div class="flex-1 overflow-auto">
+            <div class="grid grid-cols-7 border-t border-l border-ms-neutral-30 sticky top-0 bg-white z-10">
+                {% for name in day_names %}
+                <div class="p-2 text-xs font-semibold text-ms-neutral-60 border-b border-r border-ms-neutral-30">{{ name }}</div>
+                {% endfor %}
+            </div>
+            {% for row in week_rows %}
+            <div class="relative">
+                <div class="grid grid-cols-7">
+                    {% for d in row.days %}
+                    <div class="min-h-[96px] border-b border-r border-l-0 border-ms-neutral-30 p-1
+                                {% if not d.in_month %}bg-ms-neutral-10 text-ms-neutral-40{% endif %}
+                                {% if forloop.first %}border-l{% endif %}">
+                        <div class="text-xs">
+                            <span class="{% if d.is_today %}inline-flex w-5 h-5 items-center justify-center bg-ms-blue text-white rounded-full font-semibold{% endif %}">
+                                {{ d.date.day }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <!-- Task bars overlay -->
+                <div class="absolute left-0 right-0 top-6 grid grid-cols-7 gap-0.5 px-1 pb-1"
+                     style="grid-auto-rows: 20px; grid-template-rows: repeat({{ row.lane_count }}, 20px);">
+                    {% for b in row.bars %}
+                    <a href="{% url 'workspaces:task_detail' b.task.id %}?from={{ request.get_full_path|urlencode }}"
+                       style="grid-column: {{ b.col_start }} / {{ b.col_end }}; grid-row: {{ b.lane|add:"1" }};"
+                       class="status-c-{{ b.task|status_color:task_list }} text-[11px] px-1.5 rounded truncate flex items-center font-medium hover:opacity-80 pointer-events-auto"
+                       title="{{ b.task.title }}">
+                        {{ b.task.title }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Right rail -->
+        <div class="w-10 border-l border-ms-neutral-30 flex flex-col items-center py-3 gap-4 text-xs text-ms-neutral-60 bg-white">
+            <div class="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap flex items-center gap-1">
+                <span class="px-1.5 py-0.5 rounded-full bg-ms-neutral-30 text-ms-neutral-80 text-[10px]">{{ unscheduled_count }}</span>
+                Unscheduled
+            </div>
+            <div class="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap flex items-center gap-1">
+                <span class="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px]">{{ overdue_count }}</span>
+                Overdue
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'workspaces/_new_task_modal.html' %}
+{% endblock %}

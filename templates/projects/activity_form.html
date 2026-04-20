@@ -1,0 +1,550 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 dark:bg-slate-900">
+  <!-- Header -->
+  <header class="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <a href="{% url 'main:project_detail' project.id %}" class="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <span class="text-sm font-medium">Back to Project</span>
+          </a>
+          <div class="w-px h-6 bg-slate-300 dark:bg-slate-600"></div>
+          <div>
+            <h1 class="text-xl font-bold text-slate-900 dark:text-white">{{ action }} Activity</h1>
+            <p class="text-sm text-slate-600 dark:text-slate-400">{{ project.name }}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+            {{ project.get_status_display }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+      {% for message in messages %}
+      <div class="flex items-center gap-3 p-4 rounded-xl border 
+        {% if message.tags == 'error' %}
+          bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200
+        {% elif message.tags == 'success' %}
+          bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-200
+        {% elif message.tags == 'warning' %}
+          bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-200
+        {% else %}
+          bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-200
+        {% endif %}">
+        <div class="flex-shrink-0">
+          {% if message.tags == 'error' %}
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          {% elif message.tags == 'success' %}
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+          {% else %}
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+          {% endif %}
+        </div>
+        <div class="flex-1 text-sm font-medium">{{ message }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Form Card -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <!-- Card Header -->
+      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 px-6 py-6 border-b border-slate-200 dark:border-slate-600">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Activity Details</h2>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Define the scope and timeline for this activity</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Content -->
+      <form method="post" class="p-6 space-y-8">
+        {% csrf_token %}
+        
+        <!-- Activity Title -->
+        <div class="space-y-2">
+          <label for="{{ form.title.id_for_label }}" class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+            </svg>
+            Activity Title
+            <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <input type="text" name="{{ form.title.name }}" id="{{ form.title.id_for_label }}" 
+              value="{{ form.title.value|default:'' }}"
+              class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl 
+                     bg-white dark:bg-slate-700 text-slate-900 dark:text-white 
+                     placeholder-slate-500 dark:placeholder-slate-400
+                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 
+                     transition-all duration-200 text-sm
+                     {% if form.title.errors %}border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500{% endif %}"
+              placeholder="Enter a descriptive title for this activity"
+              required>
+            {% if form.title.errors %}
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            {% endif %}
+          </div>
+          {% if form.title.errors %}
+          <p class="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            {{ form.title.errors.0 }}
+          </p>
+          {% endif %}
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-2">
+          <label for="{{ form.description.id_for_label }}" class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+            </svg>
+            Description
+          </label>
+          <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="4"
+            class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl 
+                   bg-white dark:bg-slate-700 text-slate-900 dark:text-white 
+                   placeholder-slate-500 dark:placeholder-slate-400
+                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 
+                   transition-all duration-200 text-sm resize-none
+                   {% if form.description.errors %}border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500{% endif %}"
+            placeholder="Describe what needs to be accomplished in this activity...">{{ form.description.value|default:'' }}</textarea>
+          {% if form.description.errors %}
+          <p class="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            {{ form.description.errors.0 }}
+          </p>
+          {% endif %}
+        </div>
+
+        <!-- Date Range -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Start Date -->
+          <div class="space-y-2">
+            <label for="{{ form.start_date.id_for_label }}" class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+              <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              Start Date
+              <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input type="date" name="{{ form.start_date.name }}" id="{{ form.start_date.id_for_label }}" 
+                value="{{ form.start_date.value|default:'' }}"
+                class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl 
+                       bg-white dark:bg-slate-700 text-slate-900 dark:text-white 
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 
+                       transition-all duration-200 text-sm
+                       {% if form.start_date.errors %}border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500{% endif %}"
+                required>
+              {% if form.start_date.errors %}
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              {% endif %}
+            </div>
+            {% if form.start_date.errors %}
+            <p class="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+              {{ form.start_date.errors.0 }}
+            </p>
+            {% endif %}
+          </div>
+
+          <!-- End Date -->
+          <div class="space-y-2">
+            <label for="{{ form.end_date.id_for_label }}" class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+              <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              End Date
+              <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input type="date" name="{{ form.end_date.name }}" id="{{ form.end_date.id_for_label }}" 
+                value="{{ form.end_date.value|default:'' }}"
+                class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl 
+                       bg-white dark:bg-slate-700 text-slate-900 dark:text-white 
+                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 
+                       transition-all duration-200 text-sm
+                       {% if form.end_date.errors %}border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500{% endif %}"
+                required>
+              {% if form.end_date.errors %}
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              {% endif %}
+            </div>
+            {% if form.end_date.errors %}
+            <p class="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+              {{ form.end_date.errors.0 }}
+            </p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="space-y-2">
+          <label for="{{ form.status.id_for_label }}" class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
+            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+            </svg>
+            Status
+            <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <select name="{{ form.status.name }}" id="{{ form.status.id_for_label }}"
+              class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-xl 
+                     bg-white dark:bg-slate-700 text-slate-900 dark:text-white 
+                     focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 
+                     transition-all duration-200 text-sm
+                     {% if form.status.errors %}border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500{% endif %}" 
+              required>
+              <option value="">Select status...</option>
+              <option value="planning" {% if form.status.value == 'planning' %}selected{% endif %}>📋 Planning</option>
+              <option value="in-progress" {% if form.status.value == 'in-progress' %}selected{% endif %}>🚀 In Progress</option>
+              <option value="in-progress-guidance-required" {% if form.status.value == 'in-progress-guidance-required' %}selected{% endif %}>🚀 In Progress (Guidance Required)</option>
+              <option value="completed" {% if form.status.value == 'completed' %}selected{% endif %}>✅ Completed</option>
+              <option value="completed-review-pending" {% if form.status.value == 'completed-review-pending' %}selected{% endif %}>✅ Completed (Review Pending)</option>
+              <option value="completed-data-discrepancy-addressing" {% if form.status.value == 'completed-data-discrepancy-addressing' %}selected{% endif %}>✅ Completed (Data Discrepancy addressing)</option>
+              <option value="blocked" {% if form.status.value == 'blocked' %}selected{% endif %}>🚫 Blocked</option>
+            </select>
+            {% if form.status.errors %}
+            <div class="absolute inset-y-0 right-8 pr-3 flex items-center pointer-events-none">
+              <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            {% endif %}
+          </div>
+          {% if form.status.errors %}
+          <p class="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            {{ form.status.errors.0 }}
+          </p>
+          {% endif %}
+        </div>
+
+        <!-- Project Constraints Info -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+          <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+              <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">Project Timeline Constraints</h4>
+              <p class="text-sm text-blue-700 dark:text-blue-300">
+                Activity dates must fall within the project timeline: 
+                <strong>{{ project.start_date|date:"M d, Y" }}</strong> to 
+                <strong>{{ project.end_date|date:"M d, Y" }}</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-between pt-6 border-t border-slate-200 dark:border-slate-700">
+          <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+            All fields marked with <span class="text-red-500">*</span> are required
+          </div>
+          
+          <div class="flex items-center gap-3">
+            <a href="{% url 'main:project_detail' project.id %}" 
+               class="inline-flex items-center gap-2 px-6 py-3 border border-slate-300 dark:border-slate-600 
+                      rounded-xl shadow-sm text-sm font-medium text-slate-700 dark:text-slate-200 
+                      bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+                      transition-all duration-200">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              Cancel
+            </a>
+            
+            <button type="submit" 
+                    class="inline-flex items-center gap-2 px-6 py-3 border border-transparent 
+                           rounded-xl shadow-sm text-sm font-medium text-white 
+                           bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 
+                           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+                           transition-all duration-200 transform hover:scale-105 active:scale-95"
+                    id="submit-btn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              <span id="submit-text">{{ action }} Activity</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Form validation and enhancement
+  const form = document.querySelector('form');
+  const submitBtn = document.getElementById('submit-btn');
+  const submitText = document.getElementById('submit-text');
+  const startDateInput = document.querySelector('input[name="start_date"]');
+  const endDateInput = document.querySelector('input[name="end_date"]');
+  
+  // Date validation
+  function validateDates() {
+    const startDate = new Date(startDateInput.value);
+    const endDate = new Date(endDateInput.value);
+    const projectStart = new Date('{{ project.start_date|date:"Y-m-d" }}');
+    const projectEnd = new Date('{{ project.end_date|date:"Y-m-d" }}');
+    
+    let isValid = true;
+    
+    // Clear previous error states
+    startDateInput.classList.remove('border-red-300', 'dark:border-red-600');
+    endDateInput.classList.remove('border-red-300', 'dark:border-red-600');
+    
+    // Remove existing error messages
+    document.querySelectorAll('.date-error').forEach(el => el.remove());
+    
+    if (startDate && endDate && startDate > endDate) {
+      showDateError(endDateInput, 'End date must be after start date');
+      isValid = false;
+    }
+    
+    if (startDate && startDate < projectStart) {
+      showDateError(startDateInput, 'Start date cannot be before project start date');
+      isValid = false;
+    }
+    
+    if (endDate && endDate > projectEnd) {
+      showDateError(endDateInput, 'End date cannot be after project end date');
+      isValid = false;
+    }
+    
+    return isValid;
+  }
+  
+  function showDateError(input, message) {
+    input.classList.add('border-red-300', 'dark:border-red-600');
+    const errorDiv = document.createElement('p');
+    errorDiv.className = 'text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-2 date-error';
+    errorDiv.innerHTML = `
+      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+      </svg>
+      ${message}
+    `;
+    input.parentNode.appendChild(errorDiv);
+  }
+  
+  // Real-time date validation
+  startDateInput?.addEventListener('change', validateDates);
+  endDateInput?.addEventListener('change', validateDates);
+  
+  // Form submission handling
+  form?.addEventListener('submit', function(e) {
+    if (!validateDates()) {
+      e.preventDefault();
+      return;
+    }
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+    submitText.textContent = 'Creating...';
+    
+    // Add loading spinner
+    const spinner = document.createElement('div');
+    spinner.className = 'w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin';
+    submitBtn.querySelector('svg').replaceWith(spinner);
+  });
+  
+  // Auto-resize textarea
+  const textarea = document.querySelector('textarea');
+  if (textarea) {
+    textarea.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = this.scrollHeight + 'px';
+    });
+  }
+  
+  // Status color preview
+  const statusSelect = document.querySelector('select[name="status"]');
+  statusSelect?.addEventListener('change', function() {
+    const colors = {
+      'planning': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      'in-progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      'completed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      'blocked': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+    };
+    
+    // You can add a status preview here if needed
+  });
+  
+  // Smooth animations
+  const inputs = document.querySelectorAll('input, textarea, select');
+  inputs.forEach(input => {
+    input.addEventListener('focus', function() {
+      this.parentNode.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-20');
+    });
+    
+    input.addEventListener('blur', function() {
+      this.parentNode.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-20');
+    });
+  });
+  
+  // Character counter for title (optional enhancement)
+  const titleInput = document.querySelector('input[name="title"]');
+  if (titleInput) {
+    const maxLength = 200;
+    const counter = document.createElement('div');
+    counter.className = 'text-xs text-slate-500 dark:text-slate-400 mt-1 text-right';
+    counter.textContent = `0/${maxLength}`;
+    titleInput.parentNode.appendChild(counter);
+    
+    titleInput.addEventListener('input', function() {
+      const length = this.value.length;
+      counter.textContent = `${length}/${maxLength}`;
+      
+      if (length > maxLength * 0.9) {
+        counter.classList.add('text-orange-500');
+      } else {
+        counter.classList.remove('text-orange-500');
+      }
+      
+      if (length > maxLength) {
+        counter.classList.add('text-red-500');
+        counter.classList.remove('text-orange-500');
+      } else {
+        counter.classList.remove('text-red-500');
+      }
+    });
+  }
+  
+  // Add entrance animations
+  const formCard = document.querySelector('.bg-white.dark\\:bg-slate-800');
+  if (formCard) {
+    formCard.style.opacity = '0';
+    formCard.style.transform = 'translateY(20px)';
+    formCard.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+    
+    setTimeout(() => {
+      formCard.style.opacity = '1';
+      formCard.style.transform = 'translateY(0)';
+    }, 100);
+  }
+  
+  // Enhanced form field animations
+  inputs.forEach((input, index) => {
+    input.style.transition = 'all 0.2s ease-in-out';
+    input.addEventListener('focus', function() {
+      this.style.transform = 'scale(1.02)';
+      this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+    });
+    
+    input.addEventListener('blur', function() {
+      this.style.transform = 'scale(1)';
+      this.style.boxShadow = 'none';
+    });
+  });
+});
+</script>
+
+<style>
+/* Custom scrollbar for textarea */
+textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 3px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Loading animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Smooth focus transitions */
+input:focus, textarea:focus, select:focus {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Custom select arrow */
+select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/* Dark mode select arrow */
+.dark select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%219ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+}
+</style>
+{% endblock %}

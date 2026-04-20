@@ -1,0 +1,111 @@
+{% load static %}
+
+<section id="clients" class="relative py-24 px-6 overflow-hidden transition-all duration-1000 bg-white dark:bg-slate-900">
+    <!-- Ambient background -->
+    <div class="absolute inset-0 bg-gradient-to-b from-gray-50 to-white dark:from-slate-900 dark:to-slate-800 transition-all duration-1000"></div>
+    
+    <div class="container mx-auto relative z-10">
+        <!-- Section header -->
+        <div class="text-center mb-16 max-w-3xl mx-auto">
+            <span class="inline-block bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-4 py-1 rounded-full text-sm font-medium mb-4 reveal-element border border-red-200 dark:border-red-800/50">
+                Our Clients
+            </span>
+            
+            <h2 class="text-4xl md:text-5xl font-bold mb-6 reveal-element text-gray-900 dark:text-white">
+                Trusted by Businesses 
+                <span class="relative z-10 ml-2">
+                    <span class="relative z-10 bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent">
+                        Worldwide
+                    </span>
+                </span>
+            </h2>
+            
+            <p class="text-lg text-gray-600 dark:text-gray-300 reveal-element">
+                See what our clients have to say about their experience working with E-click 
+                and the impact our solutions have had on their businesses.
+            </p>
+        </div>
+
+        <!-- Company Logos -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 items-center justify-items-center mb-20 reveal-element">
+            {% for company in companies %}
+            <div class="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg w-full h-60 flex flex-col items-center justify-center transition-all duration-300 hover:shadow-xl hover:scale-105">
+                <!-- Image container -->
+                <div class="relative w-full h-40 flex items-center justify-center mb-4">
+                    <!-- Fallback SVG -->
+                    <div class="company-fallback transform scale-150">
+                        <svg viewBox="0 0 100 40" class="w-48 h-16">
+                            <rect width="100" height="40" rx="4" fill="#f1f5f9" class="dark:fill-slate-700" />
+                            <text x="50" y="25" fontSize="16" fontWeight="bold" fill="#1e293b" class="dark:fill-slate-200" textAnchor="middle">{{ company.name }}</text>
+                        </svg>
+                    </div>
+                    
+                    <!-- Actual logo image -->
+                    <img 
+                        src="{% static company.logo_url %}" 
+                        alt="{{ company.alt }}"
+                        class="company-logo absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ease-in-out opacity-0"
+                        loading="lazy"
+                        style="image-rendering: crisp-edges; max-width: 85%; max-height: 85%; margin: auto;"
+                        onload="this.style.opacity='1'; this.parentElement.querySelector('.company-fallback').style.display='none';"
+                        onerror="this.style.display='none';"
+                    />
+                </div>
+                
+                <!-- Company name -->
+                <div class="text-xl font-semibold mt-2 text-gray-900 dark:text-white">{{ company.name }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Testimonials -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for testimonial in testimonials %}
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg relative reveal-element h-64">
+                <!-- Rating stars -->
+                <div class="mb-4 flex">
+                    {% for i in "12345" %}
+                    {% if forloop.counter <= testimonial.rating %}
+                    <svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                
+                <!-- Content layout -->
+                <div class="h-full flex flex-col">
+                    <div class="mb-20">
+                        <p class="text-gray-800 dark:text-gray-200 text-left italic">
+                            "{{ testimonial.message }}"
+                        </p>
+                    </div>
+                    
+                    <div class="absolute bottom-6 left-6 right-6 flex items-center">
+                        <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-white shrink-0">
+                            <span class="font-bold">
+                                {{ testimonial.initials }}
+                            </span>
+                        </div>
+                        
+                        <div class="ml-4 overflow-hidden">
+                            <h4 class="font-semibold text-gray-900 dark:text-white text-base">
+                                {{ testimonial.name }}
+                            </h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ testimonial.role }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="mt-12 text-center reveal-element">
+            <a href="#contact" class="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-lg font-medium inline-block">
+                Become Our Next Success Story
+            </a>
+        </div>
+    </div>
+</section>

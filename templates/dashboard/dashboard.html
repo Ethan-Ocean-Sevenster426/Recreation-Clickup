@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-white dark:bg-slate-900">
+  <!-- Sidebar -->
+  <div class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-30" id="sidebar">
+    <div class="flex items-center justify-between h-16 px-4 border-b border-slate-200 dark:border-slate-700">
+      <a href="{% url 'main:home' %}" class="flex items-center gap-2 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+          <span class="text-white font-bold text-lg">EC</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xl font-bold text-slate-900 dark:text-white">E-click</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400 -mt-1 tracking-wider">TECHNOLOGIES</span>
+        </div>
+      </a>
+      <button class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" id="close-sidebar">
+        <svg class="w-6 h-6 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <nav class="px-4 py-6 space-y-2">
+      <a href="#overview" class="flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+        </svg>
+        Overview
+      </a>
+      <a href="#projects" class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+        Projects
+      </a>
+      <a href="#analytics" class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+        Analytics
+      </a>
+      <a href="#settings" class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+        Settings
+      </a>
+    </nav>
+  </div>
+
+  <!-- Main Content -->
+  <div class="lg:pl-64">
+    <!-- Top Navigation -->
+    <div class="sticky top-0 z-20 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+      <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+        <button class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" id="open-sidebar">
+          <svg class="w-6 h-6 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+
+        <div class="flex items-center gap-4">
+          <button id="theme-toggle" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+            <svg id="sun-icon" class="w-5 h-5 text-yellow-500 transition-all duration-300" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>
+            </svg>
+            <svg id="moon-icon" class="w-5 h-5 text-slate-400 transition-all duration-300 absolute opacity-0" fill="currentColor" viewBox="0 0 24 24">
+              <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+
+          <div class="relative">
+            <button class="flex items-center gap-2 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" id="user-menu-button">
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white font-bold">
+                {{ user.username|first|upper }}
+              </div>
+              <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ user.username }}</span>
+            </button>
+
+            <div class="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 hidden" id="user-menu">
+              <div class="py-1">
+                <a href="#profile" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Your Profile</a>
+                <a href="#settings" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Settings</a>
+                <a href="{% url 'main:logout' %}" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">Sign out</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <main class="p-4 sm:p-6 lg:p-8">
+      <!-- Welcome Section -->
+      <div class="mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Welcome back, {{ user.username }}!</h1>
+        <p class="mt-2 text-slate-600 dark:text-slate-400">Here's what's happening with your projects today.</p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+              <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Total Projects</p>
+              <p class="text-2xl font-bold text-slate-900 dark:text-white">12</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Completed</p>
+              <p class="text-2xl font-bold text-slate-900 dark:text-white">8</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">In Progress</p>
+              <p class="text-2xl font-bold text-slate-900 dark:text-white">3</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-6">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+              <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Performance</p>
+              <p class="text-2xl font-bold text-slate-900 dark:text-white">98%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Projects -->
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Recent Projects</h2>
+          <a href="#projects" class="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300 transition-colors">View all</a>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
+                <span class="text-red-600 dark:text-red-400 font-semibold">EC</span>
+              </div>
+              <div>
+                <h3 class="font-medium text-slate-900 dark:text-white">E-Commerce Platform</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Last updated 2 hours ago</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-sm font-medium text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/20 rounded-full">Completed</span>
+          </div>
+
+          <div class="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+                <span class="text-blue-600 dark:text-blue-400 font-semibold">AI</span>
+              </div>
+              <div>
+                <h3 class="font-medium text-slate-900 dark:text-white">AI Chatbot Integration</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Last updated 1 day ago</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/20 rounded-full">In Progress</span>
+          </div>
+
+          <div class="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-700/50">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+                <span class="text-purple-600 dark:text-purple-400 font-semibold">API</span>
+              </div>
+              <div>
+                <h3 class="font-medium text-slate-900 dark:text-white">API Gateway</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Last updated 3 days ago</p>
+              </div>
+            </div>
+            <span class="px-3 py-1 text-sm font-medium text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/20 rounded-full">Pending</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Theme Management
+  const themeToggle = document.getElementById('theme-toggle');
+  const sunIcon = document.getElementById('sun-icon');
+  const moonIcon = document.getElementById('moon-icon');
+  
+  function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = savedTheme === 'system' ? (prefersDark ? 'dark' : 'light') : savedTheme;
+    
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    
+    updateThemeIcons();
+  }
+  
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.contains('dark');
+    if (isDark) {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    }
+    updateThemeIcons();
+  }
+  
+  function updateThemeIcons() {
+    const isDark = document.documentElement.classList.contains('dark');
+    if (sunIcon && moonIcon) {
+      if (isDark) {
+        sunIcon.style.opacity = '0';
+        moonIcon.style.opacity = '1';
+      } else {
+        sunIcon.style.opacity = '1';
+        moonIcon.style.opacity = '0';
+      }
+    }
+  }
+  
+  // Sidebar Management
+  const sidebar = document.getElementById('sidebar');
+  const openSidebarBtn = document.getElementById('open-sidebar');
+  const closeSidebarBtn = document.getElementById('close-sidebar');
+  
+  function toggleSidebar() {
+    sidebar.classList.toggle('-translate-x-full');
+  }
+  
+  // User Menu Management
+  const userMenuButton = document.getElementById('user-menu-button');
+  const userMenu = document.getElementById('user-menu');
+  
+  function toggleUserMenu() {
+    userMenu.classList.toggle('hidden');
+  }
+  
+  // Event Listeners
+  themeToggle?.addEventListener('click', toggleTheme);
+  openSidebarBtn?.addEventListener('click', toggleSidebar);
+  closeSidebarBtn?.addEventListener('click', toggleSidebar);
+  userMenuButton?.addEventListener('click', toggleUserMenu);
+  
+  // Close user menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (userMenu && !userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+      userMenu.classList.add('hidden');
+    }
+  });
+  
+  // Initialize theme
+  initTheme();
+});
+</script>
+{% endblock %} 

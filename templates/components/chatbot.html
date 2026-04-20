@@ -1,0 +1,222 @@
+<!-- ===== FULL E-CLICK CHATBOT CODE (HTML + JS + CSS) ===== -->
+
+<!-- === HTML === -->
+<div id="chatbot" class="chatbot-container">
+    <div id="chatHeader" class="chat-header">
+      <strong>E-Click Assistant</strong>
+      <span class="chat-status">Online • Ready to help!</span>
+    </div>
+    <div id="chatMessages" class="chat-messages"></div>
+    <div class="chat-input">
+      <input id="chatbotInput" type="text" placeholder="Type a message..." onkeypress="if(event.key === 'Enter') sendMessage()">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+  
+  <!-- === CSS === -->
+  <style>
+    .chatbot-container {
+      position: fixed;
+      bottom: 0;
+      right: 20px;
+      width: 320px;
+      max-height: 500px;
+      background: var(--bg-color, #fff);
+      border: 1px solid #ccc;
+      border-radius: 10px 10px 0 0;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      font-family: Arial, sans-serif;
+      z-index: 9999;
+    }
+    .chat-header {
+      background: var(--header-bg, #183a58);
+      color: white;
+      padding: 10px;
+      border-radius: 10px 10px 0 0;
+    }
+    .chat-status {
+      font-size: 12px;
+      display: block;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      background: var(--msg-bg, #f5f5f5);
+    }
+    .user-message, .bot-message {
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      max-width: 90%;
+      word-wrap: break-word;
+    }
+    .user-message {
+      background: #168aad;
+      color: white;
+      align-self: flex-end;
+    }
+    .bot-message {
+      background: #eee;
+      color: black;
+      align-self: flex-start;
+    }
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      outline: none;
+    }
+    .chat-input button {
+      padding: 10px;
+      background: #168aad;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    body.dark {
+      --bg-color: #121212;
+      --msg-bg: #1e1e1e;
+      --header-bg: #0a63aa;
+      color: #fff;
+    }
+  </style>
+  
+  <!-- === JAVASCRIPT === -->
+  <script>
+  const keywordMap = {
+    greetings: ["hi", "hello", "hey", "greetings"],
+    help: ["help", "assist", "what can you do", "commands"],
+    lightMode: ["light", "light mode", "bright"],
+    darkMode: ["dark", "dark mode", "night"],
+    projects: ["project", "projects", "work"],
+    dashboard: ["dashboard", "overview", "stats"],
+    contact: ["contact", "get in touch", "email"],
+    goodbye: ["bye", "goodbye", "logout", "sign out"],
+    refresh: ["refresh", "reload"],
+    thanks: ["thank", "thanks", "thx"]
+  };
+  
+  const responses = {
+    greetings: ["👋 Hi there! I'm your E-Click Assistant. I can help you with:<br>🌞 Light Mode<br>🌙 Dark Mode<br>❓ Help<br>📁 Projects<br>navigate to /dashboard/"],
+    help: ["🤖 I'm your assistant! Try commands like:<br>• switch to dark mode<br>• go to dashboard<br>• refresh page<br>• contact"],
+    lightMode: ["🌞 Light mode activated!"],
+    darkMode: ["🌙 Dark mode activated! Easy on the eyes!"],
+    dashboard: ["📊 Your dashboard shows all your project statistics and recent activities!"],
+    projects: ["📁 Opening projects list for you..."],
+    contact: ["📬 Redirecting you to our contact page..."],
+    goodbye: ["👋 Logging you out... see you soon!"],
+    refresh: ["🔄 Refreshing the page..."],
+    thanks: ["😊 You're welcome! Let me know if you need anything else!"]
+  };
+  
+  function findMatchedCategories(msg) {
+    const matches = [];
+    for (const category in keywordMap) {
+      for (const keyword of keywordMap[category]) {
+        if (msg.includes(keyword)) {
+          matches.push(category);
+          break;
+        }
+      }
+    }
+    return matches;
+  }
+  
+  function getRandomResponse(category) {
+    const r = responses[category];
+    return r[Math.floor(Math.random() * r.length)] || "🤔 I'm not sure what you mean.";
+  }
+  
+  function addMessage(msg, isUser = false) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = isUser ? "user-message" : "bot-message";
+    msgDiv.innerHTML = msg;
+    document.getElementById("chatMessages").appendChild(msgDiv);
+    document.getElementById("chatMessages").scrollTop = document.getElementById("chatMessages").scrollHeight;
+  }
+  
+  function sendMessage() {
+    const input = document.getElementById("chatbotInput");
+    const message = input.value.trim();
+    if (!message) return;
+  
+    addMessage(message, true);
+    saveChatHistory(message, 'user');
+    input.value = '';
+  
+    const response = processMessage(message);
+    setTimeout(() => {
+      addMessage(response);
+      saveChatHistory(response, 'bot');
+    }, 600);
+  }
+  
+  function processMessage(message) {
+    const lower = message.toLowerCase();
+    const categories = findMatchedCategories(lower);
+    let replies = [];
+  
+    categories.forEach(cat => {
+      if (cat === 'darkMode') {
+        document.body.classList.add('dark');
+        localStorage.theme = 'dark';
+        replies.push(getRandomResponse(cat));
+      } else if (cat === 'lightMode') {
+        document.body.classList.remove('dark');
+        localStorage.theme = 'light';
+        replies.push(getRandomResponse(cat));
+      } else if (cat === 'dashboard') {
+        replies.push(getRandomResponse(cat));
+        setTimeout(() => window.location.href = "/dashboard/", 1500);
+      } else if (cat === 'projects') {
+        replies.push(getRandomResponse(cat));
+        setTimeout(() => window.location.href = "/projects/", 1500);
+      } else if (cat === 'goodbye') {
+        replies.push(getRandomResponse(cat));
+        setTimeout(() => window.location.href = "/logout/", 1500);
+      } else {
+        replies.push(getRandomResponse(cat));
+      }
+    });
+  
+    if (lower.includes('contact')) {
+      replies.push("📬 Redirecting you to our contact page...");
+      setTimeout(() => window.location.href = "/contact/", 1500);
+    }
+  
+    if (lower.includes('refresh') || lower.includes('reload')) {
+      replies.push("🔄 Refreshing the page...");
+      setTimeout(() => location.reload(), 1500);
+    }
+  
+    return replies.join("<br><br>");
+  }
+  
+  function saveChatHistory(message, type) {
+    const key = 'echat_history';
+    let history = JSON.parse(localStorage.getItem(key)) || [];
+    history.push({ type, message });
+    localStorage.setItem(key, JSON.stringify(history));
+  }
+  
+  function loadChatHistory() {
+    const key = 'echat_history';
+    let history = JSON.parse(localStorage.getItem(key)) || [];
+    history.forEach(item => addMessage(item.message, item.type === 'user'));
+  }
+  
+  document.addEventListener("DOMContentLoaded", () => {
+    if (localStorage.theme === 'dark') {
+      document.body.classList.add('dark');
+    }
+    loadChatHistory();
+  });
+  </script>
+  

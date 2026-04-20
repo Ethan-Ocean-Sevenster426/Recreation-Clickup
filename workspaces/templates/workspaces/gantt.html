@@ -1,0 +1,96 @@
+{% extends 'workspaces/base.html' %}
+
+{% block title %}{{ workspace.name }} - Gantt{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-full">
+    {% include 'workspaces/_view_tabs.html' %}
+
+    <!-- Toolbar -->
+    <div class="px-6 py-3 flex items-center justify-between border-b border-ms-neutral-30">
+        <span class="text-xs text-ms-neutral-60">Auto-fit range based on task dates</span>
+        <button type="button" onclick="document.getElementById('newTaskModal').classList.remove('hidden')"
+                class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-ms-blue hover:bg-ms-blue-dark text-white text-xs font-medium">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New task
+        </button>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Left: Name column -->
+        <div class="w-72 border-r border-ms-neutral-30 flex flex-col flex-shrink-0 overflow-auto">
+            <div class="px-3 py-2 border-b border-ms-neutral-30 bg-ms-neutral-10 text-xs font-semibold text-ms-neutral-60 flex items-center justify-between sticky top-0">
+                Name
+            </div>
+            <div class="px-3 py-2 border-b border-ms-neutral-30 text-sm font-semibold text-ms-neutral-80 flex items-center gap-2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                {{ task_list.name }}
+            </div>
+            {% for row in rows %}
+            <a href="{% url 'workspaces:task_detail' row.task.id %}?from={{ request.get_full_path|urlencode }}"
+               class="block px-3 py-2 border-b border-ms-neutral-10 text-sm text-ms-neutral-80 hover:bg-ms-neutral-10 hover:text-ms-blue truncate"
+               style="height:32px;line-height:16px">{{ row.task.title }}</a>
+            {% empty %}
+            <div class="px-3 py-4 text-xs text-ms-neutral-40">No tasks yet. Click + Add Task.</div>
+            {% endfor %}
+        </div>
+
+        <!-- Right: Timeline -->
+        <div class="flex-1 overflow-auto relative">
+            <!-- Header: weeks -->
+            <div class="flex border-b border-ms-neutral-30 bg-ms-neutral-10 sticky top-0 z-10">
+                {% for w in weeks %}
+                <div class="text-xs text-ms-neutral-60 font-semibold border-r border-ms-neutral-30 flex items-center justify-start px-2"
+                     style="min-width: {{ w.days|add:"0" }}00px; width: calc({{ w.days }} * 40px); height: 30px;">
+                    W{{ w.start|date:"W" }} {{ w.start|date:"M j" }} - {{ w.end|date:"M j" }}
+                </div>
+                {% endfor %}
+            </div>
+            <!-- Header: days -->
+            <div class="flex border-b border-ms-neutral-30 bg-white sticky z-10" style="top: 30px;">
+                {% for d in days %}
+                <div class="text-xs text-ms-neutral-60 border-r border-ms-neutral-10 flex items-center justify-center"
+                     style="width: 40px; min-width: 40px; height: 30px;">
+                    {{ d|date:"D"|slice:":2" }} {{ d.day }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Header row for "list" summary -->
+            <div class="relative border-b border-ms-neutral-30" style="height:32px; width: calc({{ total_days }} * 40px);">
+            </div>
+
+            <!-- Task rows -->
+            {% for row in rows %}
+            <div class="relative border-b border-ms-neutral-10 hover:bg-ms-neutral-10"
+                 style="height:32px; width: calc({{ total_days }} * 40px);">
+                {% if row.left_days is not None %}
+                <a href="{% url 'workspaces:task_detail' row.task.id %}?from={{ request.get_full_path|urlencode }}"
+                   class="absolute top-1.5 h-5 rounded bg-emerald-400 hover:bg-emerald-500 text-white text-[10px] px-2 flex items-center truncate shadow-sm"
+                   style="left: calc({{ row.left_days }} * 40px); width: calc({{ row.span_days }} * 40px - 4px);"
+                   title="{{ row.task.title }}">
+                    {{ row.task.title }}
+                </a>
+                {% else %}
+                <div class="absolute left-1 top-2 text-xs text-ms-neutral-40">
+                    <span class="border border-ms-neutral-30 text-ms-neutral-40 rounded px-1">◂</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% if today_offset is not None %}
+            <!-- Today line -->
+            <div class="absolute top-0 bottom-0 border-l-2 border-red-500 pointer-events-none"
+                 style="left: calc({{ today_offset }} * 40px + 20px);">
+                <div class="absolute -top-1 -translate-x-1/2 left-0">
+                    <span class="bg-red-500 text-white text-[10px] rounded-full w-5 h-5 inline-flex items-center justify-center font-bold">{{ today_offset|add:"0" }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% include 'workspaces/_new_task_modal.html' %}
+{% endblock %}

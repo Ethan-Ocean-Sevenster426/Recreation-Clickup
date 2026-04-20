@@ -1,0 +1,327 @@
+{% extends 'workspaces/base.html' %}
+{% load ws_extras %}
+
+{% block title %}{{ task.title }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-full">
+
+    <!-- Header bar -->
+    <div class="px-6 py-2 flex items-center justify-between border-b border-ms-neutral-30 flex-shrink-0">
+        <div class="flex items-center gap-2 text-sm">
+            <a href="{% if request.GET.from %}{{ request.GET.from }}{% else %}{% url 'workspaces:list_detail' task.task_list_id %}{% endif %}" class="w-7 h-7 rounded hover:bg-ms-neutral-10 inline-flex items-center justify-center text-ms-neutral-60" title="Back">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </a>
+            <a href="{% url 'workspaces:detail' task.workspace_id %}" class="text-ms-neutral-60 hover:text-ms-blue">{{ task.workspace.name }}</a>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A19F9D" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <a href="{% url 'workspaces:list_detail' task.task_list_id %}" class="text-ms-neutral-80 font-medium hover:text-ms-blue">{{ task.task_list.name }}</a>
+        </div>
+        <div class="flex items-center gap-3 text-xs text-ms-neutral-60">
+            <span>Created {{ task.created_at|date:"M j" }}</span>
+            <a href="{% if request.GET.from %}{{ request.GET.from }}{% else %}{% url 'workspaces:list_detail' task.task_list_id %}{% endif %}" class="w-7 h-7 rounded hover:bg-ms-neutral-10 inline-flex items-center justify-center" title="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </a>
+        </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Main pane -->
+        <div class="flex-1 overflow-auto px-8 py-6">
+
+            <!-- Task type label -->
+            <div class="inline-flex items-center gap-2 px-2 py-1 border border-ms-neutral-30 rounded text-xs text-ms-neutral-80 mb-3">
+                <span class="w-2 h-2 rounded-full border border-ms-neutral-40"></span>
+                <span>Task</span>
+            </div>
+
+            <!-- Title (inline editable) -->
+            <form method="post" action="{% url 'workspaces:task_update' task.id %}" class="mb-4"
+                  onsubmit="return this.querySelector('input[name=value]').value.trim() !== '';">
+                {% csrf_token %}
+                <input type="hidden" name="field" value="title">
+                <input name="value" value="{{ task.title }}"
+                       onblur="this.form.submit()"
+                       class="w-full text-3xl font-semibold text-ms-neutral-80 bg-transparent border-0 border-b border-transparent hover:border-ms-neutral-30 focus:border-ms-blue focus:ring-0 focus:outline-none py-1">
+            </form>
+
+            <!-- Fields grid -->
+            <div class="grid grid-cols-2 gap-x-8 gap-y-2 mb-6 text-sm">
+                <!-- Status -->
+                <div class="flex items-center gap-3 py-1.5">
+                    <span class="w-28 flex-shrink-0 text-ms-neutral-60 flex items-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/></svg>
+                        Status
+                    </span>
+                    <form method="post" action="{% url 'workspaces:task_update' task.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="field" value="status">
+                        <select name="value" onchange="this.form.submit()"
+                                class="status-pill status-c-{{ task|status_color:task_list }} border-0 appearance-none cursor-pointer pr-5 bg-no-repeat"
+                                style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22white%22 viewBox=%220 0 20 20%22><path d=%22M5.25 7.5L10 12.25 14.75 7.5z%22/></svg>'); background-position: right 0.25rem center; background-size: 12px;">
+                            {% for key, label in status_choices %}
+                            <option value="{{ key }}" {% if key == task.status %}selected{% endif %} class="bg-white text-ms-neutral-80">{{ label|upper }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+
+                <!-- Assignee -->
+                <div class="flex items-center gap-3 py-1.5">
+                    <span class="w-28 flex-shrink-0 text-ms-neutral-60 flex items-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Assignee
+                    </span>
+                    <form method="post" action="{% url 'workspaces:task_update' task.id %}" class="flex-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="field" value="assignee">
+                        <select name="value" onchange="this.form.submit()"
+                                class="bg-transparent border-0 text-sm cursor-pointer hover:bg-ms-neutral-10 px-2 py-0.5 rounded outline-none">
+                            <option value="" {% if not task.assignee %}selected{% endif %}>Unassigned</option>
+                            {% for u in users %}
+                            <option value="{{ u.id }}" {% if task.assignee_id == u.id %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+
+                <!-- Dates -->
+                <div class="flex items-center gap-3 py-1.5">
+                    <span class="w-28 flex-shrink-0 text-ms-neutral-60 flex items-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Dates
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <form method="post" action="{% url 'workspaces:task_update' task.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="field" value="start_date">
+                            <input type="date" name="value" value="{{ task.start_date|date:'Y-m-d' }}"
+                                   onchange="this.form.submit()"
+                                   class="bg-transparent border-0 text-sm hover:bg-ms-neutral-10 px-2 py-0.5 rounded outline-none">
+                        </form>
+                        <span class="text-ms-neutral-40">→</span>
+                        <form method="post" action="{% url 'workspaces:task_update' task.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="field" value="due_date">
+                            <input type="date" name="value" value="{{ task.due_date|date:'Y-m-d' }}"
+                                   onchange="this.form.submit()"
+                                   class="bg-transparent border-0 text-sm hover:bg-ms-neutral-10 px-2 py-0.5 rounded outline-none">
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Priority -->
+                <div class="flex items-center gap-3 py-1.5">
+                    <span class="w-28 flex-shrink-0 text-ms-neutral-60 flex items-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="22" x2="4" y2="15"/><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/></svg>
+                        Priority
+                    </span>
+                    <form method="post" action="{% url 'workspaces:task_update' task.id %}" class="flex-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="field" value="priority">
+                        <select name="value" onchange="this.form.submit()"
+                                class="bg-transparent border-0 text-sm cursor-pointer hover:bg-ms-neutral-10 px-2 py-0.5 rounded outline-none priority-flag priority-{{ task.priority }}">
+                            {% for key, label in priority_choices %}
+                            <option value="{{ key }}" {% if key == task.priority %}selected{% endif %} class="bg-white text-ms-neutral-80">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+
+                <!-- Time estimate -->
+                <div class="flex items-center gap-3 py-1.5">
+                    <span class="w-28 flex-shrink-0 text-ms-neutral-60 flex items-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Time estimate
+                    </span>
+                    <form method="post" action="{% url 'workspaces:task_update' task.id %}" class="flex-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="field" value="estimated_minutes">
+                        <input name="value" value="{{ task.estimated_minutes|default_if_none:'' }}"
+                               placeholder="minutes" onblur="this.form.submit()"
+                               class="w-32 bg-transparent border-0 text-sm hover:bg-ms-neutral-10 px-2 py-0.5 rounded outline-none">
+                    </form>
+                </div>
+
+                <!-- Tags -->
+                <div class="flex items-center gap-3 py-1.5">
+                    <span class="w-28 flex-shrink-0 text-ms-neutral-60 flex items-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                        Tags
+                    </span>
+                    <form method="post" action="{% url 'workspaces:task_update' task.id %}" class="flex-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="field" value="tags">
+                        <input name="value" value="{{ task.tags }}" placeholder="comma separated" onblur="this.form.submit()"
+                               class="w-full bg-transparent border-0 text-sm hover:bg-ms-neutral-10 px-2 py-0.5 rounded outline-none">
+                    </form>
+                </div>
+
+                <!-- Track time -->
+                <div class="col-span-2 flex items-center gap-3 py-1.5">
+                    <span class="w-28 flex-shrink-0 text-ms-neutral-60 flex items-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        Track time
+                    </span>
+
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="text-sm font-mono tabular-nums text-ms-neutral-80" id="totalTracked"
+                              data-total-seconds="{{ total_tracked_seconds }}"
+                              data-running-started="{{ running_started_at }}">—</span>
+
+                        {% if running_entry %}
+                        <form method="post" action="{% url 'workspaces:time_stop' task.id %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    title="Recording in the background — closing this page won't stop it"
+                                    class="inline-flex items-center gap-1 px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs font-medium">
+                                <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                                Stop
+                            </button>
+                        </form>
+                        <span class="text-xs text-red-500 inline-flex items-center gap-1"
+                              title="Recording continues even if you close this tab or turn off your PC. Come back and press Stop when done.">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Recording in background
+                        </span>
+                        {% else %}
+                        <form method="post" action="{% url 'workspaces:time_start' task.id %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    title="Start a timer. It keeps running even if you close this page or your PC."
+                                    class="inline-flex items-center gap-1 px-3 py-1 rounded bg-ms-blue hover:bg-ms-blue-dark text-white text-xs font-medium">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Start
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        <form method="post" action="{% url 'workspaces:time_add' task.id %}" class="inline-flex items-center gap-1">
+                            {% csrf_token %}
+                            <input name="minutes" type="number" min="1" placeholder="e.g. 30"
+                                   class="w-20 text-sm border border-ms-neutral-30 rounded px-2 py-0.5 focus:ring-2 focus:ring-ms-blue outline-none">
+                            <button type="submit"
+                                    title="Log time manually (minutes)"
+                                    class="inline-flex items-center gap-1 px-2 py-1 border border-ms-neutral-30 rounded text-xs text-ms-neutral-80 hover:bg-ms-neutral-10">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Add time
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                (function() {
+                    const el = document.getElementById('totalTracked');
+                    if (!el) return;
+                    const baseSeconds = parseInt(el.dataset.totalSeconds || '0', 10);
+                    const runningStarted = el.dataset.runningStarted;
+                    function fmt(s) {
+                        const h = Math.floor(s / 3600);
+                        const m = Math.floor((s % 3600) / 60);
+                        const sec = s % 60;
+                        return (h > 0 ? h + 'h ' : '') + (m > 0 || h > 0 ? m + 'm ' : '') + sec + 's';
+                    }
+                    function render() {
+                        let total = baseSeconds;
+                        if (runningStarted) {
+                            // running entry's elapsed is already counted in base (server computed now-started).
+                            // Re-derive: subtract running's own baseline (server evaluated at page load) and re-add fresh elapsed.
+                            // Simpler: just display baseSeconds + seconds since page-load tick.
+                            total += Math.floor((Date.now() - pageLoadMs) / 1000);
+                        }
+                        el.textContent = fmt(Math.max(0, total));
+                    }
+                    const pageLoadMs = Date.now();
+                    render();
+                    if (runningStarted) setInterval(render, 1000);
+                })();
+            </script>
+
+            <!-- Description -->
+            <div class="mb-6">
+                <form method="post" action="{% url 'workspaces:task_update' task.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="field" value="description">
+                    <textarea name="value" rows="4" placeholder="Add a description"
+                              onblur="this.form.submit()"
+                              class="w-full px-3 py-2 border border-transparent hover:border-ms-neutral-30 focus:border-ms-blue focus:ring-0 focus:outline-none rounded text-sm text-ms-neutral-80 resize-y">{{ task.description }}</textarea>
+                </form>
+            </div>
+
+            <!-- Subtasks -->
+            <div class="mb-4">
+                <div class="flex items-center gap-2 text-sm font-semibold text-ms-neutral-80 mb-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    Subtasks
+                    <span class="text-xs text-ms-neutral-60 font-normal">{{ subtasks|length }}</span>
+                </div>
+                <div class="space-y-1 mb-2">
+                    {% for st in subtasks %}
+                    <div class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-ms-neutral-10 group">
+                        <form method="post" action="{% url 'workspaces:subtask_toggle' st.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="w-5 h-5 rounded border border-ms-neutral-40 flex items-center justify-center {% if st.is_done %}bg-ms-blue border-ms-blue{% endif %}">
+                                {% if st.is_done %}
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                {% endif %}
+                            </button>
+                        </form>
+                        <span class="flex-1 text-sm text-ms-neutral-80 {% if st.is_done %}line-through text-ms-neutral-40{% endif %}">{{ st.title }}</span>
+                        <form method="post" action="{% url 'workspaces:subtask_delete' st.id %}" class="opacity-0 group-hover:opacity-100">
+                            {% csrf_token %}
+                            <button class="text-ms-neutral-40 hover:text-red-500" title="Delete">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{% url 'workspaces:subtask_create' task.id %}" class="flex items-center gap-2">
+                    {% csrf_token %}
+                    <span class="w-5 h-5 rounded border border-dashed border-ms-neutral-40"></span>
+                    <input name="title" placeholder="Add subtask"
+                           class="flex-1 text-sm text-ms-neutral-80 bg-transparent border-0 focus:outline-none focus:ring-0 px-1 py-1">
+                </form>
+            </div>
+        </div>
+
+        <!-- Activity pane -->
+        <aside class="w-96 border-l border-ms-neutral-30 flex flex-col flex-shrink-0 bg-ms-neutral-10">
+            <div class="px-4 py-3 border-b border-ms-neutral-30 flex items-center justify-between bg-white">
+                <h3 class="font-semibold text-ms-neutral-80 text-sm">Activity</h3>
+                <span class="text-xs text-ms-neutral-60">{{ comments|length }} comment{{ comments|length|pluralize }}</span>
+            </div>
+
+            <div class="flex-1 overflow-auto px-4 py-3 space-y-3">
+                <div class="text-xs text-ms-neutral-60 flex items-center gap-2">
+                    <span class="avatar bg-ms-teams-purple" style="width:1.25rem;height:1.25rem;font-size:0.625rem">{{ request.user.username|slice:":1"|upper }}</span>
+                    You created this task · {{ task.created_at|timesince }} ago
+                </div>
+                {% for c in comments %}
+                <div class="bg-white rounded border border-ms-neutral-30 p-3">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="avatar bg-ms-blue" style="width:1.25rem;height:1.25rem;font-size:0.625rem">{{ c.author.username|slice:":1"|upper }}</span>
+                        <span class="text-xs font-semibold text-ms-neutral-80">{{ c.author.get_full_name|default:c.author.username }}</span>
+                        <span class="text-xs text-ms-neutral-60">{{ c.created_at|timesince }} ago</span>
+                    </div>
+                    <p class="text-sm text-ms-neutral-80 whitespace-pre-wrap">{{ c.body }}</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <form method="post" action="{% url 'workspaces:comment_create' task.id %}" class="px-4 py-3 border-t border-ms-neutral-30 bg-white">
+                {% csrf_token %}
+                <textarea name="body" rows="2" required placeholder="Write a comment…"
+                          class="w-full px-3 py-2 border border-ms-neutral-30 rounded text-sm focus:ring-2 focus:ring-ms-blue focus:border-ms-blue outline-none resize-none"></textarea>
+                <div class="flex justify-end mt-2">
+                    <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-ms-blue hover:bg-ms-blue-dark text-white text-xs font-medium">
+                        Send
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </div>
+            </form>
+        </aside>
+    </div>
+</div>
+{% endblock %}

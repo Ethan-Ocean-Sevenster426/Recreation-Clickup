@@ -1,0 +1,20 @@
+{# Expects: tl (TaskList), size ('sm'|'md'|'lg') #}
+{% if size == 'lg' %}
+    {% if tl.image %}
+    <img src="{{ tl.image.url }}" alt="{{ tl.name }}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0">
+    {% else %}
+    <span class="status-c-{{ tl.color }} w-10 h-10 rounded-lg flex items-center justify-center text-base font-semibold flex-shrink-0">{{ tl.name|slice:":1"|upper }}</span>
+    {% endif %}
+{% elif size == 'md' %}
+    {% if tl.image %}
+    <img src="{{ tl.image.url }}" alt="{{ tl.name }}" class="w-6 h-6 rounded object-cover flex-shrink-0">
+    {% else %}
+    <span class="status-c-{{ tl.color }} w-6 h-6 rounded flex items-center justify-center text-[11px] font-semibold flex-shrink-0">{{ tl.name|slice:":1"|upper }}</span>
+    {% endif %}
+{% else %}
+    {% if tl.image %}
+    <img src="{{ tl.image.url }}" alt="{{ tl.name }}" class="w-4 h-4 rounded object-cover flex-shrink-0">
+    {% else %}
+    <span class="status-c-{{ tl.color }} w-4 h-4 rounded flex items-center justify-center text-[9px] font-semibold flex-shrink-0">{{ tl.name|slice:":1"|upper }}</span>
+    {% endif %}
+{% endif %}

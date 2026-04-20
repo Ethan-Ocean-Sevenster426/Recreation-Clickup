@@ -1,0 +1,576 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Workspaces{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ms-blue': '#0078D4',
+                        'ms-blue-dark': '#106EBE',
+                        'ms-blue-darker': '#005A9E',
+                        'ms-teams-purple': '#5B5FC7',
+                        'ms-teams-purple-dark': '#464775',
+                        'ms-neutral-0': '#FFFFFF',
+                        'ms-neutral-10': '#F3F2F1',
+                        'ms-neutral-20': '#EDEBE9',
+                        'ms-neutral-30': '#E1DFDD',
+                        'ms-neutral-40': '#C8C6C4',
+                        'ms-neutral-60': '#605E5C',
+                        'ms-neutral-80': '#323130',
+                        'cu-pink': '#FF0080',
+                        'cu-purple': '#7612FA',
+                        'cu-blue': '#00B2FF',
+                    },
+                    fontFamily: {
+                        sans: ['"Segoe UI"', '-apple-system', 'BlinkMacSystemFont', 'Roboto', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif; color: #323130; }
+        /* Status pills */
+        .status-pill { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.125rem 0.625rem; border-radius: 4px; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; }
+        /* Status pill colors (dynamic by color name) */
+        .status-c-gray { background: #EDEBE9; color: #605E5C; }
+        .status-c-purple { background: #7612FA; color: #fff; }
+        .status-c-pink { background: #EC4899; color: #fff; }
+        .status-c-orange { background: #F7630C; color: #fff; }
+        .status-c-red { background: #D13438; color: #fff; }
+        .status-c-green { background: #107C10; color: #fff; }
+        .status-c-blue { background: #0078D4; color: #fff; }
+        .status-c-yellow { background: #F59E0B; color: #fff; }
+        /* Column tints (dynamic) */
+        .col-c-gray { background: #FAF9F8; }
+        .col-c-purple { background: #F3E8FF; }
+        .col-c-pink { background: #FCE7F3; }
+        .col-c-orange { background: #FFF4CE; }
+        .col-c-red { background: #FDE7E9; }
+        .col-c-green { background: #DFF6DD; }
+        .col-c-blue { background: #DEECF9; }
+        .col-c-yellow { background: #FFF4CE; }
+        .priority-flag { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; }
+        .priority-urgent { color: #D13438; }
+        .priority-high { color: #F7630C; }
+        .priority-normal { color: #605E5C; }
+        .priority-low { color: #A19F9D; }
+        .avatar { width: 1.75rem; height: 1.75rem; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff; }
+        /* Rail buttons — white icon chip over purple rail */
+        .rail-btn { width: 4rem; padding: 0.5rem 0; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; color: rgba(255,255,255,0.9); font-size: 0.6875rem; cursor: pointer; transition: all 0.15s; position: relative; text-decoration: none; border: none; background: transparent; }
+        .rail-btn .rail-icon { width: 2.25rem; height: 2.25rem; background: #fff; border-radius: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px rgba(0,0,0,0.1); transition: all 0.15s; }
+        .rail-btn .rail-icon svg { width: 20px; height: 20px; stroke: #5B5FC7; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+        .rail-btn:hover .rail-icon { background: #EDEBF9; }
+        .rail-btn.active .rail-icon { background: #fff; box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(0,0,0,0.2); }
+        .rail-btn.active { color: #fff; }
+        .rail-btn.active::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; background: #fff; border-radius: 0 3px 3px 0; }
+        .menu-icon { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    </style>
+</head>
+<body class="bg-white text-ms-neutral-80" data-csrf="{{ csrf_token }}">
+<div class="flex flex-col h-screen overflow-hidden">
+
+    <!-- Top bar -->
+    <div class="h-10 bg-ms-neutral-10 flex items-center px-2 border-b border-ms-neutral-30 flex-shrink-0">
+        <button class="flex items-center gap-2 px-2 py-1 rounded hover:bg-white text-sm font-semibold text-ms-neutral-80">
+            <span class="w-5 h-5 rounded bg-ms-teams-purple text-white text-xs flex items-center justify-center font-semibold">{{ request.user.username|slice:":1"|upper }}</span>
+            <span>{{ request.user.username }}'s Workspace</span>
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+    </div>
+
+    <!-- Main flex row -->
+    <div class="flex flex-1 overflow-hidden">
+
+        <!-- Icon rail -->
+        <aside class="w-16 bg-gradient-to-b from-ms-teams-purple to-ms-teams-purple-dark flex flex-col items-center text-white flex-shrink-0 shadow-lg">
+            <a href="{% url 'workspaces:list' %}" class="rail-btn {% if not active_workspace %}active{% endif %}" title="Home">
+                <span class="rail-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                </span>
+                <span>Home</span>
+            </a>
+            {% if request.user.is_staff %}
+            <a href="{% url 'workspaces:user_list' %}" class="rail-btn" title="Users">
+                <span class="rail-icon">
+                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </span>
+                <span>Users</span>
+            </a>
+            {% endif %}
+            <div class="mt-auto mb-3">
+                <a href="{% url 'logout' %}" class="rail-btn" title="Sign out">
+                    <span class="rail-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </span>
+                    <span>Sign out</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Secondary sidebar -->
+        <aside class="w-64 bg-ms-neutral-10 border-r border-ms-neutral-30 flex flex-col flex-shrink-0 overflow-y-auto">
+            <!-- Header -->
+            <div class="px-4 py-3 flex items-center justify-between border-b border-ms-neutral-30">
+                <span class="font-semibold text-ms-neutral-80 text-sm">Home</span>
+                <button type="button" onclick="document.getElementById('newWsModal').classList.remove('hidden')"
+                        class="inline-flex items-center gap-1 text-xs px-3 py-1 rounded bg-ms-blue text-white font-medium hover:bg-ms-blue-dark">
+                    <svg class="menu-icon" style="stroke:#fff" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New
+                </button>
+            </div>
+
+            <!-- Spaces -->
+            <div class="px-2 py-2 border-b border-ms-neutral-30">
+                <div class="flex items-center justify-between px-2 mb-1">
+                    <span class="text-xs font-semibold text-ms-neutral-60 uppercase tracking-wide">Workspaces</span>
+                    <button type="button" onclick="document.getElementById('newWsModal').classList.remove('hidden')"
+                            class="text-ms-neutral-60 hover:text-ms-blue" title="New workspace">
+                        <svg class="menu-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                </div>
+                <ul class="space-y-0.5 text-sm">
+                    {% for ws in nav_workspaces %}
+                    <li>
+                        <details {% if active_workspace and active_workspace.id == ws.id %}open{% endif %}>
+                            <summary class="flex items-center justify-between px-2 py-1.5 rounded cursor-pointer list-none
+                                          {% if active_workspace and active_workspace.id == ws.id and not active_list %}bg-white font-semibold text-ms-blue{% else %}text-ms-neutral-80 hover:bg-white{% endif %}">
+                                <span class="flex items-center gap-2 truncate">
+                                    <svg class="menu-icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                                    <span class="w-5 h-5 rounded bg-ms-teams-purple text-white text-[10px] flex items-center justify-center flex-shrink-0 font-semibold">{{ ws.name|slice:":1"|upper }}</span>
+                                    <a href="{% url 'workspaces:detail' ws.id %}" class="truncate">{{ ws.name }}</a>
+                                </span>
+                            </summary>
+                            <ul class="ml-5 mt-1 space-y-0.5 border-l border-ms-neutral-30 pl-2">
+                                {% for tl in ws.lists.all %}
+                                <li>
+                                    <a href="{% url 'workspaces:list_detail' tl.id %}"
+                                       data-list-id="{{ tl.id }}" data-list-name="{{ tl.name }}" data-list-color="{{ tl.color }}"
+                                       class="flex items-center justify-between px-2 py-1 rounded text-xs
+                                              {% if active_list and active_list.id == tl.id %}bg-white font-semibold text-ms-blue{% else %}text-ms-neutral-60 hover:bg-white{% endif %}">
+                                        <span class="flex items-center gap-2 truncate">
+                                            {% include 'workspaces/_list_chip.html' with tl=tl size='sm' %}
+                                            <span class="truncate">{{ tl.name }}</span>
+                                        </span>
+                                        <span class="text-ms-neutral-60">{{ tl.tasks.count }}</span>
+                                    </a>
+                                </li>
+                                {% endfor %}
+                                <li>
+                                    <button type="button" onclick="openNewListModal({{ ws.id }})"
+                                            class="w-full flex items-center gap-2 px-2 py-1 rounded text-xs text-ms-neutral-60 hover:text-ms-blue hover:bg-white">
+                                        <svg class="menu-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                        New list
+                                    </button>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+                    {% endfor %}
+                    <li>
+                        <button type="button" onclick="document.getElementById('newWsModal').classList.remove('hidden')"
+                                class="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded text-sm text-ms-neutral-60 hover:bg-white">
+                            <svg class="menu-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            New workspace
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-auto px-4 py-3 border-t border-ms-neutral-30 text-xs text-ms-neutral-60 flex items-center justify-between">
+                <span class="flex items-center gap-2">
+                    <span class="avatar bg-ms-teams-purple" style="width:1.5rem;height:1.5rem;font-size:0.625rem">{{ request.user.username|slice:":1"|upper }}</span>
+                    <span class="truncate">{{ request.user.username }}</span>
+                </span>
+                <a href="{% url 'logout' %}" class="text-ms-blue hover:underline">Sign out</a>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="flex-1 min-w-0 overflow-hidden bg-white flex flex-col">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+
+<!-- New workspace modal -->
+<div id="newWsModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl border border-ms-neutral-30">
+        <h2 class="text-lg font-semibold mb-4">Create workspace</h2>
+        <form method="post" action="{% url 'workspaces:create' %}">
+            {% csrf_token %}
+            <input name="name" required autofocus placeholder="Workspace name"
+                   class="w-full px-3 py-2 border border-ms-neutral-30 rounded focus:ring-2 focus:ring-ms-blue focus:border-ms-blue outline-none mb-4">
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="document.getElementById('newWsModal').classList.add('hidden')"
+                        class="px-4 py-2 text-sm text-ms-neutral-60 hover:text-ms-neutral-80 border border-ms-neutral-30 rounded">Cancel</button>
+                <button type="submit"
+                        class="px-4 py-2 text-sm rounded bg-ms-blue text-white font-medium hover:bg-ms-blue-dark">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Right-click context menu for lists -->
+<div id="listContextMenu"
+     class="hidden fixed z-50 w-52 bg-white rounded-lg shadow-2xl border border-ms-neutral-30 py-1 text-sm text-ms-neutral-80">
+    <button data-action="rename" class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-ms-neutral-10 text-left">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Rename
+    </button>
+    <button data-action="color" class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-ms-neutral-10 text-left">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+        Color &amp; image
+    </button>
+    <button data-action="copy-link" class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-ms-neutral-10 text-left">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        Copy link
+    </button>
+    <div class="border-t border-ms-neutral-20 my-1"></div>
+    <button data-action="delete" class="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-red-50 text-red-600 text-left">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+        Delete
+    </button>
+</div>
+
+<!-- Global edit-list modal -->
+<div id="editListModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-lg shadow-2xl border border-ms-neutral-30 overflow-hidden">
+
+        <div class="flex items-center justify-between px-6 pt-5 pb-4">
+            <h2 class="text-lg font-semibold text-ms-neutral-80">Edit list</h2>
+            <button type="button" onclick="document.getElementById('editListModal').classList.add('hidden')"
+                    class="w-8 h-8 rounded hover:bg-ms-neutral-10 text-ms-neutral-60 inline-flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <!-- Live preview strip -->
+        <div class="px-6 pb-5">
+            <div class="flex items-center gap-3 px-4 py-3 bg-ms-neutral-10 border border-ms-neutral-30 rounded-lg">
+                <span id="editListPreviewChip"
+                      class="w-10 h-10 rounded-lg flex items-center justify-center text-base font-semibold text-white bg-ms-blue flex-shrink-0 overflow-hidden">
+                    <span id="editListPreviewLetter">G</span>
+                </span>
+                <div class="min-w-0">
+                    <div id="editListPreviewName" class="text-sm font-semibold text-ms-neutral-80 truncate">General</div>
+                    <div class="text-xs text-ms-neutral-60">Preview</div>
+                </div>
+            </div>
+        </div>
+
+        <form id="editListForm" method="post" enctype="multipart/form-data" class="px-6 pb-5 space-y-5">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+            <!-- Name -->
+            <div>
+                <label class="block text-xs font-semibold text-ms-neutral-60 uppercase tracking-wide mb-1.5" for="editListName">Name</label>
+                <input id="editListName" name="name" required autocomplete="off"
+                       class="w-full px-3 py-2 border border-ms-neutral-30 rounded-md text-sm text-ms-neutral-80 focus:ring-2 focus:ring-ms-blue focus:border-ms-blue outline-none">
+            </div>
+
+            <!-- Color -->
+            <div>
+                <label class="block text-xs font-semibold text-ms-neutral-60 uppercase tracking-wide mb-2">Color</label>
+                <div class="flex items-center gap-3 flex-wrap">
+                    {% for key, label in status_colors %}
+                    <label class="cursor-pointer" title="{{ label }}">
+                        <input type="radio" name="color" value="{{ key }}" class="sr-only peer">
+                        <span class="status-c-{{ key }} w-8 h-8 rounded-full inline-flex items-center justify-center text-transparent peer-checked:text-white transition-all peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-ms-blue hover:scale-110">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Image -->
+            <div>
+                <label class="block text-xs font-semibold text-ms-neutral-60 uppercase tracking-wide mb-1.5">Image (optional)</label>
+                <div class="relative group">
+                    <input id="editListImageInput" type="file" name="image" accept="image/*"
+                           class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                    <div id="editListImageZone"
+                         class="flex items-center gap-3 border-2 border-dashed border-ms-neutral-30 rounded-lg px-4 py-3 group-hover:border-ms-blue group-hover:bg-ms-neutral-10 transition">
+                        <div id="editListImagePreview" class="w-12 h-12 rounded-lg bg-ms-neutral-10 border border-ms-neutral-30 flex items-center justify-center flex-shrink-0 overflow-hidden text-ms-neutral-40">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-ms-neutral-80">Click or drop an image here</div>
+                            <div id="editListImageHint" class="text-xs text-ms-neutral-60">PNG, JPG, up to ~5MB</div>
+                        </div>
+                    </div>
+                </div>
+                <label class="mt-2 inline-flex items-center gap-2 text-xs text-ms-neutral-60">
+                    <input type="checkbox" name="remove_image" value="1" class="rounded border-ms-neutral-30 text-ms-blue focus:ring-ms-blue">
+                    Remove current image
+                </label>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-ms-neutral-20 -mx-6 px-6 pb-0">
+                <div class="flex justify-end gap-2 pt-4 w-full">
+                    <button type="button" onclick="document.getElementById('editListModal').classList.add('hidden')"
+                            class="px-4 py-2 text-sm text-ms-neutral-80 border border-ms-neutral-30 rounded hover:bg-ms-neutral-10">Cancel</button>
+                    <button type="submit"
+                            class="px-4 py-2 text-sm rounded bg-ms-blue hover:bg-ms-blue-dark text-white font-medium">Save</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const COLOR_HEX = {
+            gray: '#EDEBE9', purple: '#7612FA', pink: '#EC4899', orange: '#F7630C',
+            red: '#D13438', green: '#107C10', blue: '#0078D4', yellow: '#F59E0B',
+        };
+
+        function updatePreview() {
+            const nameEl = document.getElementById('editListName');
+            const chip = document.getElementById('editListPreviewChip');
+            const letter = document.getElementById('editListPreviewLetter');
+            const nameDisplay = document.getElementById('editListPreviewName');
+            if (!nameEl || !chip) return;
+            const name = nameEl.value.trim() || 'List';
+            letter.textContent = name.slice(0, 1).toUpperCase();
+            nameDisplay.textContent = name;
+            const selectedColor = document.querySelector('#editListForm input[name="color"]:checked')?.value || 'blue';
+            // Only update bg if no image preview active
+            if (!chip.dataset.hasImage) {
+                chip.style.background = COLOR_HEX[selectedColor] || '#0078D4';
+                chip.style.color = (selectedColor === 'gray' || selectedColor === 'yellow') ? '#323130' : '#fff';
+            }
+        }
+
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('#editListName')) updatePreview();
+        });
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('#editListForm input[name="color"]')) updatePreview();
+            if (e.target.matches('#editListImageInput')) {
+                const file = e.target.files && e.target.files[0];
+                const preview = document.getElementById('editListImagePreview');
+                const chip = document.getElementById('editListPreviewChip');
+                const hint = document.getElementById('editListImageHint');
+                const letterEl = document.getElementById('editListPreviewLetter');
+                if (file && preview && chip) {
+                    const url = URL.createObjectURL(file);
+                    preview.innerHTML = `<img src="${url}" alt="" class="w-full h-full object-cover">`;
+                    chip.innerHTML = `<img src="${url}" alt="" class="w-full h-full object-cover">`;
+                    chip.dataset.hasImage = '1';
+                    if (hint) hint.textContent = file.name;
+                } else {
+                    preview.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>`;
+                    chip.dataset.hasImage = '';
+                    chip.innerHTML = `<span id="editListPreviewLetter"></span>`;
+                    updatePreview();
+                }
+            }
+        });
+
+        window.openEditListModal = function(id, name, color) {
+            const form = document.getElementById('editListForm');
+            form.action = '/workspaces/lists/' + id + '/update/';
+            document.getElementById('editListName').value = name;
+            form.querySelectorAll('input[name="color"]').forEach(r => { r.checked = (r.value === color); });
+            // reset image UI
+            const input = document.getElementById('editListImageInput');
+            if (input) input.value = '';
+            const preview = document.getElementById('editListImagePreview');
+            if (preview) preview.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>`;
+            const hint = document.getElementById('editListImageHint');
+            if (hint) hint.textContent = 'PNG, JPG, up to ~5MB';
+            const chip = document.getElementById('editListPreviewChip');
+            if (chip) {
+                chip.dataset.hasImage = '';
+                chip.innerHTML = '<span id="editListPreviewLetter"></span>';
+            }
+            const remove = form.querySelector('input[name="remove_image"]');
+            if (remove) remove.checked = false;
+            updatePreview();
+            document.getElementById('editListModal').classList.remove('hidden');
+        };
+    })();
+</script>
+
+<!-- New list modal (spawned from sidebar) -->
+<div id="sidebarNewListModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl border border-ms-neutral-30">
+        <h2 class="text-lg font-semibold mb-4">New list</h2>
+        <form id="sidebarNewListForm" method="post" class="space-y-3">
+            {% csrf_token %}
+            <input name="name" required placeholder="List name"
+                   class="w-full px-3 py-2 border border-ms-neutral-30 rounded focus:ring-2 focus:ring-ms-blue outline-none">
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('sidebarNewListModal').classList.add('hidden')"
+                        class="px-4 py-2 text-sm text-ms-neutral-60 hover:text-ms-neutral-80 border border-ms-neutral-30 rounded">Cancel</button>
+                <button type="submit"
+                        class="px-4 py-2 text-sm rounded bg-ms-blue text-white font-medium hover:bg-ms-blue-dark">Create list</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openNewListModal(workspaceId) {
+        const form = document.getElementById('sidebarNewListForm');
+        form.action = '/workspaces/' + workspaceId + '/lists/create/';
+        document.getElementById('sidebarNewListModal').classList.remove('hidden');
+    }
+
+    // Drag-and-drop with optimistic in-place move (no page reload)
+    (function() {
+        const csrf = document.body.dataset.csrf || '';
+        let dragged = null;
+
+        document.addEventListener('dragstart', function(e) {
+            const el = e.target.closest('[data-task-id]');
+            if (!el) return;
+            dragged = el;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', el.dataset.taskId);
+            requestAnimationFrame(() => el.classList.add('opacity-40', 'scale-95'));
+        });
+        document.addEventListener('dragend', function(e) {
+            const el = e.target.closest('[data-task-id]');
+            if (el) el.classList.remove('opacity-40', 'scale-95');
+            document.querySelectorAll('.drop-hover').forEach(n => n.classList.remove('drop-hover'));
+            dragged = null;
+        });
+        document.addEventListener('dragover', function(e) {
+            const zone = e.target.closest('[data-drop-status]');
+            if (!zone) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            zone.classList.add('drop-hover');
+        });
+        document.addEventListener('dragleave', function(e) {
+            const zone = e.target.closest('[data-drop-status]');
+            if (zone && !zone.contains(e.relatedTarget)) zone.classList.remove('drop-hover');
+        });
+        document.addEventListener('drop', function(e) {
+            const zone = e.target.closest('[data-drop-status]');
+            if (!zone) return;
+            e.preventDefault();
+            zone.classList.remove('drop-hover');
+            const taskEl = dragged;
+            if (!taskEl) return;
+            const taskId = taskEl.dataset.taskId;
+            const newStatus = zone.dataset.dropStatus;
+            const oldStatus = taskEl.closest('[data-drop-status]')?.dataset.dropStatus;
+            if (!taskId || newStatus === oldStatus) return;
+
+            // Optimistic move: animate via FLIP
+            const firstRect = taskEl.getBoundingClientRect();
+            const container = zone.querySelector('[data-tasks-container]') || zone;
+            const addButton = container.querySelector('[data-add-task-row]');
+            if (addButton) container.insertBefore(taskEl, addButton);
+            else container.appendChild(taskEl);
+            const lastRect = taskEl.getBoundingClientRect();
+            const dx = firstRect.left - lastRect.left;
+            const dy = firstRect.top - lastRect.top;
+            taskEl.style.transition = 'none';
+            taskEl.style.transform = `translate(${dx}px, ${dy}px) scale(0.95)`;
+            taskEl.style.opacity = '0.4';
+            requestAnimationFrame(() => {
+                taskEl.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s';
+                taskEl.style.transform = '';
+                taskEl.style.opacity = '';
+            });
+
+            // Update count badges
+            const bump = function(statusKey, delta) {
+                document.querySelectorAll(`[data-count-for="${statusKey}"]`).forEach(el => {
+                    const n = parseInt(el.textContent, 10) || 0;
+                    el.textContent = Math.max(0, n + delta);
+                });
+            };
+            if (oldStatus) bump(oldStatus, -1);
+            bump(newStatus, 1);
+
+            // Persist in background
+            const fd = new FormData();
+            fd.append('csrfmiddlewaretoken', csrf);
+            fd.append('status', newStatus);
+            fetch('/workspaces/tasks/' + taskId + '/status/', {
+                method: 'POST', body: fd, credentials: 'same-origin',
+                headers: {'X-CSRFToken': csrf},
+            }).catch(() => window.location.reload());
+        });
+    })();
+
+    // Right-click context menu on channels/lists
+    (function() {
+        const menu = document.getElementById('listContextMenu');
+        if (!menu) return;
+        let targetList = null;
+
+        function closeMenu() { menu.classList.add('hidden'); }
+        document.addEventListener('click', closeMenu);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+
+        document.addEventListener('contextmenu', function(e) {
+            const el = e.target.closest('[data-list-id]');
+            if (!el) return;
+            e.preventDefault();
+            targetList = {
+                id: el.dataset.listId,
+                name: el.dataset.listName,
+                color: el.dataset.listColor || 'blue',
+            };
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+            menu.classList.remove('hidden');
+            // flip if off-screen
+            const r = menu.getBoundingClientRect();
+            if (r.right > window.innerWidth) menu.style.left = (window.innerWidth - r.width - 8) + 'px';
+            if (r.bottom > window.innerHeight) menu.style.top = (window.innerHeight - r.height - 8) + 'px';
+        });
+
+        menu.querySelector('[data-action="rename"]').addEventListener('click', function() {
+            closeMenu();
+            if (targetList && window.openEditListModal) {
+                window.openEditListModal(targetList.id, targetList.name, targetList.color);
+                setTimeout(() => document.getElementById('editListName')?.focus(), 60);
+            }
+        });
+        menu.querySelector('[data-action="color"]').addEventListener('click', function() {
+            closeMenu();
+            if (targetList && window.openEditListModal) {
+                window.openEditListModal(targetList.id, targetList.name, targetList.color);
+            }
+        });
+        menu.querySelector('[data-action="copy-link"]').addEventListener('click', function() {
+            closeMenu();
+            if (!targetList) return;
+            const url = window.location.origin + '/workspaces/lists/' + targetList.id + '/';
+            navigator.clipboard.writeText(url).catch(() => {});
+        });
+        menu.querySelector('[data-action="delete"]').addEventListener('click', function() {
+            closeMenu();
+            if (!targetList) return;
+            if (!confirm(`Delete "${targetList.name}" and all its tasks?`)) return;
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/workspaces/lists/' + targetList.id + '/delete/';
+            form.innerHTML = `<input type="hidden" name="csrfmiddlewaretoken" value="${document.body.dataset.csrf}">`;
+            document.body.appendChild(form);
+            form.submit();
+        });
+    })();
+</script>
+<style>
+    .drop-hover { outline: 2px dashed #0078D4; outline-offset: -4px; background: rgba(0,120,212,0.05); }
+    [data-task-id] { cursor: grab; }
+    [data-task-id]:active { cursor: grabbing; }
+</style>
+</body>
+</html>

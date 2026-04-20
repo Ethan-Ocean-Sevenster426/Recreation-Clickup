@@ -1,0 +1,86 @@
+<section class="py-20 bg-white dark:bg-gray-800 transition-colors duration-300">
+    <div class="container mx-auto px-6">
+        <!-- Header -->
+        <div class="text-center mb-16">
+            <span class="inline-block bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-4 py-2 rounded-full text-sm font-medium mb-4">
+                Our Services
+            </span>
+            <h2 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                Comprehensive Software Solutions
+            </h2>
+            <p class="text-gray-600 dark:text-gray-300 text-lg max-w-2xl mx-auto">
+                We offer a wide range of services designed to help businesses leverage technology for growth and success.
+            </p>
+        </div>
+
+        <!-- Services Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            {% for service in services %}
+            <div class="bg-white dark:bg-gray-700 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 p-6 border border-gray-100 dark:border-gray-600">
+                <div class="w-12 h-12 bg-red-600 dark:bg-red-500 rounded-lg flex items-center justify-center mb-4">
+                    {% if service.icon == 'code' %}
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                    </svg>
+                    {% elif service.icon == 'database' %}
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                    </svg>
+                    {% elif service.icon == 'zap' %}
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    {% elif service.icon == 'server' %}
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
+                    </svg>
+                    {% elif service.icon == 'settings' %}
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543-.94-3.31.826-2.37 2.37a1.724 1.724 0 00-1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 001.066 2.573c-.94 1.543.826 3.31 2.37 2.37a1.724 1.724 0 002.572 1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    {% else %}
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+                    </svg>
+                    {% endif %}
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">{{ service.title }}</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">{{ service.description }}</p>
+                <a href="#" class="text-red-600 dark:text-red-400 font-medium hover:text-red-700 dark:hover:text-red-300 transition-colors">Learn more →</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- CTA Button -->
+        <div class="text-center">
+            <a href="#solutions" class="inline-flex items-center bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-300">
+                Explore Our Solutions
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                </svg>
+            </a>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">10+</div>
+                <div class="text-sm text-red-600 dark:text-red-400 font-medium mb-1">Years of Experience</div>
+                <p class="text-gray-600 dark:text-gray-300 text-sm">Delivering innovative solutions since 2014</p>
+            </div>
+            
+            <div class="text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">200+</div>
+                <div class="text-sm text-red-600 dark:text-red-400 font-medium mb-1">Successful Projects</div>
+                <p class="text-gray-600 dark:text-gray-300 text-sm">Projects completed across various industries</p>
+            </div>
+            
+            <div class="text-center p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">50+</div>
+                <div class="text-sm text-red-600 dark:text-red-400 font-medium mb-1">Enterprise Clients</div>
+                <p class="text-gray-600 dark:text-gray-300 text-sm">Fortune 500 companies trust our solutions</p>
+            </div>
+        </div>
+    </div>
+</section>

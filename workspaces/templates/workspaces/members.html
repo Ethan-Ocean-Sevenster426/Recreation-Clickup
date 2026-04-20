@@ -1,0 +1,111 @@
+{% extends 'workspaces/base.html' %}
+
+{% block title %}{{ workspace.name }} – Members{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-auto px-8 py-6">
+    <div class="flex items-center gap-2 text-ms-neutral-80 mb-1">
+        <a href="{% url 'workspaces:detail' workspace.id %}" class="text-sm text-ms-neutral-60 hover:text-ms-blue">{{ workspace.name }}</a>
+        <span class="text-ms-neutral-30">/</span>
+        <span class="font-semibold text-sm">Members</span>
+    </div>
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-ms-neutral-80">Members</h1>
+            <p class="text-sm text-ms-neutral-60">Who can see and edit this workspace.</p>
+        </div>
+    </div>
+
+    {% if current_role == 'owner' and available_users %}
+    <div class="bg-white border border-ms-neutral-30 rounded-lg p-4 mb-6">
+        <h2 class="text-sm font-semibold text-ms-neutral-80 mb-3">Add a member</h2>
+        <form method="post" action="{% url 'workspaces:member_add' workspace.id %}" class="flex items-center gap-2">
+            {% csrf_token %}
+            <select name="user_id" required class="flex-1 px-3 py-2 border border-ms-neutral-30 rounded text-sm bg-white focus:ring-2 focus:ring-ms-blue outline-none">
+                <option value="">Select a user…</option>
+                {% for u in available_users %}
+                <option value="{{ u.id }}">{{ u.username }}{% if u.get_full_name %} — {{ u.get_full_name }}{% endif %}</option>
+                {% endfor %}
+            </select>
+            <select name="role" class="px-3 py-2 border border-ms-neutral-30 rounded text-sm bg-white focus:ring-2 focus:ring-ms-blue outline-none">
+                {% for key, label in role_choices %}
+                <option value="{{ key }}" {% if key == 'editor' %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="px-4 py-2 rounded bg-ms-blue hover:bg-ms-blue-dark text-white text-sm font-medium">Add</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="bg-white border border-ms-neutral-30 rounded-lg overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-ms-neutral-10 text-xs font-medium text-ms-neutral-60 text-left">
+                <tr>
+                    <th class="px-4 py-2">Member</th>
+                    <th class="px-4 py-2">Role</th>
+                    <th class="px-4 py-2 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-t border-ms-neutral-20">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <span class="avatar bg-ms-blue" style="width:1.75rem;height:1.75rem;font-size:0.75rem">{{ workspace.owner.username|slice:":1"|upper }}</span>
+                            <div>
+                                <div class="font-medium text-ms-neutral-80">{{ workspace.owner.username }}</div>
+                                <div class="text-xs text-ms-neutral-60">{{ workspace.owner.get_full_name }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-ms-blue text-white rounded text-xs font-medium">Owner</span>
+                    </td>
+                    <td class="px-4 py-3 text-right text-xs text-ms-neutral-40">—</td>
+                </tr>
+                {% for m in memberships %}
+                <tr class="border-t border-ms-neutral-20 hover:bg-ms-neutral-10">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <span class="avatar bg-ms-neutral-60" style="width:1.75rem;height:1.75rem;font-size:0.75rem">{{ m.user.username|slice:":1"|upper }}</span>
+                            <div>
+                                <div class="font-medium text-ms-neutral-80">{{ m.user.username }}</div>
+                                <div class="text-xs text-ms-neutral-60">{{ m.user.get_full_name }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        {% if current_role == 'owner' %}
+                        <form method="post" action="{% url 'workspaces:member_update' m.id %}">
+                            {% csrf_token %}
+                            <select name="role" onchange="this.form.submit()" class="px-2 py-1 border border-ms-neutral-30 rounded text-xs bg-white focus:ring-2 focus:ring-ms-blue outline-none">
+                                {% for key, label in role_choices %}
+                                <option value="{{ key }}" {% if key == m.role %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                        {% else %}
+                        <span class="text-xs text-ms-neutral-80">{{ m.get_role_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 text-right">
+                        {% if current_role == 'owner' or m.user_id == request.user.id %}
+                        <form method="post" action="{% url 'workspaces:member_remove' m.id %}"
+                              onsubmit="return confirm('Remove {{ m.user.username|escapejs }}?');">
+                            {% csrf_token %}
+                            <button class="text-xs text-red-600 hover:text-red-700">Remove</button>
+                        </form>
+                        {% else %}
+                        <span class="text-xs text-ms-neutral-40">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr class="border-t border-ms-neutral-20">
+                    <td colspan="3" class="px-4 py-6 text-center text-sm text-ms-neutral-60">No other members yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
