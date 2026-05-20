@@ -2,7 +2,7 @@
 import multiprocessing
 
 # Server socket
-bind = "unix:/var/www/luma/luma.sock"
+bind = "127.0.0.1:8006"
 backlog = 2048
 
 # Worker processes
