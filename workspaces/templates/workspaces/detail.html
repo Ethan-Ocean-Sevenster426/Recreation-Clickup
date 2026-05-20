@@ -8,18 +8,20 @@
     {% include 'workspaces/_view_tabs.html' %}
 
     <!-- Toolbar -->
-    <div class="px-6 py-3 flex items-center justify-between border-b border-ms-neutral-30">
+    <div class="px-6 py-3 flex items-center justify-between border-b border-white/10">
         <div class="flex items-center gap-2 text-xs">
-            <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-ms-neutral-10 text-ms-neutral-80 font-medium">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-cu-panel text-white/85 font-medium">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
                 Grouped by Status
             </span>
         </div>
-        <button type="button" onclick="document.getElementById('newTaskModal').classList.remove('hidden')"
-                class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-ms-blue text-white text-xs font-medium hover:bg-ms-blue-dark">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            New task
-        </button>
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="document.getElementById('newTaskModal').classList.remove('hidden')"
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-gradient-to-r from-cu-pink via-cu-purple to-cu-blue text-white hover:opacity-90 text-xs font-medium">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New task
+            </button>
+        </div>
     </div>
 
     <!-- Grouped list -->
@@ -31,14 +33,13 @@
                 <span class="text-xs text-ms-neutral-40" data-count-for="{{ col.status.key }}">{{ col.tasks|length }}</span>
             </div>
 
-            {% if col.tasks %}
-            <div class="bg-white border border-ms-neutral-30 rounded-lg overflow-hidden"
+            <div class="bg-cu-panel border border-white/10 rounded-lg overflow-hidden"
                  data-drop-status="{{ col.status.key }}">
                 <!-- Header row -->
-                <div class="grid grid-cols-12 gap-2 px-4 py-2 bg-ms-neutral-10 text-xs font-medium text-ms-neutral-60 border-b border-ms-neutral-30">
-                    <div class="col-span-5">Name</div>
-                    <div class="col-span-1">Assignee</div>
-                    <div class="col-span-2">Due date</div>
+                <div class="grid grid-cols-12 gap-2 px-4 py-2 bg-cu-sidebar text-xs font-medium text-white/60 border-b border-white/10">
+                    <div class="col-span-4">Name</div>
+                    <div class="col-span-2">Assignee</div>
+                    <div class="col-span-2">{% if workspace.purpose == 'retainer' %}Days taken{% else %}Due date{% endif %}</div>
                     <div class="col-span-1">Priority</div>
                     <div class="col-span-2">Status</div>
                     <div class="col-span-1"></div>
@@ -46,28 +47,70 @@
                 <!-- Rows -->
                 <div data-tasks-container>
                 {% for task in col.tasks %}
-                <div class="grid grid-cols-12 gap-2 px-4 py-2.5 border-b border-ms-neutral-10 hover:bg-ms-neutral-10 text-sm items-center"
-                     draggable="true" data-task-id="{{ task.id }}">
-                    <div class="col-span-5 flex items-center gap-2">
-                        <span class="w-4 h-4 rounded-full border-2 border-ms-neutral-30 flex-shrink-0"></span>
-                        <a href="{% url 'workspaces:task_detail' task.id %}?from={{ request.get_full_path|urlencode }}" class="truncate text-ms-neutral-80 hover:text-ms-blue hover:underline">{{ task.title }}</a>
-                        {% for tag in task.tag_list %}
-                        <span class="text-[10px] px-1.5 py-0.5 bg-ms-neutral-10 text-ms-blue rounded">{{ tag }}</span>
+                <div class="grid grid-cols-12 gap-2 px-4 py-2.5 border-b border-white/5 hover:bg-cu-panel-2 text-sm items-center cursor-pointer text-white/85"
+                     draggable="true" data-task-id="{{ task.id }}"
+                     data-task-href="{% url 'workspaces:task_detail' task.id %}?from={{ request.get_full_path|urlencode }}">
+                    <div class="col-span-4 flex items-center gap-2 flex-wrap">
+                        <span class="w-4 h-4 rounded-full border-2 border-white/30 flex-shrink-0"></span>
+                        <a href="{% url 'workspaces:task_detail' task.id %}?from={{ request.get_full_path|urlencode }}" class="truncate text-white hover:text-cu-accent hover:underline">{{ task.title }}</a>
+                        {% with task_values=custom_values_by_task|cf_value:task.id %}
+                        {% for cf in custom_fields_for_list %}
+                            {% with v=task_values|dict_get:cf.id %}
+                            {% if v %}
+                                {% if cf.field_type == 'dropdown' and v.option %}
+                                <span class="status-pill status-c-{{ v.option.color }}" title="{{ cf.name }}">{{ v.option.name }}</span>
+                                {% elif cf.field_type == 'labels' %}
+                                    {% for o in v.options.all %}
+                                    <span class="status-pill status-c-{{ o.color }}" title="{{ cf.name }}">{{ o.name }}</span>
+                                    {% endfor %}
+                                {% elif cf.field_type == 'checkbox' %}
+                                <span class="text-[10px] px-1.5 py-0.5 bg-ms-neutral-10 text-ms-neutral-80 rounded" title="{{ cf.name }}">{{ cf.name }}: {% if v.bool_value %}✓{% else %}✗{% endif %}</span>
+                                {% elif cf.field_type == 'number' and v.number_value is not None %}
+                                <span class="text-[10px] px-1.5 py-0.5 bg-ms-neutral-10 text-ms-neutral-80 rounded" title="{{ cf.name }}">{{ cf.name }}: {{ v.number_value }}</span>
+                                {% elif cf.field_type == 'date' and v.date_value %}
+                                <span class="text-[10px] px-1.5 py-0.5 bg-ms-neutral-10 text-ms-neutral-80 rounded" title="{{ cf.name }}">{{ cf.name }}: {{ v.date_value|date:"M j" }}</span>
+                                {% elif v.text_value %}
+                                <span class="text-[10px] px-1.5 py-0.5 bg-ms-neutral-10 text-ms-neutral-80 rounded" title="{{ cf.name }}">{{ cf.name }}: {{ v.text_value|truncatechars:18 }}</span>
+                                {% endif %}
+                            {% endif %}
+                            {% endwith %}
+                        {% endfor %}
+                        {% endwith %}
+                    </div>
+                    <div class="col-span-2 flex items-center">
+                        {% for u in task.assignees.all %}
+                        <span class="avatar bg-cu-accent text-white" style="width:1.5rem;height:1.5rem;font-size:0.625rem{% if not forloop.first %};margin-left:-0.35rem{% endif %}" title="{{ u.get_full_name|default:u.username }}">{{ u.username|slice:":1"|upper }}</span>
+                        {% empty %}
+                        <span class="avatar bg-white/15 text-white/40" style="width:1.5rem;height:1.5rem;font-size:0.625rem">?</span>
                         {% endfor %}
                     </div>
-                    <div class="col-span-1">
-                        {% if task.assignee %}
-                        <span class="avatar bg-ms-blue">{{ task.assignee.username|slice:":1"|upper }}</span>
+                    <div class="col-span-2">
+                        {% if workspace.purpose == 'retainer' %}
+                        <span class="text-xs text-white/85 px-1.5 py-1 inline-flex items-center gap-1">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-white/40"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            {{ task|days_taken }} day{{ task|days_taken|pluralize }}
+                        </span>
                         {% else %}
-                        <span class="avatar bg-ms-neutral-30">?</span>
+                        <form method="post" action="{% url 'workspaces:task_update' task.id %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="field" value="due_date">
+                            <input type="date" name="value" value="{% if task.due_date %}{{ task.due_date|date:'Y-m-d' }}{% endif %}" onchange="this.form.submit()"
+                                   class="bg-transparent border-0 text-xs text-white/85 hover:bg-cu-panel rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-cu-accent w-full">
+                        </form>
                         {% endif %}
                     </div>
-                    <div class="col-span-2 text-ms-neutral-60">
-                        {% if task.due_date %}{{ task.due_date|date:"n/j/y" }}{% else %}<span class="text-ms-neutral-30">—</span>{% endif %}
-                    </div>
-                    <div class="col-span-1 priority-flag priority-{{ task.priority }}">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="22" x2="4" y2="15"/><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/></svg>
-                        {{ task.get_priority_display }}
+                    <div class="col-span-1">
+                        <form method="post" action="{% url 'workspaces:task_update' task.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="field" value="priority">
+                            <select name="value" onchange="this.form.submit()"
+                                    class="priority-flag priority-{{ task.priority }} bg-transparent border-0 cursor-pointer text-xs appearance-none pr-4 bg-no-repeat focus:outline-none"
+                                    style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22%23ffffff%22 viewBox=%220 0 20 20%22><path d=%22M5.25 7.5L10 12.25 14.75 7.5z%22/></svg>'); background-position: right 0 center; background-size: 10px;">
+                                {% for key, label in priority_choices %}
+                                <option value="{{ key }}" {% if key == task.priority %}selected{% endif %} class="opt-priority-{{ key }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
                     </div>
                     <div class="col-span-2">
                         <form method="post" action="{% url 'workspaces:task_update_status' task.id %}">
@@ -76,7 +119,7 @@
                                     class="status-pill status-c-{{ task|status_color:task_list }} border-0 appearance-none cursor-pointer pr-6 bg-no-repeat"
                                     style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22white%22 viewBox=%220 0 20 20%22><path d=%22M5.25 7.5L10 12.25 14.75 7.5z%22/></svg>'); background-position: right 0.25rem center; background-size: 12px;">
                                 {% for key, label in status_choices %}
-                                <option value="{{ key }}" {% if key == task.status %}selected{% endif %} class="bg-white text-ms-neutral-80">{{ label|upper }}</option>
+                                <option value="{{ key }}" {% if key == task.status %}selected{% endif %} class="bg-cu-panel text-white">{{ label|upper }}</option>
                                 {% endfor %}
                             </select>
                         </form>
@@ -85,7 +128,7 @@
                         <form method="post" action="{% url 'workspaces:task_delete' task.id %}"
                               onsubmit="return confirm('Delete task?');">
                             {% csrf_token %}
-                            <button class="text-xs text-ms-neutral-40 hover:text-red-500" title="Delete task">
+                            <button class="text-xs text-white/40 hover:text-red-400" title="Delete task">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
                             </button>
                         </form>
@@ -93,15 +136,89 @@
                 </div>
                 {% endfor %}
                 </div>
-                <button type="button" onclick="prefillStatus('{{ col.key }}')"
-                        class="w-full text-left px-4 py-2 text-xs text-ms-neutral-40 hover:text-ms-blue hover:bg-ms-neutral-10"
+
+                <!-- Inline add-task row (hidden by default) -->
+                <form method="post" action="{% url 'workspaces:task_create' task_list.id %}"
+                      id="inlineTaskForm_{{ col.key }}" class="hidden border-t border-white/10">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="hidden" name="status" value="{{ col.key }}">
+                    <div class="grid grid-cols-12 gap-2 px-4 py-2 items-center bg-cu-accent/5">
+                        <!-- Name -->
+                        <div class="col-span-4 flex items-center gap-2">
+                            <span class="w-4 h-4 rounded-full border-2 border-cu-accent/50 flex-shrink-0"></span>
+                            <input type="text" name="title" required placeholder="Type task name..."
+                                   class="flex-1 bg-transparent border-0 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-0 py-0"
+                                   data-inline-task-input>
+                        </div>
+                        <!-- Assignees -->
+                        <div class="col-span-2 relative">
+                            <button type="button" onclick="this.nextElementSibling.classList.toggle('hidden')"
+                                    class="inline-assign-btn flex items-center gap-1 px-1 py-0.5 rounded hover:bg-cu-panel text-xs text-white/40 w-full min-h-[1.5rem]"
+                                    data-col="{{ col.key }}">
+                                <span class="inline-assign-display flex items-center gap-0.5">
+                                    <span class="avatar bg-white/15 text-white/40" style="width:1.25rem;height:1.25rem;font-size:0.55rem">?</span>
+                                </span>
+                            </button>
+                            <div class="hidden absolute z-20 top-full mt-1 left-0 w-48 rounded-lg shadow-xl overflow-hidden bg-cu-sidebar border border-white/10">
+                                <div class="p-1.5 border-b border-white/10">
+                                    <input type="text" placeholder="Search…"
+                                           oninput="var q=this.value.toLowerCase(); this.closest('div').nextElementSibling.querySelectorAll('label').forEach(function(l){l.style.display=l.dataset.name.indexOf(q)!==-1?'':'none'})"
+                                           class="w-full rounded px-2 py-1 text-xs outline-none bg-cu-panel border border-white/10 text-white placeholder-white/40 focus:border-cu-accent">
+                                </div>
+                                <div class="p-1 max-h-36 overflow-y-auto">
+                                    {% for u in users %}
+                                    <label class="flex items-center gap-2 px-2 py-1 rounded cursor-pointer text-xs text-white hover:bg-white/5"
+                                           data-name="{{ u.get_full_name|default:u.username|lower }}">
+                                        <input type="checkbox" name="assignees" value="{{ u.id }}"
+                                               onchange="updateInlineAssignDisplay(this, '{{ col.key }}')"
+                                               data-initial="{{ u.username|slice:':1'|upper }}"
+                                               class="rounded border-white/15 bg-cu-panel text-cu-accent focus:ring-cu-accent w-3.5 h-3.5">
+                                        <span class="avatar bg-cu-accent text-white" style="width:1.1rem;height:1.1rem;font-size:0.45rem">{{ u.username|slice:":1"|upper }}</span>
+                                        {{ u.get_full_name|default:u.username }}
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Due date -->
+                        <div class="col-span-2">
+                            <input type="date" name="due_date"
+                                   class="bg-transparent border-0 text-xs hover:bg-cu-panel rounded px-1 py-0.5 focus:outline-none w-full">
+                        </div>
+                        <!-- Priority -->
+                        <div class="col-span-1">
+                            <select name="priority"
+                                    class="bg-transparent border-0 cursor-pointer text-xs appearance-none hover:bg-cu-panel px-1 py-0.5 rounded outline-none">
+                                {% for key, label in priority_choices %}
+                                <option value="{{ key }}" {% if key == 'normal' %}selected{% endif %} class="opt-priority-{{ key }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <!-- Status (read-only pill) -->
+                        <div class="col-span-2">
+                            <span class="status-pill status-c-{{ col.color }}">{{ col.label }}</span>
+                        </div>
+                        <!-- Actions: Save + Cancel -->
+                        <div class="col-span-1 flex items-center justify-end gap-1">
+                            <button type="submit" class="text-cu-accent hover:text-white" title="Save task">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            </button>
+                            <button type="button" onclick="hideInlineTask('{{ col.key }}')" class="text-white/40 hover:text-white" title="Cancel">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <button type="button" onclick="showInlineTask('{{ col.key }}')"
+                        id="addTaskBtn_{{ col.key }}"
+                        class="w-full text-left px-4 py-2 text-xs text-white/40 hover:text-cu-accent hover:bg-cu-panel-2"
                         data-add-task-row>+ Add Task</button>
             </div>
-            {% else %}
-            <div class="bg-white border border-ms-neutral-30 rounded-lg"
-                 data-drop-status="{{ col.status.key }}">
-                <button type="button" onclick="prefillStatus('{{ col.key }}')"
-                        class="w-full text-left px-4 py-3 text-xs text-ms-neutral-40 hover:text-ms-blue hover:bg-ms-neutral-10">+ Add Task</button>
+            {% if not col.tasks %}
+            <div class="hidden" data-empty-hint="{{ col.key }}">
+                <div class="px-4 py-1 text-[11px] text-white/50 italic">No tasks yet</div>
             </div>
             {% endif %}
         </div>
@@ -112,11 +229,86 @@
 {% include 'workspaces/_new_task_modal.html' %}
 
 <script>
+    function showInlineTask(statusKey) {
+        // Hide any other open inline forms first
+        document.querySelectorAll('[id^="inlineTaskForm_"]').forEach(f => f.classList.add('hidden'));
+        document.querySelectorAll('[id^="addTaskBtn_"]').forEach(b => b.classList.remove('hidden'));
+
+        const form = document.getElementById('inlineTaskForm_' + statusKey);
+        const btn = document.getElementById('addTaskBtn_' + statusKey);
+        if (form) {
+            form.classList.remove('hidden');
+            const input = form.querySelector('[data-inline-task-input]');
+            if (input) { input.value = ''; input.focus(); }
+        }
+        if (btn) btn.classList.add('hidden');
+    }
+
+    function hideInlineTask(statusKey) {
+        const form = document.getElementById('inlineTaskForm_' + statusKey);
+        const btn = document.getElementById('addTaskBtn_' + statusKey);
+        if (form) form.classList.add('hidden');
+        if (btn) btn.classList.remove('hidden');
+    }
+
+    // Submit inline form on Enter key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.matches('[data-inline-task-input]')) {
+            e.preventDefault();
+            e.target.closest('form').submit();
+        }
+        if (e.key === 'Escape' && e.target.matches('[data-inline-task-input]')) {
+            const form = e.target.closest('form');
+            const key = form.id.replace('inlineTaskForm_', '');
+            hideInlineTask(key);
+        }
+    });
+
+    // Pre-fill status on the modal and update color
     function prefillStatus(key) {
         const modal = document.getElementById('newTaskModal');
-        const select = modal.querySelector('select[name="status"]');
-        if (select) select.value = key;
-        modal.classList.remove('hidden');
+        const sel = modal ? modal.querySelector('select[name="status"]') : null;
+        if (sel) {
+            sel.value = key;
+            if (typeof updateStatusColor === 'function') updateStatusColor(sel);
+        }
+        if (modal) modal.classList.remove('hidden');
     }
+
+    // Row-level click → open task detail. Ignores clicks on interactive descendants.
+    document.addEventListener('click', (e) => {
+        const row = e.target.closest('[data-task-href]');
+        if (!row) return;
+        if (e.target.closest('a, button, select, form, input, textarea, label')) return;
+        window.location.href = row.dataset.taskHref;
+    });
+
+    // Inline assignee dropdown — update avatar display
+    function updateInlineAssignDisplay(cb, colKey) {
+        var form = document.getElementById('inlineTaskForm_' + colKey);
+        if (!form) return;
+        var btn = form.querySelector('.inline-assign-btn[data-col="' + colKey + '"]');
+        if (!btn) return;
+        var display = btn.querySelector('.inline-assign-display');
+        var checked = form.querySelectorAll('input[name="assignees"]:checked');
+        if (checked.length === 0) {
+            display.innerHTML = '<span class="avatar bg-white/15 text-white/40" style="width:1.25rem;height:1.25rem;font-size:0.55rem">?</span>';
+            return;
+        }
+        var html = '';
+        checked.forEach(function(c, i) {
+            var ml = i > 0 ? 'margin-left:-0.3rem;' : '';
+            html += '<span class="avatar bg-cu-accent text-white" style="width:1.25rem;height:1.25rem;font-size:0.55rem;' + ml + '">' + (c.dataset.initial || '?') + '</span>';
+        });
+        display.innerHTML = html;
+    }
+    // Close inline assignee dropdowns on click outside
+    document.addEventListener('click', function(e) {
+        document.querySelectorAll('[id^="inlineTaskForm_"] .inline-assign-btn + div').forEach(function(dd) {
+            if (!dd.classList.contains('hidden') && !dd.contains(e.target) && !dd.previousElementSibling.contains(e.target)) {
+                dd.classList.add('hidden');
+            }
+        });
+    });
 </script>
 {% endblock %}

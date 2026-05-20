@@ -6,8 +6,13 @@ from datetime import timedelta
 class User(AbstractUser):
     """Custom user model for E-Click"""
     ROLE_CHOICES = [
-        ('user', 'User'),
-        ('admin', 'Admin'),
+        ('employee', 'Employee'),
+        ('manager', 'Manager'),
+    ]
+    THEME_CHOICES = [
+        ('system', 'System'),
+        ('light', 'Light'),
+        ('dark', 'Dark'),
     ]
 
     email = models.EmailField(_('email address'), unique=True)
@@ -15,6 +20,7 @@ class User(AbstractUser):
     company_name = models.CharField(max_length=100, blank=True)
     position = models.CharField(max_length=100, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user', help_text="User role in the system")
+    theme = models.CharField(max_length=10, choices=THEME_CHOICES, default='system', help_text="UI theme preference")
     can_login = models.BooleanField(default=True, help_text="Whether this user can log in to the system")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

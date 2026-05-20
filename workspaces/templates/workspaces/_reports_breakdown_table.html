@@ -1,0 +1,43 @@
+{# rows: list of dicts with name/total/open/done/overdue/pct_done/time_label/ws_id/lst_id #}
+{# drill_type: 'space' or 'list' #}
+<div class="overflow-x-auto">
+  <table class="w-full text-xs">
+    <thead>
+      <tr class="text-white/45 border-b border-white/10">
+        <th class="text-left pb-2 font-semibold pr-4">{% if drill_type == 'list' %}List{% else %}Space{% endif %}</th>
+        <th class="text-right pb-2 font-semibold px-3">Total</th>
+        <th class="text-right pb-2 font-semibold px-3">Open</th>
+        <th class="text-right pb-2 font-semibold px-3">Done</th>
+        <th class="text-right pb-2 font-semibold px-3">Overdue</th>
+        <th class="text-right pb-2 font-semibold px-3">Time</th>
+        <th class="pb-2 pl-4 w-28 font-semibold">% Done</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr class="breakdown-row border-b border-white/5 hover:bg-cu-panel-2 transition-colors cursor-pointer"
+          onclick="window.__filterReport('{% url 'workspaces:reports' %}?workspace={{ row.ws_id }}{% if drill_type == 'list' %}&list={{ row.lst_id }}{% endif %}&period={{ period }}')">
+        <td class="py-2.5 pr-4">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded {% if drill_type == 'list' %}bg-cu-purple/50{% else %}bg-cu-accent/70{% endif %} text-white text-[10px] inline-flex items-center justify-center font-bold flex-shrink-0">{{ row.name|slice:":1"|upper }}</span>
+            <span class="text-white font-medium">{{ row.name }}</span>
+          </div>
+        </td>
+        <td class="py-2.5 text-right text-white/70 font-mono tabular-nums px-3">{{ row.total }}</td>
+        <td class="py-2.5 text-right text-cu-blue font-mono tabular-nums px-3">{{ row.open }}</td>
+        <td class="py-2.5 text-right text-emerald-400 font-mono tabular-nums px-3">{{ row.done }}</td>
+        <td class="py-2.5 text-right font-mono tabular-nums px-3 {% if row.overdue %}text-red-400{% else %}text-white/25{% endif %}">{{ row.overdue }}</td>
+        <td class="py-2.5 text-right text-white/60 font-mono tabular-nums px-3">{{ row.time_label }}</td>
+        <td class="py-2.5 pl-4">
+          <div class="flex items-center gap-2">
+            <div class="flex-1 h-1.5 rounded-full report-bar-track bg-cu-sidebar overflow-hidden">
+              <div class="h-full bg-emerald-500 rounded-full" style="width:{{ row.pct_done }}%"></div>
+            </div>
+            <span class="text-white/60 font-semibold tabular-nums w-7 text-right">{{ row.pct_done }}%</span>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

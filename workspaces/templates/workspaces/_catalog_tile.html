@@ -1,0 +1,683 @@
+{# Reusable catalog card tile — expects `item` + dashboard data context #}
+<button type="button" onclick="addCard('{{ item.key }}')"
+        class="catalog-item group text-left rounded-lg border border-white/10 overflow-hidden hover:border-cu-accent/50 transition-all hover:shadow-lg hover:shadow-cu-accent/5">
+
+  {# ── Mini card preview (looks like a real rendered card) ── #}
+  <div class="h-32 relative overflow-hidden bg-[#032D45] p-2.5">
+    {# Mini card frame #}
+    <div class="w-full h-full rounded border border-white/[0.07] bg-cu-panel overflow-hidden flex flex-col">
+
+      {# Mini card header #}
+      <div class="flex items-center gap-1 px-2 py-1 border-b border-white/[0.05] flex-shrink-0">
+        <svg class="text-white/20 flex-shrink-0" width="6" height="6" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="4" r="2.5"/><circle cx="12" cy="4" r="2.5"/><circle cx="5" cy="12" r="2.5"/><circle cx="12" cy="12" r="2.5"/></svg>
+        <span class="text-[7px] font-semibold text-white/50 truncate">{{ item.label }}</span>
+      </div>
+
+      {# Mini card body #}
+      <div class="flex-1 flex items-center justify-center p-2 min-h-0">
+
+        {% if item.key == 'progress' %}
+        <div class="text-center w-full">
+          <div class="text-lg font-bold text-cu-accent leading-none">{{ completion_rate }}<span class="text-[10px]">%</span></div>
+          <div class="w-3/4 h-[3px] rounded-full bg-white/10 mt-1 mx-auto overflow-hidden"><div class="h-full bg-cu-accent rounded-full" style="width:{{ completion_rate }}%"></div></div>
+          <div class="text-[6px] text-white/30 mt-0.5">{{ closed_tasks }} done &middot; {{ open_tasks }} open</div>
+        </div>
+
+        {% elif item.key == 'velocity' %}
+        <div class="text-center">
+          <div class="text-lg font-bold text-cu-blue leading-none">{{ velocity }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">tasks / week</div>
+        </div>
+
+        {% elif item.key == 'cycle_time' %}
+        <div class="text-center">
+          {% if avg_cycle_days is not None %}
+          <div class="text-lg font-bold text-white/80 leading-none">{{ avg_cycle_days }}<span class="text-[10px] text-white/50">d</span></div>
+          {% else %}
+          <div class="text-lg font-bold text-white/30 leading-none">&mdash;</div>
+          {% endif %}
+          <div class="text-[6px] text-white/30 mt-0.5">avg creation &rarr; done</div>
+        </div>
+
+        {% elif item.key == 'tasks_in_progress' %}
+        <div class="text-center">
+          <div class="text-lg font-bold text-cu-purple leading-none">{{ in_progress_count }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">tasks in progress</div>
+        </div>
+
+        {% elif item.key == 'tasks_completed' %}
+        <div class="text-center">
+          <div class="text-lg font-bold text-emerald-400 leading-none">{{ closed_tasks }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">of {{ total_tasks }} total tasks</div>
+        </div>
+
+        {% elif item.key == 'unassigned_tasks' %}
+        <div class="text-center">
+          <div class="text-lg font-bold {% if unassigned_count %}text-amber-400{% else %}text-emerald-400{% endif %} leading-none">{{ unassigned_count }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">{% if unassigned_count %}no assignee{% else %}all assigned{% endif %}</div>
+        </div>
+
+        {% elif item.key == 'urgent_tasks' %}
+        <div class="text-center">
+          <div class="text-lg font-bold {% if urgent_count %}text-red-400{% else %}text-emerald-400{% endif %} leading-none">{{ urgent_count }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">{% if urgent_count %}urgent priority{% else %}no urgent tasks{% endif %}</div>
+        </div>
+
+        {% elif item.key == 'time_logged' %}
+        <div class="text-center">
+          <div class="text-lg font-bold text-cu-pink leading-none">{{ total_tracked_label }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">total tracked</div>
+        </div>
+
+        {% elif item.key == 'status_breakdown_pie' %}
+        {# Mini doughnut chart with real data #}
+        <div class="flex items-center gap-2 w-full px-1">
+          <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
+            {% for arc in status_arcs %}
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#054B70' '#0A6D9E' '#10B981' '#F472B6' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            {% endfor %}
+          </svg>
+          <div class="space-y-[3px] min-w-0">
+            {% for s in statuses_list|slice:":4" %}
+            <div class="flex items-center gap-1">
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#054B70' '#0A6D9E' '#10B981' '#F472B6' %}"></div>
+              <span class="text-[6px] text-white/40 truncate">{{ s.label }} ({{ s.count }})</span>
+            </div>
+            {% endfor %}
+            {% if not statuses_list %}
+            <span class="text-[6px] text-white/25">No data</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% elif item.key == 'tasks_by_assignee_pie' %}
+        <div class="flex items-center gap-2 w-full px-1">
+          <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
+            {% for arc in assignee_arcs %}
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            {% endfor %}
+          </svg>
+          <div class="space-y-[3px] min-w-0">
+            {% for a in assignee_rows|slice:":4" %}
+            <div class="flex items-center gap-1">
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' %}"></div>
+              <span class="text-[6px] text-white/40 truncate">{{ a.name }} ({{ a.count }})</span>
+            </div>
+            {% endfor %}
+            {% if not assignee_rows %}
+            <span class="text-[6px] text-white/25">No data</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% elif item.key == 'priority_breakdown_pie' %}
+        <div class="flex items-center gap-2 w-full px-1">
+          <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
+            {% for arc in priority_arcs %}
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#94A3B8' '#8BB7C4' '#FB923C' '#EF4444' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            {% endfor %}
+          </svg>
+          <div class="space-y-[3px] min-w-0">
+            {% for p in priority_list %}
+            <div class="flex items-center gap-1">
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#94A3B8' '#8BB7C4' '#FB923C' '#EF4444' %}"></div>
+              <span class="text-[6px] text-white/40 truncate">{{ p.label }} ({{ p.count }})</span>
+            </div>
+            {% endfor %}
+            {% if not priority_list %}
+            <span class="text-[6px] text-white/25">No data</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% elif item.key == 'status_breakdown_bar' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for s in statuses_list|slice:":5" %}
+            <div class="flex-1 rounded-t" style="height:{% widthratio s.count total_tasks 100 %}%; background:{% cycle '#054B70' '#0A6D9E' '#F472B6' '#FB923C' '#10B981' %}"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for s in statuses_list|slice:":5" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ s.label|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'tasks_by_assignee_bar' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for a in assignee_rows|slice:":5" %}
+            <div class="flex-1 rounded-t bg-[#054B70]/70" style="height:{% widthratio a.count total_tasks 100 %}%"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for a in assignee_rows|slice:":5" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ a.name|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'priority_breakdown_bar' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for p in priority_list %}
+            <div class="flex-1 rounded-t" style="height:{% widthratio p.count total_tasks 100 %}%; background:{% cycle '#94A3B8' '#8BB7C4' '#FB923C' '#EF4444' %}"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for p in priority_list %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ p.label|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'time_by_category' %}
+        <div class="w-full px-1">
+          {% if category_rows %}
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for c in category_rows|slice:":5" %}
+            <div class="flex-1 rounded-t bg-[#0A6D9E]/60" style="height:{% if c.pct %}{{ c.pct }}{% else %}2{% endif %}%"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for c in category_rows|slice:":5" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ c.label|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-[7px] text-white/25 text-center">No time data</div>
+          {% endif %}
+        </div>
+
+        {% elif item.key == 'time_by_workspace' %}
+        <div class="w-full px-1">
+          {% if workspace_hour_rows %}
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for r in workspace_hour_rows|slice:":4" %}
+            <div class="flex-1 rounded-t bg-[#054B70]/55" style="height:{% if r.pct %}{{ r.pct }}{% else %}2{% endif %}%"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for r in workspace_hour_rows|slice:":4" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ r.name|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-[7px] text-white/25 text-center">No time data</div>
+          {% endif %}
+        </div>
+
+        {% elif item.key == 'activity_trend' %}
+        <div class="w-full px-1">
+          {% if trend_preview %}
+          <div class="flex items-end gap-[2px] h-[36px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for b in trend_preview %}
+            <div class="flex-1 rounded-t bg-[#054B70]/60" style="height:{% if b.created_pct %}{{ b.created_pct }}{% else %}2{% endif %}%"></div>
+            <div class="flex-1 rounded-t bg-[#10B981]/55" style="height:{% if b.done_pct %}{{ b.done_pct }}{% else %}2{% endif %}%"></div>
+            {% if not forloop.last %}<div class="w-[1px]"></div>{% endif %}
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="flex items-end gap-[2px] h-[36px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            <div class="flex-1"></div>
+          </div>
+          {% endif %}
+          <div class="flex items-center justify-center gap-2 mt-1">
+            <div class="flex items-center gap-0.5"><div class="w-1.5 h-1.5 rounded-sm bg-[#054B70]/60"></div><span class="text-[5px] text-white/25">Created</span></div>
+            <div class="flex items-center gap-0.5"><div class="w-1.5 h-1.5 rounded-sm bg-[#10B981]/55"></div><span class="text-[5px] text-white/25">Done</span></div>
+          </div>
+        </div>
+
+        {% elif item.key == 'overdue_tasks' %}
+        <div class="w-full space-y-[3px]">
+          <div class="flex items-center gap-1 mb-1">
+            <span class="text-[6px] font-semibold {% if overdue %}text-red-400/80 bg-red-500/10{% else %}text-emerald-400/80 bg-emerald-500/10{% endif %} px-1 py-px rounded">{{ overdue }} overdue</span>
+          </div>
+          {% for t in overdue_tasks|slice:":3" %}
+          <div class="flex items-center gap-1.5 {% if not forloop.last %}border-b border-white/[0.04] pb-[3px]{% endif %}">
+            <div class="w-1 h-1 rounded-full bg-red-500 flex-shrink-0"></div>
+            <div class="flex-1 text-[5px] text-white/40 truncate">{{ t.title|truncatechars:18 }}</div>
+            <span class="text-[5px] text-red-400/60 flex-shrink-0">{{ t.due_date|date:"M j" }}</span>
+          </div>
+          {% empty %}
+          <div class="text-[6px] text-emerald-400/60 text-center">None overdue</div>
+          {% endfor %}
+        </div>
+
+        {% elif item.key == 'tasks_due_soon' %}
+        <div class="w-full space-y-[3px]">
+          {% for t in due_soon_tasks|slice:":4" %}
+          <div class="flex items-center gap-1.5 {% if not forloop.last %}border-b border-white/[0.04] pb-[3px]{% endif %}">
+            <div class="flex-1 text-[5px] text-white/40 truncate">{{ t.title|truncatechars:18 }}</div>
+            <span class="text-[5px] text-white/35 flex-shrink-0">{{ t.due_date|date:"M j" }}</span>
+          </div>
+          {% empty %}
+          <div class="text-[6px] text-white/25 text-center">No tasks due soon</div>
+          {% endfor %}
+        </div>
+
+        {% elif item.key == 'team_performance' %}
+        <div class="w-full">
+          <div class="flex items-center gap-1 text-[5px] text-white/30 mb-1 px-0.5">
+            <span class="flex-1">Member</span><span class="w-5 text-right">Open</span><span class="w-5 text-right">Done</span><span class="w-10">Rate</span>
+          </div>
+          <div class="space-y-[3px]">
+            {% for r in team_rows|slice:":3" %}
+            <div class="flex items-center gap-1">
+              <div class="w-3 h-3 rounded-full flex items-center justify-center text-[5px] text-white font-bold flex-shrink-0" style="background:{% cycle 'rgba(99,71,234,0.6)' 'rgba(0,178,255,0.6)' 'rgba(255,0,128,0.6)' %}">{{ r.name|slice:":1"|upper }}</div>
+              <span class="flex-1 text-[5px] text-white/50 truncate">{{ r.name|truncatechars:8 }}</span>
+              <span class="w-5 text-right text-[5px] text-cu-blue">{{ r.open }}</span>
+              <span class="w-5 text-right text-[5px] text-emerald-400">{{ r.done }}</span>
+              <div class="w-10 h-[3px] rounded-full bg-white/10 overflow-hidden"><div class="h-full bg-emerald-500/60 rounded-full" style="width:{{ r.done_pct }}%"></div></div>
+            </div>
+            {% empty %}
+            <div class="text-[6px] text-white/25 text-center">No team data</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'task_list_table' %}
+        <div class="w-full space-y-[3px]">
+          {% for t in recent_tasks|slice:":4" %}
+          <div class="flex items-center gap-1.5 {% if not forloop.last %}border-b border-white/[0.04] pb-[3px]{% endif %}">
+            <div class="w-1 h-1 rounded-full flex-shrink-0
+              {% if t.status == 'done' %}bg-emerald-500
+              {% elif t.status == 'in_progress' %}bg-cu-purple
+              {% elif t.status == 'review' %}bg-orange-500
+              {% else %}bg-white/30{% endif %}"></div>
+            <div class="flex-1 text-[5px] text-white/40 truncate">{{ t.title|truncatechars:18 }}</div>
+            {% if t.due_date %}<span class="text-[5px] {% if t.due_date < today %}text-red-400/60{% else %}text-white/30{% endif %} flex-shrink-0">{{ t.due_date|date:"M j" }}</span>{% endif %}
+          </div>
+          {% empty %}
+          <div class="text-[6px] text-white/25 text-center">No tasks</div>
+          {% endfor %}
+        </div>
+
+        {% elif item.key == 'subtask_progress' %}
+        <div class="text-center w-full">
+          <div class="text-lg font-bold text-cu-accent leading-none">{{ subtask_completion }}<span class="text-[10px]">%</span></div>
+          <div class="w-3/4 h-[3px] rounded-full bg-white/10 mt-1 mx-auto overflow-hidden"><div class="h-full bg-cu-accent rounded-full" style="width:{{ subtask_completion }}%"></div></div>
+          <div class="text-[6px] text-white/30 mt-0.5">{{ done_subtasks }} done &middot; {{ open_subtasks }} open</div>
+        </div>
+
+        {% elif item.key == 'subtask_total' %}
+        <div class="text-center">
+          <div class="text-lg font-bold text-cu-blue leading-none">{{ total_subtasks }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">total subtasks</div>
+        </div>
+
+        {% elif item.key == 'subtask_overdue' %}
+        <div class="text-center">
+          <div class="text-lg font-bold {% if subtask_overdue %}text-red-400{% else %}text-emerald-400{% endif %} leading-none">{{ subtask_overdue }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">{% if subtask_overdue %}overdue subtasks{% else %}no overdue{% endif %}</div>
+        </div>
+
+        {% elif item.key == 'subtask_status_pie' %}
+        <div class="flex items-center gap-2 w-full px-1">
+          <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
+            {% for arc in subtask_status_arcs %}
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#054B70' '#0A6D9E' '#10B981' '#F472B6' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            {% endfor %}
+          </svg>
+          <div class="space-y-[3px] min-w-0">
+            {% for s in subtask_statuses_list|slice:":4" %}
+            <div class="flex items-center gap-1">
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#054B70' '#0A6D9E' '#10B981' '#F472B6' %}"></div>
+              <span class="text-[6px] text-white/40 truncate">{{ s.label }} ({{ s.count }})</span>
+            </div>
+            {% endfor %}
+            {% if not subtask_statuses_list %}
+            <span class="text-[6px] text-white/25">No data</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% elif item.key == 'subtask_status_bar' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for s in subtask_statuses_list|slice:":5" %}
+            <div class="flex-1 rounded-t" style="height:{% widthratio s.count total_subtasks 100 %}%; background:{% cycle '#054B70' '#0A6D9E' '#F472B6' '#FB923C' '#10B981' %}"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for s in subtask_statuses_list|slice:":5" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ s.label|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'subtask_priority_pie' %}
+        <div class="flex items-center gap-2 w-full px-1">
+          <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
+            {% for arc in subtask_priority_arcs %}
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#94A3B8' '#8BB7C4' '#FB923C' '#EF4444' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            {% endfor %}
+          </svg>
+          <div class="space-y-[3px] min-w-0">
+            {% for p in subtask_priority_list %}
+            <div class="flex items-center gap-1">
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#94A3B8' '#8BB7C4' '#FB923C' '#EF4444' %}"></div>
+              <span class="text-[6px] text-white/40 truncate">{{ p.label }} ({{ p.count }})</span>
+            </div>
+            {% endfor %}
+            {% if not subtask_priority_list %}
+            <span class="text-[6px] text-white/25">No data</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% elif item.key == 'subtask_by_assignee' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for a in subtask_assignee_rows|slice:":5" %}
+            <div class="flex-1 rounded-t bg-[#054B70]/70" style="height:{% widthratio a.count total_subtasks 100 %}%"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for a in subtask_assignee_rows|slice:":5" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ a.name|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {# ── Task Breakdown KPIs ── #}
+        {% elif item.key == 'total_tasks_kpi' %}
+        <div class="text-center">
+          <div class="text-lg font-bold text-cu-blue leading-none">{{ total_tasks }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">total tasks</div>
+        </div>
+
+        {% elif item.key == 'completion_rate_kpi' %}
+        <div class="text-center w-full">
+          <div class="text-lg font-bold text-emerald-400 leading-none">{{ completion_rate }}<span class="text-[10px]">%</span></div>
+          <div class="w-3/4 h-[3px] rounded-full bg-white/10 mt-1 mx-auto overflow-hidden"><div class="h-full bg-emerald-500 rounded-full" style="width:{{ completion_rate }}%"></div></div>
+          <div class="text-[6px] text-white/30 mt-0.5">completed</div>
+        </div>
+
+        {% elif item.key == 'overdue_pct_kpi' %}
+        <div class="text-center">
+          <div class="text-lg font-bold {% if overdue_pct %}text-red-400{% else %}text-emerald-400{% endif %} leading-none">{{ overdue_pct }}<span class="text-[10px]">%</span></div>
+          <div class="text-[6px] text-white/30 mt-0.5">{% if overdue %}{{ overdue }} overdue{% else %}none overdue{% endif %}</div>
+        </div>
+
+        {% elif item.key == 'tasks_no_due_date' %}
+        <div class="text-center">
+          <div class="text-lg font-bold {% if no_due_date_count %}text-amber-400{% else %}text-emerald-400{% endif %} leading-none">{{ no_due_date_count }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">{% if no_due_date_count %}missing due date{% else %}all have dates{% endif %}</div>
+        </div>
+
+        {% elif item.key == 'tasks_due_this_week' %}
+        <div class="text-center">
+          <div class="text-lg font-bold {% if due_this_week %}text-cu-accent{% else %}text-white/30{% endif %} leading-none">{{ due_this_week }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">due this week</div>
+        </div>
+
+        {# ── Task Breakdown Charts ── #}
+        {% elif item.key == 'tasks_by_workspace_pie' %}
+        <div class="flex items-center gap-2 w-full px-1">
+          <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
+            {% for arc in tasks_ws_arcs %}
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#054B70' '#0A6D9E' '#10B981' '#FB923C' '#F472B6' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            {% endfor %}
+          </svg>
+          <div class="space-y-[3px] min-w-0">
+            {% for r in tasks_by_workspace_rows|slice:":4" %}
+            <div class="flex items-center gap-1">
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#054B70' '#0A6D9E' '#10B981' '#FB923C' '#F472B6' %}"></div>
+              <span class="text-[6px] text-white/40 truncate">{{ r.name|truncatechars:10 }} ({{ r.count }})</span>
+            </div>
+            {% endfor %}
+            {% if not tasks_by_workspace_rows %}
+            <span class="text-[6px] text-white/25">No data</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% elif item.key == 'tasks_by_workspace_bar' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for r in tasks_by_workspace_rows|slice:":5" %}
+            <div class="flex-1 rounded-t bg-[#054B70]/70" style="height:{% widthratio r.count total_tasks 100 %}%"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for r in tasks_by_workspace_rows|slice:":5" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ r.name|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'tasks_by_list_bar' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for r in tasks_by_list_rows|slice:":5" %}
+            <div class="flex-1 rounded-t bg-[#0A6D9E]/60" style="height:{% widthratio r.count total_tasks 100 %}%"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for r in tasks_by_list_rows|slice:":5" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ r.name|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'tasks_by_category_pie' %}
+        <div class="flex items-center gap-2 w-full px-1">
+          <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
+            {% for arc in tasks_cat_arcs %}
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' '#F472B6' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            {% endfor %}
+          </svg>
+          <div class="space-y-[3px] min-w-0">
+            {% for r in tasks_by_category_rows|slice:":4" %}
+            <div class="flex items-center gap-1">
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' '#F472B6' %}"></div>
+              <span class="text-[6px] text-white/40 truncate">{{ r.name|truncatechars:10 }} ({{ r.count }})</span>
+            </div>
+            {% endfor %}
+            {% if not tasks_by_category_rows %}
+            <span class="text-[6px] text-white/25">No data</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {# ── Subtask KPIs (new) ── #}
+        {% elif item.key == 'subtask_unassigned' %}
+        <div class="text-center">
+          <div class="text-lg font-bold {% if subtask_unassigned %}text-amber-400{% else %}text-emerald-400{% endif %} leading-none">{{ subtask_unassigned }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">{% if subtask_unassigned %}no assignee{% else %}all assigned{% endif %}</div>
+        </div>
+
+        {% elif item.key == 'subtask_no_due_date' %}
+        <div class="text-center">
+          <div class="text-lg font-bold {% if subtask_no_due %}text-amber-400{% else %}text-emerald-400{% endif %} leading-none">{{ subtask_no_due }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">{% if subtask_no_due %}missing due date{% else %}all have dates{% endif %}</div>
+        </div>
+
+        {% elif item.key == 'subtask_due_soon' %}
+        <div class="text-center">
+          <div class="text-lg font-bold {% if subtask_due_soon_count %}text-cu-accent{% else %}text-white/30{% endif %} leading-none">{{ subtask_due_soon_count }}</div>
+          <div class="text-[6px] text-white/30 mt-0.5">due in 14 days</div>
+        </div>
+
+        {# ── Subtask Charts (new) ── #}
+        {% elif item.key == 'subtask_priority_bar' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for p in subtask_priority_list %}
+            <div class="flex-1 rounded-t" style="height:{% widthratio p.count total_subtasks 100 %}%; background:{% cycle '#94A3B8' '#8BB7C4' '#FB923C' '#EF4444' %}"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for p in subtask_priority_list %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ p.label|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'subtask_assignee_pie' %}
+        <div class="flex items-center gap-2 w-full px-1">
+          <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
+            {% for arc in subtask_assignee_arcs %}
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            {% endfor %}
+          </svg>
+          <div class="space-y-[3px] min-w-0">
+            {% for a in subtask_assignee_rows|slice:":4" %}
+            <div class="flex items-center gap-1">
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' %}"></div>
+              <span class="text-[6px] text-white/40 truncate">{{ a.name|truncatechars:10 }} ({{ a.count }})</span>
+            </div>
+            {% endfor %}
+            {% if not subtask_assignee_rows %}
+            <span class="text-[6px] text-white/25">No data</span>
+            {% endif %}
+          </div>
+        </div>
+
+        {% elif item.key == 'subtask_by_workspace' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for r in subtask_by_workspace_rows|slice:":5" %}
+            <div class="flex-1 rounded-t bg-[#054B70]/70" style="height:{% widthratio r.count total_subtasks 100 %}%"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for r in subtask_by_workspace_rows|slice:":5" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ r.name|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'subtask_by_list' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for r in subtask_by_list_rows|slice:":5" %}
+            <div class="flex-1 rounded-t bg-[#0A6D9E]/60" style="height:{% widthratio r.count total_subtasks 100 %}%"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for r in subtask_by_list_rows|slice:":5" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ r.name|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'subtask_by_parent' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for r in subtask_by_parent_status_rows|slice:":5" %}
+            <div class="flex-1 rounded-t" style="height:{% widthratio r.count total_subtasks 100 %}%; background:{% cycle '#054B70' '#0A6D9E' '#10B981' '#F472B6' '#FB923C' %}"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for r in subtask_by_parent_status_rows|slice:":5" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ r.name|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'subtask_by_category' %}
+        <div class="w-full px-1">
+          <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
+            {% for r in subtask_by_category_rows|slice:":5" %}
+            <div class="flex-1 rounded-t bg-[#8BB7C4]/50" style="height:{% widthratio r.count total_subtasks 100 %}%"></div>
+            {% endfor %}
+          </div>
+          <div class="flex gap-[3px] mt-0.5 pl-0.5">
+            {% for r in subtask_by_category_rows|slice:":5" %}
+            <div class="flex-1 text-center text-[5px] text-white/25 truncate">{{ r.name|truncatechars:5 }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% elif item.key == 'subtask_done_vs_open' %}
+        <div class="flex items-center gap-2 w-full px-1">
+          <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
+            {% if total_subtasks %}
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="#10B981" stroke-dasharray="{% widthratio done_subtasks total_subtasks 75 %} 75.4" stroke-dashoffset="0"/>
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="#054B70" stroke-dasharray="{% widthratio open_subtasks total_subtasks 75 %} 75.4" stroke-dashoffset="-{% widthratio done_subtasks total_subtasks 75 %}"/>
+            {% endif %}
+          </svg>
+          <div class="space-y-[3px] min-w-0">
+            <div class="flex items-center gap-1">
+              <div class="w-1.5 h-1.5 rounded-sm bg-emerald-500"></div>
+              <span class="text-[6px] text-white/40">Done ({{ done_subtasks }})</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <div class="w-1.5 h-1.5 rounded-sm bg-[#054B70]"></div>
+              <span class="text-[6px] text-white/40">Open ({{ open_subtasks }})</span>
+            </div>
+          </div>
+        </div>
+
+        {# ── Subtask Tables (new) ── #}
+        {% elif item.key == 'subtask_overdue_table' %}
+        <div class="w-full space-y-[3px]">
+          <div class="flex items-center gap-1 mb-1">
+            <span class="text-[6px] font-semibold {% if subtask_overdue %}text-red-400/80 bg-red-500/10{% else %}text-emerald-400/80 bg-emerald-500/10{% endif %} px-1 py-px rounded">{{ subtask_overdue }} overdue</span>
+          </div>
+          {% for s in subtask_overdue_qs|slice:":3" %}
+          <div class="flex items-center gap-1.5 {% if not forloop.last %}border-b border-white/[0.04] pb-[3px]{% endif %}">
+            <div class="w-1 h-1 rounded-full bg-red-500 flex-shrink-0"></div>
+            <div class="flex-1 text-[5px] text-white/40 truncate">{{ s.title|truncatechars:18 }}</div>
+            <span class="text-[5px] text-red-400/60 flex-shrink-0">{{ s.due_date|date:"M j" }}</span>
+          </div>
+          {% empty %}
+          <div class="text-[6px] text-emerald-400/60 text-center">None overdue</div>
+          {% endfor %}
+        </div>
+
+        {% elif item.key == 'subtask_due_soon_table' %}
+        <div class="w-full space-y-[3px]">
+          {% for s in subtask_due_soon_qs|slice:":4" %}
+          <div class="flex items-center gap-1.5 {% if not forloop.last %}border-b border-white/[0.04] pb-[3px]{% endif %}">
+            <div class="flex-1 text-[5px] text-white/40 truncate">{{ s.title|truncatechars:18 }}</div>
+            <span class="text-[5px] text-white/35 flex-shrink-0">{{ s.due_date|date:"M j" }}</span>
+          </div>
+          {% empty %}
+          <div class="text-[6px] text-white/25 text-center">No subtasks due soon</div>
+          {% endfor %}
+        </div>
+
+        {% elif item.key == 'subtask_table' %}
+        <div class="w-full space-y-[3px]">
+          {% for s in subtask_recent_qs|slice:":4" %}
+          <div class="flex items-center gap-1.5 {% if not forloop.last %}border-b border-white/[0.04] pb-[3px]{% endif %}">
+            <div class="w-1 h-1 rounded-full flex-shrink-0
+              {% if s.status == 'done' %}bg-emerald-500
+              {% elif s.status == 'in_progress' %}bg-cu-purple
+              {% elif s.status == 'review' %}bg-orange-500
+              {% else %}bg-white/30{% endif %}"></div>
+            <div class="flex-1 text-[5px] text-white/40 truncate">{{ s.title|truncatechars:18 }}</div>
+            {% if s.due_date %}<span class="text-[5px] {% if s.due_date < today %}text-red-400/60{% else %}text-white/30{% endif %} flex-shrink-0">{{ s.due_date|date:"M j" }}</span>{% endif %}
+          </div>
+          {% empty %}
+          <div class="text-[6px] text-white/25 text-center">No subtasks</div>
+          {% endfor %}
+        </div>
+
+        {% else %}
+        <div class="text-[8px] text-white/20">{{ item.label }}</div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+  {# ── Card label + description ── #}
+  <div class="px-3 py-2.5 bg-cu-panel">
+    <div class="text-xs font-semibold text-white group-hover:text-cu-accent transition-colors leading-tight">{{ item.label }}</div>
+    <div class="text-[10px] text-white/40 mt-0.5 leading-snug line-clamp-2">{{ item.desc }}</div>
+  </div>
+</button>

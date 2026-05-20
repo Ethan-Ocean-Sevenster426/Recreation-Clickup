@@ -25,6 +25,12 @@ LOGOUT_REDIRECT_URL = '/login/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'no-reply@example.com'
 
+# Azure AD / Microsoft Graph – used to send email notifications
+AZURE_TENANT_ID = os.getenv('AZURE_TENANT_ID', '')          # Directory (tenant) ID
+AZURE_CLIENT_ID = os.getenv('AZURE_CLIENT_ID', '')          # Application (client) ID
+AZURE_CLIENT_SECRET = os.getenv('AZURE_CLIENT_SECRET', '')  # Client secret value
+AZURE_MAIL_FROM = os.getenv('AZURE_MAIL_FROM', '')          # e.g. notifications@magnumopusconsultants.co.za
+
 # Google Cloud API Configuration - DISABLED
 # GOOGLE_CLOUD_API_KEY = 'AIzaSyBAHeuA83Rl--GvorBIZlY8UOratOu-X2U'
 
@@ -69,6 +75,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

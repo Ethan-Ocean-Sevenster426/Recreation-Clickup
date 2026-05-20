@@ -1,0 +1,609 @@
+{% extends 'workspaces/base.html' %}
+{% block title %}Dashboard · Luma{% endblock %}
+
+{% block content %}
+<style>
+  body.theme-light .dash-card { background: #FAFAFC !important; border-color: rgba(26,22,57,0.10) !important; }
+  body.theme-light .dash-bar-track { background: rgba(26,22,57,0.08) !important; }
+  body.theme-light .dash-kpi-sub { color: rgba(26,22,57,0.50) !important; }
+  body.theme-light .dash-catalog { background: #FFFFFF !important; border-color: rgba(26,22,57,0.10) !important; }
+  body.theme-light .dash-catalog-item:hover { background: rgba(26,22,57,0.04) !important; }
+  body.theme-light .dash-empty-icon { color: rgba(26,22,57,0.15) !important; }
+  body.theme-light #catalogModal { background: #FFFFFF !important; border-color: rgba(26,22,57,0.12) !important; }
+  body.theme-light .cat-nav-btn { color: rgba(26,22,57,0.55) !important; }
+  body.theme-light .cat-nav-btn:hover { color: #032D45 !important; background: rgba(26,22,57,0.04) !important; }
+  body.theme-light .cat-nav-active { background: rgba(5,75,112,0.10) !important; color: #054B70 !important; }
+  .cat-nav-active { background: rgba(5,75,112,0.15); color: #fff; font-weight: 600; }
+  .drag-ghost { opacity: 0.4; }
+  .drag-chosen { box-shadow: 0 0 0 2px rgba(5,75,112,0.5); border-radius: 0.5rem; }
+  .dash-card { transition: box-shadow 0.15s ease; }
+
+  /* ── Templates bar, dropdown & modal: light mode ─────────────── */
+  body.theme-light .tpl-dropdown-btn { background: #F0F0F5 !important; border-color: rgba(26,22,57,0.15) !important; color: #032D45 !important; }
+  body.theme-light #tplDropdownMenu { background: #FFFFFF !important; border-color: rgba(26,22,57,0.12) !important; box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important; }
+  body.theme-light .tpl-dd-item { color: rgba(26,22,57,0.70) !important; }
+  body.theme-light .tpl-dd-item:hover, body.theme-light .tpl-dd-item-wrap:hover { background: rgba(26,22,57,0.04) !important; }
+  body.theme-light .tpl-chip-active { background: #054B70 !important; color: #FFFFFF !important; border-color: #054B70 !important; }
+  body.theme-light #saveTemplateModal > div { background: #FFFFFF !important; border-color: rgba(26,22,57,0.12) !important; }
+  body.theme-light .tpl-modal-header { border-color: rgba(26,22,57,0.08) !important; }
+  body.theme-light .tpl-modal-input { background: #F7F7FA !important; border-color: rgba(26,22,57,0.15) !important; color: #032D45 !important; }
+  body.theme-light .tpl-modal-input::placeholder { color: rgba(26,22,57,0.35) !important; }
+  body.theme-light .tpl-modal-info { background: rgba(26,22,57,0.03) !important; border-color: rgba(26,22,57,0.06) !important; }
+  body.theme-light .tpl-modal-footer { border-color: rgba(26,22,57,0.08) !important; }
+  body.theme-light .hover\:border-white\/30:hover { border-color: rgba(26,22,57,0.30) !important; }
+  body.theme-light .hover\:border-white\/40:hover { border-color: rgba(26,22,57,0.40) !important; }
+  body.theme-light .placeholder-white\/30::placeholder { color: rgba(26,22,57,0.30) !important; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+
+<div class="flex-1 min-h-0 overflow-auto" id="dashPage">
+  <div class="px-6 py-6 max-w-[1400px] mx-auto">
+
+    <!-- ── Header ──────────────────────────────────────────────────────── -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-xl font-bold text-white leading-tight">Dashboard</h1>
+        <p class="text-xs text-white/50 mt-0.5">Your customised reporting view</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <!-- Period chips -->
+        <div class="inline-flex items-center bg-cu-panel border border-white/10 rounded-md p-0.5 text-xs">
+          {% for key, label in period_choices %}
+          <a href="{% url 'workspaces:reports' %}?{% for wid in selected_ws_ids %}workspace={{ wid }}&{% endfor %}{% for lid in selected_list_ids %}list={{ lid }}&{% endfor %}period={{ key }}"
+             class="px-2.5 py-1 rounded {% if period == key %}bg-cu-accent text-white font-semibold shadow{% else %}text-white/55 hover:text-white{% endif %} transition-colors"
+             >{{ label }}</a>
+          {% endfor %}
+        </div>
+
+        <!-- Workspace multi-select -->
+        <div class="relative" id="wsFilterWrap">
+          <button type="button" onclick="toggleDashDD('wsDD')"
+                  class="text-xs px-2.5 py-1.5 border border-white/15 rounded bg-cu-panel text-white/85 cursor-pointer inline-flex items-center gap-1.5 hover:border-white/30 transition">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            {% if selected_workspaces %}
+              {% for w in selected_workspaces %}{{ w.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% else %}All spaces{% endif %}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div id="wsDD" class="hidden absolute z-40 top-full mt-1 right-0 w-56 bg-cu-sidebar border border-white/10 rounded-lg shadow-xl overflow-hidden">
+            <div class="p-1.5 max-h-64 overflow-y-auto">
+              {% for w in all_workspaces %}
+              <label class="flex items-center gap-2 px-2.5 py-1.5 rounded text-xs text-white/85 hover:bg-cu-sidebar-hover cursor-pointer">
+                <input type="checkbox" value="{{ w.id }}" class="dash-ws-cb rounded border-gray-300 text-cu-accent focus:ring-cu-accent"
+                       {% if w.id in selected_ws_ids %}checked{% endif %}>
+                <span class="w-4 h-4 rounded bg-cu-accent text-white text-[8px] flex items-center justify-center flex-shrink-0 font-semibold">{{ w.name|slice:":1"|upper }}</span>
+                {{ w.name }}
+              </label>
+              {% endfor %}
+            </div>
+            <div class="flex items-center justify-between px-2.5 py-2 border-t border-white/10">
+              <button type="button" onclick="clearDashFilter('ws')" class="text-[10px] text-white/40 hover:text-white">Clear</button>
+              <button type="button" onclick="applyDashFilter()" class="text-[10px] px-2.5 py-1 rounded bg-cu-accent text-white font-semibold">Apply</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- List multi-select (only when workspaces selected) -->
+        {% if lists_in_ws %}
+        <div class="relative" id="listFilterWrap">
+          <button type="button" onclick="toggleDashDD('listDD')"
+                  class="text-xs px-2.5 py-1.5 border border-white/15 rounded bg-cu-panel text-white/85 cursor-pointer inline-flex items-center gap-1.5 hover:border-white/30 transition">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
+            {% if selected_lists %}
+              {% for l in selected_lists %}{{ l.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% else %}All lists{% endif %}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div id="listDD" class="hidden absolute z-40 top-full mt-1 right-0 w-56 bg-cu-sidebar border border-white/10 rounded-lg shadow-xl overflow-hidden">
+            <div class="p-1.5 max-h-64 overflow-y-auto">
+              {% for l in lists_in_ws %}
+              <label class="flex items-center gap-2 px-2.5 py-1.5 rounded text-xs text-white/85 hover:bg-cu-sidebar-hover cursor-pointer">
+                <input type="checkbox" value="{{ l.id }}" class="dash-list-cb rounded border-gray-300 text-cu-accent focus:ring-cu-accent"
+                       {% if l.id in selected_list_ids %}checked{% endif %}>
+                {{ l.name }}
+              </label>
+              {% endfor %}
+            </div>
+            <div class="flex items-center justify-between px-2.5 py-2 border-t border-white/10">
+              <button type="button" onclick="clearDashFilter('list')" class="text-[10px] text-white/40 hover:text-white">Clear</button>
+              <button type="button" onclick="applyDashFilter()" class="text-[10px] px-2.5 py-1 rounded bg-cu-accent text-white font-semibold">Apply</button>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <button type="button" onclick="openCatalog()"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-cu-accent hover:bg-cu-accent/90 text-white text-xs font-semibold shadow transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add card
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Saved Templates Bar ───────────────────────────────────────── -->
+    <div class="flex items-center gap-2 mb-5 flex-wrap">
+      <span class="tpl-label text-[10px] uppercase tracking-wider text-white/35 font-semibold mr-1">Template</span>
+
+      <!-- Template dropdown -->
+      <div class="relative" id="tplDropdownWrap">
+        <button type="button" onclick="toggleTplDropdown()" id="tplDropdownBtn"
+                class="tpl-dropdown-btn flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg border transition-colors
+                       {% if active_template_id %}bg-cu-accent/15 text-white border-cu-accent/40{% else %}bg-cu-panel border-white/10 text-white/70 hover:border-white/25{% endif %}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <span id="tplDropdownLabel">{% if active_template_id %}{% for tpl in saved_templates %}{% if tpl.id == active_template_id %}{{ tpl.name }}{% endif %}{% endfor %}{% else %}All reports{% endif %}</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ml-1 opacity-50"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div id="tplDropdownMenu" class="hidden absolute left-0 top-full mt-1 z-50 w-64 rounded-lg border border-white/10 bg-cu-sidebar shadow-xl overflow-hidden">
+          <div class="py-1">
+            <a href="{% url 'workspaces:reports' %}"
+               class="tpl-dd-item flex items-center gap-2 px-3 py-2 text-xs transition-colors
+                      {% if not active_template_id %}bg-cu-accent/15 text-white font-semibold{% else %}text-white/70 hover:bg-white/5{% endif %}">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+              All reports
+              {% if not active_template_id %}<svg class="ml-auto" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>{% endif %}
+            </a>
+            {% if saved_templates %}
+            <div class="border-t border-white/5 my-1"></div>
+            {% for tpl in saved_templates %}
+            <div class="tpl-dd-item-wrap group flex items-center hover:bg-white/5 transition-colors">
+              <a href="{% url 'workspaces:reports' %}?template={{ tpl.id }}&{% for wid in tpl.workspace_ids %}workspace={{ wid }}&{% endfor %}{% for lid in tpl.list_ids %}list={{ lid }}&{% endfor %}period={{ tpl.period }}"
+                 class="flex-1 flex items-center gap-2 px-3 py-2 text-xs transition-colors
+                        {% if active_template_id == tpl.id %}text-white font-semibold{% else %}text-white/70{% endif %}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                {{ tpl.name }}
+                {% if active_template_id == tpl.id %}<svg class="ml-auto" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>{% endif %}
+              </a>
+              <button type="button" onclick="event.stopPropagation(); deleteTemplate({{ tpl.id }})"
+                      class="hidden group-hover:flex items-center justify-center w-6 h-6 mr-2 rounded text-white/30 hover:text-red-400 transition-colors"
+                      title="Delete template">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+              </button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            <div class="border-t border-white/5 my-1"></div>
+            <button type="button" onclick="closeTplDropdown(); openSaveTemplate()"
+                    class="tpl-dd-item w-full flex items-center gap-2 px-3 py-2 text-xs text-cu-accent hover:bg-white/5 transition-colors">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Save as new template
+            </button>
+            {% if active_template_id %}
+            <button type="button" onclick="closeTplDropdown(); openSaveTemplate({{ active_template_id }})"
+                    class="tpl-dd-item w-full flex items-center gap-2 px-3 py-2 text-xs text-amber-400 hover:bg-white/5 transition-colors">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Update "{% for tpl in saved_templates %}{% if tpl.id == active_template_id %}{{ tpl.name }}{% endif %}{% endfor %}"
+            </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick save button (always visible) -->
+      <button type="button" onclick="openSaveTemplate()"
+              class="tpl-save-btn text-xs px-2.5 py-1 rounded-full border border-dashed border-white/20 text-white/40 hover:text-white hover:border-white/40 transition-colors inline-flex items-center gap-1">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Save view
+      </button>
+
+      {% if active_template_id %}
+      <button type="button" onclick="openSaveTemplate({{ active_template_id }})"
+              class="tpl-save-btn text-xs px-2.5 py-1 rounded-full border border-dashed border-amber-400/30 text-amber-400/60 hover:text-amber-400 hover:border-amber-400/50 transition-colors inline-flex items-center gap-1">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Update
+      </button>
+      {% endif %}
+    </div>
+
+    <!-- ── Save Template Modal ───────────────────────────────────────── -->
+    <div id="saveTemplateModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div class="bg-cu-sidebar border border-white/10 rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+        <div class="tpl-modal-header px-5 py-4 border-b border-white/10">
+          <h3 id="tplModalTitle" class="text-sm font-semibold text-white">Save Report Template</h3>
+          <p id="tplModalDesc" class="text-[11px] text-white/45 mt-0.5">Save the current filters &amp; card layout as a reusable template</p>
+        </div>
+        <div class="px-5 py-4 space-y-3">
+          <div>
+            <label class="tpl-modal-lbl block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1">Name</label>
+            <input id="tplName" type="text" placeholder="e.g. Software Overview"
+                   class="tpl-modal-input w-full px-3 py-2 text-xs rounded-md bg-cu-panel border border-white/10 text-white placeholder-white/30 focus:border-cu-accent focus:ring-1 focus:ring-cu-accent outline-none">
+          </div>
+
+          <!-- Overwrite existing template selector -->
+          {% if saved_templates %}
+          <div id="tplOverwriteSection" class="hidden">
+            <label class="tpl-modal-lbl block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1">Overwriting</label>
+            <div class="tpl-modal-info text-xs text-amber-400/80 bg-amber-400/5 rounded px-3 py-2 border border-amber-400/10 flex items-center gap-2">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <span id="tplOverwriteName">—</span>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="tpl-modal-info text-[10px] text-white/35 bg-cu-panel/50 rounded px-3 py-2 border border-white/5">
+            <span class="font-semibold text-white/50">Will save:</span>
+            Filters · <span class="text-white/60">{{ period_label }}{% if selected_workspaces %}, {{ selected_workspaces|length }} space{{ selected_workspaces|pluralize }}{% endif %}{% if selected_lists %}, {{ selected_lists|length }} list{{ selected_lists|pluralize }}{% endif %}</span>
+            · Cards · <span class="text-white/60">{{ dashboard_cards|length }} card{{ dashboard_cards|pluralize }}</span>
+          </div>
+        </div>
+        <div class="tpl-modal-footer flex items-center justify-end gap-2 px-5 py-3 border-t border-white/10">
+          <button type="button" onclick="closeSaveTemplate()" class="tpl-modal-cancel text-xs px-3 py-1.5 rounded text-white/60 hover:text-white transition-colors">Cancel</button>
+          <button type="button" onclick="saveTemplate()" id="tplSaveBtn" class="text-xs px-4 py-1.5 rounded-md bg-cu-accent text-white font-semibold hover:bg-cu-accent/90 transition-colors">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Card grid or empty state ────────────────────────────────────── -->
+    {% if dashboard_cards %}
+    <div id="dashGrid" class="columns-1 sm:columns-2 gap-4">
+      {% for card in dashboard_cards %}
+      {% include 'workspaces/_dashboard_card.html' %}
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div id="dashEmpty" class="flex flex-col items-center justify-center py-32 text-center">
+      <svg class="dash-empty-icon text-white/15 mb-6" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <h2 class="text-lg font-semibold text-white mb-2">Build your dashboard</h2>
+      <p class="text-sm text-white/50 mb-6 max-w-md">Add reporting cards to create your personalised view. Drag to rearrange.</p>
+      <button type="button" onclick="openCatalog()"
+              class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-cu-accent hover:bg-cu-accent/90 text-white text-sm font-semibold shadow-lg transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add card
+      </button>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- ── Add Card catalog modal ──────────────────────────────────────────── -->
+{% include 'workspaces/_dashboard_catalog.html' %}
+
+<script>
+(function() {
+    var csrf = '{{ csrf_token }}';
+    var addUrl = '{% url "workspaces:dashboard_card_add" %}';
+    var reorderUrl = '{% url "workspaces:dashboard_card_reorder" %}';
+    var dataUrl = '{% url "workspaces:dashboard_card_data" %}';
+    var filterParams = '{% for wid in selected_ws_ids %}&workspace={{ wid }}{% endfor %}{% for lid in selected_list_ids %}&list={{ lid }}{% endfor %}&period={{ period }}';
+
+    // ── Catalog modal ─────────────────────────────────────────────────
+    window.openCatalog = function() {
+        document.getElementById('catalogOverlay').classList.remove('hidden');
+        document.getElementById('catalogModal').classList.remove('hidden');
+    };
+    window.closeCatalog = function() {
+        document.getElementById('catalogOverlay').classList.add('hidden');
+        document.getElementById('catalogModal').classList.add('hidden');
+        // Reset search
+        var s = document.getElementById('catalogSearch');
+        if (s) { s.value = ''; filterCatalog(''); }
+    };
+
+    window.filterCatalog = function(q) {
+        q = q.toLowerCase();
+        document.querySelectorAll('#catalogGrid .catalog-item').forEach(function(el) {
+            var text = el.textContent.toLowerCase();
+            el.style.display = text.indexOf(q) >= 0 ? '' : 'none';
+        });
+        // If searching, show all sections; otherwise respect active category
+        if (q) {
+            document.querySelectorAll('#catalogGrid .catalog-section').forEach(function(s) {
+                var vis = s.querySelectorAll('.catalog-item:not([style*="display: none"])');
+                s.style.display = vis.length ? '' : 'none';
+                if (vis.length) s.classList.remove('hidden');
+            });
+        } else {
+            // Re-apply category filter
+            var active = document.querySelector('.cat-nav-btn.cat-nav-active');
+            if (active) showCatalogCat(active.dataset.cat);
+        }
+    };
+
+    window.showCatalogCat = function(cat) {
+        // Update active nav button
+        document.querySelectorAll('.cat-nav-btn').forEach(function(btn) {
+            if (btn.dataset.cat === cat) {
+                btn.classList.add('cat-nav-active');
+                btn.classList.remove('text-white/55', 'hover:text-white', 'hover:bg-white/5');
+            } else {
+                btn.classList.remove('cat-nav-active');
+                btn.classList.add('text-white/55', 'hover:text-white', 'hover:bg-white/5');
+            }
+        });
+        // Show/hide sections
+        document.querySelectorAll('#catalogGrid .catalog-section').forEach(function(s) {
+            if (s.dataset.section === cat) {
+                s.classList.remove('hidden');
+            } else {
+                s.classList.add('hidden');
+            }
+        });
+        // Reset search
+        var s = document.getElementById('catalogSearch');
+        if (s) s.value = '';
+        // Reset item visibility
+        document.querySelectorAll('#catalogGrid .catalog-item').forEach(function(el) {
+            el.style.display = '';
+        });
+    };
+
+    // ── Add card ─────────────────────────────────────────────────────
+    window.addCard = function(cardType) {
+        var fd = new FormData();
+        fd.append('card_type', cardType);
+        fd.append('csrfmiddlewaretoken', csrf);
+        fetch(addUrl, { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(resp) {
+                if (resp.error) return;
+                // Fetch rendered card HTML
+                fetch(dataUrl + '?card_id=' + resp.id + filterParams)
+                    .then(function(r) { return r.text(); })
+                    .then(function(html) {
+                        // Ensure grid exists (switch from empty state if needed)
+                        var grid = document.getElementById('dashGrid');
+                        if (!grid) {
+                            var empty = document.getElementById('dashEmpty');
+                            if (empty) empty.remove();
+                            var container = document.querySelector('#dashPage .px-6');
+                            grid = document.createElement('div');
+                            grid.id = 'dashGrid';
+                            grid.className = 'columns-1 sm:columns-2 gap-4';
+                            container.appendChild(grid);
+                            // Init SortableJS on new grid
+                            if (window.Sortable) {
+                                Sortable.create(grid, {
+                                    animation: 150,
+                                    handle: '.drag-handle',
+                                    ghostClass: 'drag-ghost',
+                                    chosenClass: 'drag-chosen',
+                                    onEnd: function() {
+                                        var order = [];
+                                        grid.querySelectorAll('[data-card-id]').forEach(function(el) {
+                                            order.push(parseInt(el.dataset.cardId));
+                                        });
+                                        fetch(reorderUrl, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                                            body: JSON.stringify({ order: order })
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                        // Insert card
+                        var tmp = document.createElement('div');
+                        tmp.innerHTML = html.trim();
+                        while (tmp.firstChild) {
+                            grid.appendChild(tmp.firstChild);
+                        }
+                        // Init any new charts
+                        if (window.initDashCharts) initDashCharts();
+                        // Close catalog
+                        closeCatalog();
+                    });
+            });
+    };
+
+    // ── Remove card ──────────────────────────────────────────────────
+    window.removeCard = function(cardId) {
+        var fd = new FormData();
+        fd.append('csrfmiddlewaretoken', csrf);
+        fetch('{% url "workspaces:reports" %}cards/' + cardId + '/remove/', {
+            method: 'POST', body: fd
+        }).then(function(r) { return r.json(); })
+          .then(function() {
+              var el = document.getElementById('card-' + cardId);
+              if (el) el.remove();
+              // Show empty state if no cards left
+              var grid = document.getElementById('dashGrid');
+              if (grid && grid.children.length === 0) {
+                  window.location.reload();
+              }
+          });
+    };
+
+    // ── SortableJS ───────────────────────────────────────────────────
+    var grid = document.getElementById('dashGrid');
+    if (grid && window.Sortable) {
+        Sortable.create(grid, {
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'drag-ghost',
+            chosenClass: 'drag-chosen',
+            onEnd: function() {
+                var order = [];
+                grid.querySelectorAll('[data-card-id]').forEach(function(el) {
+                    order.push(parseInt(el.dataset.cardId));
+                });
+                fetch(reorderUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                    body: JSON.stringify({ order: order })
+                });
+            }
+        });
+    }
+
+    // ── Init charts inside cards ─────────────────────────────────────
+    window.initDashCharts = function() {
+        document.querySelectorAll('[data-dash-chart]').forEach(function(canvas) {
+            if (canvas._dashChartDone) return;
+            canvas._dashChartDone = true;
+            var type = canvas.dataset.dashChart;
+            var labels, datasets;
+            try {
+                labels = JSON.parse(canvas.dataset.labels || '[]');
+                datasets = JSON.parse(canvas.dataset.datasets || '[]');
+            } catch(e) { return; }
+
+            var light = document.body.classList.contains('theme-light');
+            var gridColor = light ? 'rgba(26,22,57,0.07)' : 'rgba(255,255,255,0.05)';
+            var tickColor = light ? 'rgba(26,22,57,0.50)' : 'rgba(255,255,255,0.45)';
+
+            var opts = {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: tickColor, font: { size: 10 }, boxWidth: 10, boxHeight: 10 } }
+                }
+            };
+            if (type === 'pie' || type === 'doughnut') {
+                opts.plugins.legend.position = 'bottom';
+            } else {
+                opts.scales = {
+                    x: { ticks: { color: tickColor, font: { size: 9 } }, grid: { color: gridColor } },
+                    y: { ticks: { color: tickColor, font: { size: 9 }, precision: 0 }, grid: { color: gridColor }, beginAtZero: true }
+                };
+            }
+            new Chart(canvas, { type: type, data: { labels: labels, datasets: datasets }, options: opts });
+        });
+    };
+    initDashCharts();
+
+    // ── Multi-select filter dropdowns ─────────────────────────────
+    window.toggleDashDD = function(id) {
+        var dd = document.getElementById(id);
+        var wasHidden = dd.classList.contains('hidden');
+        // close all
+        document.querySelectorAll('#wsDD, #listDD').forEach(function(d) { d.classList.add('hidden'); });
+        if (wasHidden) dd.classList.remove('hidden');
+    };
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#wsFilterWrap') && !e.target.closest('#listFilterWrap')) {
+            document.querySelectorAll('#wsDD, #listDD').forEach(function(d) { d.classList.add('hidden'); });
+        }
+    });
+    window.clearDashFilter = function(type) {
+        var cls = type === 'ws' ? '.dash-ws-cb' : '.dash-list-cb';
+        document.querySelectorAll(cls).forEach(function(cb) { cb.checked = false; });
+    };
+    window.applyDashFilter = function() {
+        var params = new URLSearchParams();
+        params.set('period', '{{ period }}');
+        document.querySelectorAll('.dash-ws-cb:checked').forEach(function(cb) {
+            params.append('workspace', cb.value);
+        });
+        document.querySelectorAll('.dash-list-cb:checked').forEach(function(cb) {
+            params.append('list', cb.value);
+        });
+        window.location.href = '{% url "workspaces:reports" %}?' + params.toString();
+    };
+
+    // ── Template Dropdown ──────────────────────────────────────────
+    var _tplDropOpen = false;
+    window.toggleTplDropdown = function() {
+        var menu = document.getElementById('tplDropdownMenu');
+        _tplDropOpen = !_tplDropOpen;
+        menu.classList.toggle('hidden', !_tplDropOpen);
+    };
+    window.closeTplDropdown = function() {
+        _tplDropOpen = false;
+        document.getElementById('tplDropdownMenu').classList.add('hidden');
+    };
+    // Close dropdown on outside click
+    document.addEventListener('click', function(e) {
+        if (_tplDropOpen && !document.getElementById('tplDropdownWrap').contains(e.target)) {
+            closeTplDropdown();
+        }
+    });
+
+    // ── Saved Templates ────────────────────────────────────────────
+    var _editingTemplateId = null;
+    // Template name lookup
+    var _tplNames = { {% for tpl in saved_templates %}'{{ tpl.id }}': '{{ tpl.name|escapejs }}'{% if not forloop.last %}, {% endif %}{% endfor %} };
+
+    window.openSaveTemplate = function(existingId) {
+        _editingTemplateId = existingId || null;
+        var modal = document.getElementById('saveTemplateModal');
+        var title = document.getElementById('tplModalTitle');
+        var desc = document.getElementById('tplModalDesc');
+        var nameInput = document.getElementById('tplName');
+        var saveBtn = document.getElementById('tplSaveBtn');
+        var overwriteSection = document.getElementById('tplOverwriteSection');
+
+        if (_editingTemplateId && _tplNames[_editingTemplateId]) {
+            title.textContent = 'Update Template';
+            desc.textContent = 'Overwrite this template with the current filters & card layout';
+            nameInput.value = _tplNames[_editingTemplateId];
+            saveBtn.textContent = 'Update';
+            saveBtn.classList.remove('bg-cu-accent', 'hover:bg-cu-accent/90');
+            saveBtn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+            if (overwriteSection) {
+                overwriteSection.classList.remove('hidden');
+                document.getElementById('tplOverwriteName').textContent = _tplNames[_editingTemplateId];
+            }
+        } else {
+            title.textContent = 'Save Report Template';
+            desc.textContent = 'Save the current filters & card layout as a reusable template';
+            nameInput.value = '';
+            saveBtn.textContent = 'Save';
+            saveBtn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+            saveBtn.classList.add('bg-cu-accent', 'hover:bg-cu-accent/90');
+            if (overwriteSection) overwriteSection.classList.add('hidden');
+        }
+
+        modal.classList.remove('hidden');
+        nameInput.focus();
+        nameInput.select();
+    };
+    window.closeSaveTemplate = function() {
+        document.getElementById('saveTemplateModal').classList.add('hidden');
+        document.getElementById('tplName').value = '';
+        _editingTemplateId = null;
+    };
+    window.saveTemplate = function() {
+        var name = document.getElementById('tplName').value.trim();
+        if (!name) { document.getElementById('tplName').focus(); return; }
+        var fd = new FormData();
+        fd.append('name', name);
+        fd.append('template_type', 'custom');
+        fd.append('period', '{{ period }}');
+        {% for wid in selected_ws_ids %}fd.append('workspace_ids', '{{ wid }}');
+        {% endfor %}
+        {% for lid in selected_list_ids %}fd.append('list_ids', '{{ lid }}');
+        {% endfor %}
+        if (_editingTemplateId) {
+            fd.append('template_id', _editingTemplateId);
+        }
+        fetch('{% url "workspaces:report_template_save" %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: fd
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            // Reload with the template active
+            var url = '{% url "workspaces:reports" %}?template=' + data.id;
+            url += '&period={{ period }}';
+            {% for wid in selected_ws_ids %}url += '&workspace={{ wid }}';
+            {% endfor %}
+            {% for lid in selected_list_ids %}url += '&list={{ lid }}';
+            {% endfor %}
+            window.location.href = url;
+        });
+    };
+    window.deleteTemplate = function(id) {
+        if (!confirm('Delete this saved template?')) return;
+        fetch('{% url "workspaces:report_template_delete" template_id=0 %}'.replace('/0/', '/' + id + '/'), {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        }).then(function() { window.location.href = '{% url "workspaces:reports" %}'; });
+    };
+    // Close modal on escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSaveTemplate();
+            closeTplDropdown();
+        }
+    });
+    // Close modal on backdrop click
+    document.getElementById('saveTemplateModal').addEventListener('click', function(e) {
+        if (e.target === this) closeSaveTemplate();
+    });
+})();
+</script>
+{% endblock %}

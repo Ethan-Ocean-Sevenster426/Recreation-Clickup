@@ -1,0 +1,473 @@
+<div>
+  <div class="px-6 py-6 max-w-[1400px] mx-auto space-y-5">
+
+    <!-- ── Header + filter chain ──────────────────────────────────────── -->
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between flex-wrap">
+      <div>
+        <div class="flex items-center gap-1.5 text-xs text-white/50 mb-1 flex-wrap">
+          <a href="{% url 'workspaces:reports' %}?period={{ period }}" class="hover:text-white transition-colors" data-filter-link>All spaces</a>
+          {% if selected_workspace %}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <a href="{% url 'workspaces:reports' %}?workspace={{ selected_workspace.id }}&period={{ period }}"
+               class="hover:text-white transition-colors {% if not selected_list %}text-white/80 font-medium{% endif %}" data-filter-link>{{ selected_workspace.name }}</a>
+            {% if selected_list %}
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              <span class="text-white/80 font-medium">{{ selected_list.name }}</span>
+            {% endif %}
+          {% endif %}
+        </div>
+        <h1 class="text-xl font-bold text-white leading-tight">
+          {% if selected_list %}{{ selected_list.name }}
+          {% elif selected_workspace %}{{ selected_workspace.name }}
+          {% else %}Workspace overview{% endif %}
+        </h1>
+        <p class="text-xs text-white/50 mt-0.5">{{ period_label }} · snapshot metrics reflect current state</p>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Period chips -->
+        <div class="inline-flex items-center bg-cu-panel border border-white/10 rounded-md p-0.5 text-xs">
+          {% for key, label in period_choices %}
+          <a href="{% url 'workspaces:reports' %}?{% if selected_workspace %}workspace={{ selected_workspace.id }}&{% endif %}{% if selected_list %}list={{ selected_list.id }}&{% endif %}period={{ key }}"
+             class="px-2.5 py-1 rounded {% if period == key %}bg-cu-accent text-white font-semibold shadow{% else %}text-white/55 hover:text-white{% endif %}"
+             data-filter-link>{{ label }}</a>
+          {% endfor %}
+        </div>
+
+        <!-- Workspace selector -->
+        <form method="get" action="{% url 'workspaces:reports' %}">
+          <input type="hidden" name="period" value="{{ period }}">
+          <select name="workspace" data-filter-select
+                  class="text-xs px-2.5 py-1.5 border border-white/15 rounded bg-cu-panel text-white/85 focus:ring-1 focus:ring-cu-accent outline-none cursor-pointer">
+            <option value="">All spaces</option>
+            {% for w in all_workspaces %}
+            <option value="{{ w.id }}" {% if selected_workspace and selected_workspace.id == w.id %}selected{% endif %}>{{ w.name }}</option>
+            {% endfor %}
+          </select>
+        </form>
+
+        <!-- List selector -->
+        {% if selected_workspace %}
+        <form method="get" action="{% url 'workspaces:reports' %}">
+          <input type="hidden" name="period" value="{{ period }}">
+          <input type="hidden" name="workspace" value="{{ selected_workspace.id }}">
+          <select name="list" data-filter-select
+                  class="text-xs px-2.5 py-1.5 border border-white/15 rounded bg-cu-panel text-white/85 focus:ring-1 focus:ring-cu-accent outline-none cursor-pointer">
+            <option value="">All lists</option>
+            {% for l in lists_in_ws %}
+            <option value="{{ l.id }}" {% if selected_list and selected_list.id == l.id %}selected{% endif %}>{{ l.name }}</option>
+            {% endfor %}
+          </select>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── KPI cards ──────────────────────────────────────────────────── -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 {% if is_retainer %}lg:grid-cols-2{% else %}lg:grid-cols-5{% endif %} gap-3">
+
+      {% if not is_retainer %}
+      <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-4 col-span-1">
+        <div class="text-[10px] uppercase tracking-widest font-semibold text-white/50 mb-2">Progress</div>
+        <div class="text-3xl font-bold text-cu-accent leading-none">{{ completion_rate }}<span class="text-lg font-semibold">%</span></div>
+        <div class="mt-2 h-1.5 rounded-full report-bar-track bg-cu-sidebar overflow-hidden">
+          <div class="h-full bg-cu-accent rounded-full" style="width:{{ completion_rate }}%"></div>
+        </div>
+        <div class="kpi-sub mt-2 text-[11px] text-white/50 tabular-nums">{{ closed_tasks }} done · {{ open_tasks }} open</div>
+      </div>
+
+      <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-4">
+        <div class="text-[10px] uppercase tracking-widest font-semibold text-white/50 mb-2">Velocity</div>
+        <div class="text-3xl font-bold text-cu-blue leading-none">{{ velocity }}</div>
+        <div class="kpi-sub mt-1.5 text-[11px] text-white/50">tasks / week</div>
+        <div class="kpi-sub mt-1 text-[11px] text-white/40">{{ period_label }}</div>
+      </div>
+      {% endif %}
+
+      <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-4">
+        <div class="text-[10px] uppercase tracking-widest font-semibold text-white/50 mb-2">Cycle time</div>
+        {% if avg_cycle_days is not None %}
+        <div class="text-3xl font-bold text-white leading-none">{{ avg_cycle_days }}<span class="text-base font-semibold text-white/60">d</span></div>
+        <div class="kpi-sub mt-1.5 text-[11px] text-white/50">avg creation → done</div>
+        {% else %}
+        <div class="text-3xl font-bold text-white/30 leading-none">—</div>
+        <div class="kpi-sub mt-1.5 text-[11px] text-white/40">no done tasks yet</div>
+        {% endif %}
+      </div>
+
+      {% if not is_retainer %}
+      <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-4">
+        <div class="text-[10px] uppercase tracking-widest font-semibold text-white/50 mb-2">Overdue</div>
+        <div class="text-3xl font-bold {% if overdue %}text-red-400{% else %}text-emerald-400{% endif %} leading-none">{{ overdue }}</div>
+        <div class="kpi-sub mt-1.5 text-[11px] {% if overdue %}text-red-400/70{% else %}text-white/50{% endif %}">
+          {% if overdue %}{{ overdue_pct }}% of open · {{ due_this_week }} due soon{% else %}all clear{% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-4">
+        <div class="text-[10px] uppercase tracking-widest font-semibold text-white/50 mb-2">Time logged</div>
+        <div class="text-3xl font-bold text-cu-pink leading-none truncate">{{ total_tracked_label }}</div>
+        <div class="kpi-sub mt-1.5 text-[11px] text-white/50">
+          {% if unassigned_count %}{{ unassigned_count }} unassigned · {% endif %}{{ no_due_date_count }} no date
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Status by count strip — always visible ─────────────────────── -->
+    <div class="report-card bg-cu-panel border border-white/10 rounded-lg px-5 py-3">
+      <div class="flex items-center gap-1 flex-wrap">
+        <span class="text-[10px] uppercase tracking-widest font-semibold text-white/45 mr-2">By status</span>
+        {% for s in statuses_list %}
+        <button type="button" onclick="toggleStatusPanel('statusPanel_{{ s.key }}')"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/10 text-xs cursor-pointer hover:border-white/30 hover:bg-white/15 transition-colors">
+          <span class="w-2 h-2 rounded-full flex-shrink-0
+            {% if s.key == 'done' %}bg-emerald-500
+            {% elif s.key == 'in_progress' %}bg-cu-purple
+            {% elif s.key == 'on_hold' %}bg-pink-500
+            {% elif s.key == 'review' %}bg-orange-500
+            {% elif s.key == 'internal_review' %}bg-red-500
+            {% else %}bg-ms-neutral-40{% endif %}"></span>
+          <span class="text-white/70">{{ s.label }}</span>
+          <span class="font-bold text-white tabular-nums">{{ s.count }}</span>
+        </button>
+        {% endfor %}
+      </div>
+
+      <!-- Expandable status task lists -->
+      {% for s in statuses_list %}
+      {% if s.count %}
+      <div id="statusPanel_{{ s.key }}" class="hidden mt-3 border-t border-white/10 pt-3">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full
+              {% if s.key == 'done' %}bg-emerald-500
+              {% elif s.key == 'in_progress' %}bg-cu-purple
+              {% elif s.key == 'on_hold' %}bg-pink-500
+              {% elif s.key == 'review' %}bg-orange-500
+              {% elif s.key == 'internal_review' %}bg-red-500
+              {% else %}bg-ms-neutral-40{% endif %}"></span>
+            <span class="text-sm font-semibold text-white">{{ s.label }}</span>
+            <span class="text-xs text-white/50">{{ s.count }} task{{ s.count|pluralize }}</span>
+          </div>
+          <button type="button" onclick="toggleStatusPanel('statusPanel_{{ s.key }}')" class="text-white/40 hover:text-white p-1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <ul class="divide-y divide-white/5 max-h-80 overflow-y-auto">
+          {% for t in s.tasks %}
+          <li class="py-2 flex items-center gap-3">
+            <a href="{% url 'workspaces:task_detail' t.id %}"
+               class="flex-1 min-w-0 text-sm text-white hover:text-cu-accent transition-colors font-medium truncate">{{ t.title }}</a>
+            <div class="flex items-center gap-2 text-[11px] text-white/45 flex-shrink-0">
+              {% if t.task_list %}<span>{{ t.task_list.name }}</span>{% endif %}
+              {% for u in t.assignees.all %}{% if forloop.first %}<span>· {% endif %}{{ u.get_full_name|default:u.username }}{% if not forloop.last %}, {% endif %}{% if forloop.last %}</span>{% endif %}{% endfor %}
+              {% if t.due_date %}<span class="{% if t.due_date < today %}text-red-400{% endif %}">· {{ t.due_date|date:"M j" }}</span>{% endif %}
+            </div>
+          </li>
+          {% endfor %}
+          {% if s.count > 50 %}
+          <li class="py-2 text-center text-xs text-white/40">Showing 50 of {{ s.count }}</li>
+          {% endif %}
+        </ul>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- ── Activity trend chart ────────────────────────────────────────── -->
+    <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-5">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h2 class="text-sm font-semibold text-white">Activity trend</h2>
+          <p class="text-[11px] text-white/50 mt-0.5">Tasks created vs. completed · {{ period_label }} · scroll to pan</p>
+        </div>
+      </div>
+      <!-- Scrollable wrapper; inner div gets its width set by JS based on data length -->
+      <div id="activityChartWrap" style="overflow-x:auto; overflow-y:hidden; width:100%; padding-bottom:4px;">
+        <div id="activityChartInner" style="height:160px; position:relative; min-width:600px;">
+          <canvas id="activityChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Context-sensitive breakdown ────────────────────────────────── -->
+    {% if space_breakdown %}
+    <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-5">
+      <h2 class="text-sm font-semibold text-white mb-1">Breakdown by space</h2>
+      <p class="text-[11px] text-white/50 mb-4">Click a row to drill into that space's lists.</p>
+      {% include 'workspaces/_reports_breakdown_table.html' with rows=space_breakdown drill_type='space' %}
+    </div>
+
+    {% elif list_breakdown %}
+    <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-5">
+      <h2 class="text-sm font-semibold text-white mb-1">Breakdown by list · {{ selected_workspace.name }}</h2>
+      <p class="text-[11px] text-white/50 mb-4">Click a row to drill into that list's detail.</p>
+      {% include 'workspaces/_reports_breakdown_table.html' with rows=list_breakdown drill_type='list' %}
+    </div>
+    {% endif %}
+
+    <!-- Status + Priority (always shown) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-5">
+        <h2 class="text-sm font-semibold text-white mb-4">Status breakdown</h2>
+        <ul class="space-y-2.5">
+          {% for s in statuses_list %}{% if s.count %}
+          <li>
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span class="text-white font-medium">{{ s.label }}</span>
+              <span class="text-white/55 font-mono tabular-nums">{{ s.count }} · {{ s.pct }}%</span>
+            </div>
+            <div class="h-2 rounded-full report-bar-track bg-cu-sidebar overflow-hidden">
+              <div class="h-full rounded-full transition-all
+                {% if s.key == 'done' %}bg-emerald-500
+                {% elif s.key == 'in_progress' %}bg-cu-purple
+                {% elif s.key == 'on_hold' %}bg-pink-500
+                {% elif s.key == 'review' %}bg-orange-500
+                {% elif s.key == 'internal_review' %}bg-red-500
+                {% else %}bg-ms-neutral-40{% endif %}"
+                   style="width:{{ s.pct }}%"></div>
+            </div>
+          </li>
+          {% endif %}{% endfor %}
+        </ul>
+      </div>
+
+      <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-5">
+        <h2 class="text-sm font-semibold text-white mb-4">Priority breakdown</h2>
+        <ul class="space-y-2.5">
+          {% for p in priority_list %}{% if p.count %}
+          <li>
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span class="text-white font-medium">{{ p.label }}</span>
+              <span class="text-white/55 font-mono tabular-nums">{{ p.count }}</span>
+            </div>
+            <div class="h-2 rounded-full report-bar-track bg-cu-sidebar overflow-hidden">
+              <div class="h-full rounded-full transition-all
+                {% if p.key == 'urgent' %}bg-red-500
+                {% elif p.key == 'high' %}bg-orange-500
+                {% elif p.key == 'normal' %}bg-cu-blue
+                {% else %}bg-ms-neutral-40{% endif %}"
+                   style="width:{{ p.pct }}%"></div>
+            </div>
+          </li>
+          {% endif %}{% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── Team performance table ──────────────────────────────────────── -->
+    {% if team_rows %}
+    <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-5">
+      <h2 class="text-sm font-semibold text-white mb-1">Team performance</h2>
+      <p class="text-[11px] text-white/50 mb-4">Tasks assigned + time logged — sorted by workload.</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-white/45 border-b border-white/10">
+              <th class="text-left pb-2 font-semibold pr-4">Member</th>
+              <th class="text-right pb-2 font-semibold px-3">Open</th>
+              <th class="text-right pb-2 font-semibold px-3">Done</th>
+              {% if not is_retainer %}<th class="text-right pb-2 font-semibold px-3 text-red-400/70">Overdue</th>{% endif %}
+              <th class="text-right pb-2 font-semibold px-3">Time</th>
+              <th class="pb-2 pl-4 w-36 font-semibold">Done rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in team_rows %}
+            <tr class="breakdown-row border-b border-white/5 hover:bg-cu-panel-2 transition-colors">
+              <td class="py-2.5 pr-4">
+                <div class="flex items-center gap-2.5">
+                  <span class="avatar bg-cu-purple flex-shrink-0 text-[10px]">{{ r.name|slice:":1"|upper }}</span>
+                  <span class="text-white font-medium">{{ r.name }}</span>
+                </div>
+              </td>
+              <td class="py-2.5 text-right text-cu-blue font-mono tabular-nums px-3">{{ r.open }}</td>
+              <td class="py-2.5 text-right text-emerald-400 font-mono tabular-nums px-3">{{ r.done }}</td>
+              {% if not is_retainer %}<td class="py-2.5 text-right font-mono tabular-nums px-3 {% if r.overdue %}text-red-400{% else %}text-white/25{% endif %}">{{ r.overdue }}</td>{% endif %}
+              <td class="py-2.5 text-right text-white/70 font-mono tabular-nums px-3">{{ r.time_label }}</td>
+              <td class="py-2.5 pl-4">
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 h-1.5 rounded-full team-done-bar bg-cu-sidebar overflow-hidden">
+                    <div class="h-full bg-emerald-500 rounded-full" style="width:{{ r.done_pct }}%"></div>
+                  </div>
+                  <span class="text-white/55 tabular-nums w-8 text-right">{{ r.done_pct }}%</span>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Hours by category ─────────────────────────────────────────── -->
+    {% if category_rows %}
+    <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-5">
+      <h2 class="text-sm font-semibold text-white mb-1">Hours by category</h2>
+      <p class="text-[11px] text-white/50 mb-4">Time tracked grouped by task category.</p>
+      <ul class="space-y-2.5">
+        {% for c in category_rows %}
+        <li>
+          <div class="flex items-center justify-between text-xs mb-1">
+            <span class="text-white font-medium">{{ c.label }}</span>
+            <span class="text-white/55 font-mono tabular-nums">{{ c.time_label }} · {{ c.pct }}%</span>
+          </div>
+          <div class="h-2 rounded-full report-bar-track bg-cu-sidebar overflow-hidden">
+            <div class="h-full rounded-full bg-cu-purple transition-all" style="width:{{ c.pct }}%"></div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- ── Hours per workspace (company) ─────────────────────────────── -->
+    {% if workspace_hour_rows %}
+    <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-5">
+      <h2 class="text-sm font-semibold text-white mb-1">Hours per company</h2>
+      <p class="text-[11px] text-white/50 mb-4">Total time tracked by workspace · {{ total_tracked_label }} total.</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-white/45 border-b border-white/10">
+              <th class="text-left pb-2 font-semibold pr-4">Workspace</th>
+              <th class="text-right pb-2 font-semibold px-3">Time</th>
+              <th class="pb-2 pl-4 w-36 font-semibold">Share</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in workspace_hour_rows %}
+            <tr class="border-b border-white/5 hover:bg-cu-panel-2 transition-colors">
+              <td class="py-2.5 pr-4 text-white font-medium">{{ r.name }}</td>
+              <td class="py-2.5 text-right text-cu-pink font-mono tabular-nums px-3">{{ r.time_label }}</td>
+              <td class="py-2.5 pl-4">
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 h-1.5 rounded-full bg-cu-sidebar overflow-hidden">
+                    <div class="h-full bg-cu-pink rounded-full" style="width:{{ r.pct }}%"></div>
+                  </div>
+                  <span class="text-white/55 tabular-nums w-8 text-right">{{ r.pct }}%</span>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Unassigned & open tasks summary ───────────────────────────── -->
+    {% if unassigned_count or open_tasks %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-5">
+        <div class="text-[10px] uppercase tracking-widest font-semibold text-white/50 mb-2">Unassigned tasks</div>
+        <div class="text-3xl font-bold {% if unassigned_count %}text-amber-400{% else %}text-emerald-400{% endif %} leading-none">{{ unassigned_count }}</div>
+        <div class="kpi-sub mt-1.5 text-[11px] text-white/50">
+          {% if unassigned_count %}open tasks with no assignee{% else %}all tasks assigned{% endif %}
+        </div>
+      </div>
+      <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-5">
+        <div class="text-[10px] uppercase tracking-widest font-semibold text-white/50 mb-2">Open tasks</div>
+        <div class="text-3xl font-bold text-cu-blue leading-none">{{ open_tasks }}</div>
+        <div class="kpi-sub mt-1.5 text-[11px] text-white/50">
+          {{ total_tasks }} total · {{ closed_tasks }} completed
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Overdue tasks detail ────────────────────────────────────────── -->
+    {% if overdue_tasks and not is_retainer %}
+    <div class="report-card bg-cu-panel border border-white/10 rounded-lg p-5">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-sm font-semibold text-white">Overdue tasks</h2>
+          <p class="text-[11px] text-white/50 mt-0.5">{{ overdue }} total · most overdue first</p>
+        </div>
+        <span class="text-xs text-red-400 font-semibold bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full">{{ overdue }} overdue</span>
+      </div>
+      <ul class="divide-y divide-white/5">
+        {% for t in overdue_tasks %}
+        <li class="py-2.5 flex items-start gap-3">
+          <div class="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0 mt-1.5"></div>
+          <div class="flex-1 min-w-0">
+            <a href="{% url 'workspaces:task_detail' t.id %}"
+               class="text-sm text-white hover:text-cu-accent transition-colors font-medium truncate block">{{ t.title }}</a>
+            <div class="text-[11px] text-white/45 flex items-center gap-2 mt-0.5 flex-wrap">
+              <span>{{ t.workspace.name }}</span>
+              {% if t.task_list %}<span>· {{ t.task_list.name }}</span>{% endif %}
+              {% for u in t.assignees.all %}{% if forloop.first %}<span>· {% endif %}{{ u.username }}{% if not forloop.last %}, {% endif %}{% if forloop.last %}</span>{% endif %}{% endfor %}
+            </div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <div class="text-xs font-semibold text-red-400">{{ t.due_date|date:"M j" }}</div>
+            <div class="text-[10px] text-white/35 mt-0.5">{{ t.due_date|timesince }} ago</div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+(function() {
+    const labels  = {{ chart_labels_json|safe }};
+    const created = {{ chart_created_json|safe }};
+    const done    = {{ chart_done_json|safe }};
+    const ctx = document.getElementById('activityChart');
+    if (!ctx || !window.Chart) return;
+
+    const light     = document.body.classList.contains('theme-light');
+    const gridColor = light ? 'rgba(26,22,57,0.07)' : 'rgba(255,255,255,0.05)';
+    const tickColor = light ? 'rgba(26,22,57,0.50)' : 'rgba(255,255,255,0.45)';
+    const tipBg     = light ? '#FFFFFF'             : '#221D44';
+    const tipBorder = light ? 'rgba(26,22,57,0.12)' : 'rgba(255,255,255,0.10)';
+
+    // Size the inner div so each bar pair gets ~26px; cap minimum at 600px
+    var PX_PER_BAR = 26;
+    var chartWidth = Math.max(600, labels.length * PX_PER_BAR);
+    var inner = document.getElementById('activityChartInner');
+    if (inner) inner.style.width = chartWidth + 'px';
+
+    if (window._reportChart) { try { window._reportChart.destroy(); } catch(e) {} }
+    window._reportChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label: 'Created',   data: created, backgroundColor: 'rgba(99,71,234,0.55)', borderColor: 'rgba(99,71,234,0.90)', borderWidth: 1, borderRadius: 3 },
+                { label: 'Completed', data: done,    backgroundColor: 'rgba(16,185,129,0.50)', borderColor: 'rgba(16,185,129,0.90)', borderWidth: 1, borderRadius: 3 },
+            ],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: tickColor, font: { size: 11 }, boxWidth: 12, boxHeight: 12 } },
+                tooltip: { backgroundColor: tipBg, titleColor: light ? '#032D45' : '#fff', bodyColor: tickColor, borderColor: tipBorder, borderWidth: 1 },
+            },
+            scales: {
+                x: { ticks: { color: tickColor, font: { size: 10 }, maxRotation: 45, autoSkip: true, autoSkipPadding: 6 }, grid: { color: gridColor } },
+                y: { ticks: { color: tickColor, font: { size: 10 }, precision: 0 }, grid: { color: gridColor }, beginAtZero: true },
+            },
+        },
+    });
+
+    // Scroll chart to the rightmost (most recent) data
+    var wrap = document.getElementById('activityChartWrap');
+    if (wrap) wrap.scrollLeft = wrap.scrollWidth;
+})();
+
+function toggleStatusPanel(id) {
+    // Close all other status panels first
+    document.querySelectorAll('[id^="statusPanel_"]').forEach(function(el) {
+        if (el.id !== id) el.classList.add('hidden');
+    });
+    var panel = document.getElementById(id);
+    if (panel) panel.classList.toggle('hidden');
+}
+</script>

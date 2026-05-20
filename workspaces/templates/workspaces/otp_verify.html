@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Set your password · Luma</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: {
+            'cu-pink': '#054B70',
+            'cu-purple': '#0A6D9E',
+            'cu-blue': '#8BB7C4',
+        }}}}
+    </script>
+    <style>
+        body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, -20px); }
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30px, 25px) scale(1.05); }
+        }
+        .blob-1 { animation: float 8s ease-in-out infinite; }
+        .blob-2 { animation: floatSlow 12s ease-in-out infinite; }
+
+        @media (prefers-color-scheme: dark) {
+            body { background: #032D45 !important; }
+            .otp-panel { background: #032D45 !important; }
+            .otp-heading { color: #FFFFFF !important; }
+            .otp-subtext { color: rgba(255,255,255,0.60) !important; }
+            .otp-label { color: rgba(255,255,255,0.55) !important; }
+            .otp-input {
+                background: #0A4A6B !important;
+                border-color: rgba(255,255,255,0.15) !important;
+                color: #FFFFFF !important;
+            }
+            .otp-input::placeholder { color: rgba(255,255,255,0.35) !important; }
+            .otp-input-icon { color: rgba(255,255,255,0.50) !important; }
+            .otp-footer { color: rgba(255,255,255,0.45) !important; }
+            .otp-mobile-name { color: rgba(255,255,255,0.85) !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-white">
+<div class="min-h-screen flex">
+
+    <!-- Left: brand panel -->
+    <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-cu-pink via-cu-purple to-cu-blue">
+        <div class="blob-1 absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="blob-2 absolute -bottom-32 -right-10 w-96 h-96 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute top-1/3 right-20 w-40 h-40 rounded-full bg-cu-pink/30 blur-2xl blob-1"></div>
+
+        <div class="relative z-10 flex flex-col justify-between p-12 text-white w-full">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center font-bold text-lg shadow-lg">L</div>
+                <span class="text-xl font-semibold tracking-tight">Luma</span>
+            </div>
+            <div class="max-w-md">
+                <h1 class="text-5xl font-bold leading-tight mb-4">
+                    Set your password
+                </h1>
+                <p class="text-white/85 text-lg leading-relaxed">
+                    Enter the code you received via email along with your new password to get started.
+                </p>
+            </div>
+            <div class="text-sm text-white/70">
+                &copy; {% now "Y" %} &middot; All your work in one place.
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: OTP verification form -->
+    <div class="otp-panel flex-1 flex items-center justify-center px-6 py-12">
+        <div class="w-full max-w-sm">
+
+            <!-- Mobile logo -->
+            <div class="flex items-center gap-2 mb-10 lg:hidden">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cu-pink via-cu-purple to-cu-blue text-white font-bold flex items-center justify-center shadow">L</div>
+                <span class="otp-mobile-name font-semibold text-gray-800">Luma</span>
+            </div>
+
+            <h2 class="otp-heading text-3xl font-bold text-gray-800 mb-2">Set up your account</h2>
+            <p class="otp-subtext text-sm text-gray-500 mb-8">Enter the 6-digit code sent to your email, choose a username, and set your password.</p>
+
+            {% if error %}
+            <div class="mb-5 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded text-sm flex items-start gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>{{ error }}</span>
+            </div>
+            {% endif %}
+
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="otp-label block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" for="otp_code">Verification code</label>
+                    <div class="relative">
+                        <svg class="otp-input-icon absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input id="otp_code" name="otp" type="text" required autofocus
+                               maxlength="6" pattern="\d{6}" inputmode="numeric"
+                               placeholder="6-digit code"
+                               class="otp-input w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-800 focus:ring-2 focus:ring-cu-purple focus:border-cu-purple outline-none transition tracking-widest text-center font-mono text-lg">
+                    </div>
+                </div>
+                <div>
+                    <label class="otp-label block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" for="otp_username">Choose a username</label>
+                    <div class="relative">
+                        <svg class="otp-input-icon absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <input id="otp_username" name="username" type="text" required
+                               placeholder="Choose a username"
+                               class="otp-input w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-800 focus:ring-2 focus:ring-cu-purple focus:border-cu-purple outline-none transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="otp-label block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" for="otp_pw1">New password</label>
+                    <input id="otp_pw1" name="password" type="password" required
+                           placeholder="At least 6 characters"
+                           class="otp-input w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-800 focus:ring-2 focus:ring-cu-purple focus:border-cu-purple outline-none transition">
+                </div>
+                <div>
+                    <label class="otp-label block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" for="otp_pw2">Confirm password</label>
+                    <input id="otp_pw2" name="password_confirm" type="password" required
+                           placeholder="Repeat password"
+                           class="otp-input w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-800 focus:ring-2 focus:ring-cu-purple focus:border-cu-purple outline-none transition"
+                           oninput="checkOtpPwds()">
+                    <p id="otpPwMismatch" class="hidden text-xs text-red-500 mt-1">Passwords do not match.</p>
+                </div>
+                <button type="submit"
+                        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-gradient-to-r from-cu-pink via-cu-purple to-cu-blue text-white font-semibold shadow-md hover:shadow-lg hover:opacity-95 transition mt-2">
+                    Set up account
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+            </form>
+
+            <p class="otp-footer mt-8 text-xs text-center text-gray-500">
+                Already have a password? <a href="{% url 'login' %}" class="text-cu-purple font-semibold hover:underline">Sign in</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+function checkOtpPwds() {
+    var p1 = document.getElementById('otp_pw1').value;
+    var p2 = document.getElementById('otp_pw2').value;
+    document.getElementById('otpPwMismatch').classList.toggle('hidden', !p2 || p1 === p2);
+}
+</script>
+</body>
+</html>

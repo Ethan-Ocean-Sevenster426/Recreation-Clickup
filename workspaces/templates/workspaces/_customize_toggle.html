@@ -1,0 +1,12 @@
+{# Required: name (field), label, value (current bool) #}
+<form method="post" action="{% url 'workspaces:view_preference_set' task_list.id view %}" class="block">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <input type="hidden" name="{{ name }}" value="{% if value %}0{% else %}1{% endif %}">
+    <button type="submit" class="w-full flex items-center justify-between px-2 py-1.5 rounded hover:bg-cu-sidebar-hover text-sm text-white">
+        <span>{{ label }}</span>
+        <span class="w-9 h-5 rounded-full relative {% if value %}bg-cu-accent{% else %}bg-white/15{% endif %} transition">
+            <span class="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition {% if value %}left-[18px]{% else %}left-0.5{% endif %}"></span>
+        </span>
+    </button>
+</form>

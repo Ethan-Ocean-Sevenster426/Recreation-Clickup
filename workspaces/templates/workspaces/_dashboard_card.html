@@ -1,0 +1,579 @@
+<div class="dash-card break-inside-avoid mb-4 {% if card.width == 'full' %}[column-span:all]{% endif %}"
+     data-card-id="{{ card.id }}" id="card-{{ card.id }}">
+  <div class="bg-cu-panel border border-white/10 rounded-lg overflow-hidden">
+
+    <!-- ── Card header ──────────────────────────────────────────────── -->
+    <div class="flex items-center justify-between px-4 py-2 border-b border-white/5">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="drag-handle cursor-grab text-white/25 hover:text-white/50 flex-shrink-0 select-none" title="Drag to reorder">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="4" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="19" cy="4" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="20" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="19" cy="20" r="2"/></svg>
+        </span>
+        <span class="text-xs font-semibold text-white/70 truncate">{{ card.meta.label }}</span>
+      </div>
+      <button type="button" onclick="removeCard({{ card.id }})"
+              class="text-white/25 hover:text-red-400 p-0.5 transition-colors flex-shrink-0" title="Remove card">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- ── Card body ────────────────────────────────────────────────── -->
+    <div class="p-4">
+
+      {# ─── KPI: Progress ─────────────────────────────────────────── #}
+      {% if card.card_type == 'progress' %}
+      <div class="text-3xl font-bold text-cu-accent leading-none">{{ completion_rate }}<span class="text-lg font-semibold">%</span></div>
+      <div class="mt-2 h-1.5 rounded-full dash-bar-track bg-cu-sidebar overflow-hidden">
+        <div class="h-full bg-cu-accent rounded-full" style="width:{{ completion_rate }}%"></div>
+      </div>
+      <div class="dash-kpi-sub mt-2 text-[11px] text-white/50 tabular-nums">{{ closed_tasks }} done · {{ open_tasks }} open</div>
+
+      {# ─── KPI: Velocity ─────────────────────────────────────────── #}
+      {% elif card.card_type == 'velocity' %}
+      <div class="text-3xl font-bold text-cu-blue leading-none">{{ velocity }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">tasks / week</div>
+      <div class="dash-kpi-sub mt-1 text-[11px] text-white/40">{{ period_label }}</div>
+
+      {# ─── KPI: Cycle Time ───────────────────────────────────────── #}
+      {% elif card.card_type == 'cycle_time' %}
+      {% if avg_cycle_days is not None %}
+      <div class="text-3xl font-bold text-white leading-none">{{ avg_cycle_days }}<span class="text-base font-semibold text-white/60">d</span></div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">avg creation → done</div>
+      {% else %}
+      <div class="text-3xl font-bold text-white/30 leading-none">—</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/40">no done tasks yet</div>
+      {% endif %}
+
+      {# ─── KPI: Tasks In Progress ────────────────────────────────── #}
+      {% elif card.card_type == 'tasks_in_progress' %}
+      <div class="text-3xl font-bold text-cu-purple leading-none">{{ in_progress_count }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">tasks currently in progress</div>
+
+      {# ─── KPI: Tasks Completed ──────────────────────────────────── #}
+      {% elif card.card_type == 'tasks_completed' %}
+      <div class="text-3xl font-bold text-emerald-400 leading-none">{{ closed_tasks }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">of {{ total_tasks }} total tasks</div>
+
+      {# ─── KPI: Unassigned Tasks ─────────────────────────────────── #}
+      {% elif card.card_type == 'unassigned_tasks' %}
+      <div class="text-3xl font-bold {% if unassigned_count %}text-amber-400{% else %}text-emerald-400{% endif %} leading-none">{{ unassigned_count }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">
+        {% if unassigned_count %}open tasks with no assignee{% else %}all tasks assigned{% endif %}
+      </div>
+
+      {# ─── KPI: Urgent Tasks ─────────────────────────────────────── #}
+      {% elif card.card_type == 'urgent_tasks' %}
+      <div class="text-3xl font-bold {% if urgent_count %}text-red-400{% else %}text-emerald-400{% endif %} leading-none">{{ urgent_count }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">
+        {% if urgent_count %}urgent priority tasks{% else %}no urgent tasks{% endif %}
+      </div>
+
+      {# ─── KPI: Time Logged ──────────────────────────────────────── #}
+      {% elif card.card_type == 'time_logged' %}
+      <div class="text-3xl font-bold text-cu-pink leading-none truncate">{{ total_tracked_label }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">
+        {% if unassigned_count %}{{ unassigned_count }} unassigned · {% endif %}{{ no_due_date_count }} no date
+      </div>
+
+      {# ─── Chart: Status Pie ─────────────────────────────────────── #}
+      {% elif card.card_type == 'status_breakdown_pie' %}
+      {% if statuses_list %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="doughnut"
+                data-labels='["{% for s in statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"data":[{% for s in statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#F472B6","#FB923C","#EF4444","#10B981"],"borderWidth":0}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No status data yet</div>
+      {% endif %}
+
+      {# ─── Chart: Status Bar ─────────────────────────────────────── #}
+      {% elif card.card_type == 'status_breakdown_bar' %}
+      {% if statuses_list %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for s in statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Tasks","data":[{% for s in statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#F472B6","#FB923C","#EF4444","#10B981"],"borderWidth":0,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No status data yet</div>
+      {% endif %}
+
+      {# ─── Chart: Assignee Pie ───────────────────────────────────── #}
+      {% elif card.card_type == 'tasks_by_assignee_pie' %}
+      {% if assignee_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="doughnut"
+                data-labels='["{% for a in assignee_rows %}{{ a.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"data":[{% for a in assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#8BB7C4","#054B70","#10B981","#FB923C","#F472B6","#EF4444","#8B5CF6","#14B8A6","#F59E0B"],"borderWidth":0}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No assignee data yet</div>
+      {% endif %}
+
+      {# ─── Chart: Assignee Bar ───────────────────────────────────── #}
+      {% elif card.card_type == 'tasks_by_assignee_bar' %}
+      {% if assignee_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for a in assignee_rows %}{{ a.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Tasks","data":[{% for a in assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(5,75,112,0.65)","borderColor":"rgba(5,75,112,0.90)","borderWidth":1,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No assignee data yet</div>
+      {% endif %}
+
+      {# ─── Chart: Priority Pie ───────────────────────────────────── #}
+      {% elif card.card_type == 'priority_breakdown_pie' %}
+      {% if priority_list %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="doughnut"
+                data-labels='["{% for p in priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"data":[{% for p in priority_list %}{{ p.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#94A3B8","#8BB7C4","#FB923C","#EF4444"],"borderWidth":0}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No priority data yet</div>
+      {% endif %}
+
+      {# ─── Chart: Priority Bar ───────────────────────────────────── #}
+      {% elif card.card_type == 'priority_breakdown_bar' %}
+      {% if priority_list %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for p in priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Tasks","data":[{% for p in priority_list %}{{ p.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#94A3B8","#8BB7C4","#FB923C","#EF4444"],"borderWidth":0,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No priority data yet</div>
+      {% endif %}
+
+      {# ─── Chart: Time by Category ───────────────────────────────── #}
+      {% elif card.card_type == 'time_by_category' %}
+      {% if category_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for c in category_rows %}{{ c.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Hours","data":[{% for c in category_rows %}{{ c.hours }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(118,18,250,0.55)","borderColor":"rgba(118,18,250,0.90)","borderWidth":1,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No time tracked yet</div>
+      {% endif %}
+
+      {# ─── Chart: Time by Workspace ──────────────────────────────── #}
+      {% elif card.card_type == 'time_by_workspace' %}
+      {% if workspace_hour_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for r in workspace_hour_rows %}{{ r.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Hours","data":[{% for r in workspace_hour_rows %}{{ r.hours }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(255,0,128,0.50)","borderColor":"rgba(255,0,128,0.90)","borderWidth":1,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No time tracked yet</div>
+      {% endif %}
+
+      {# ─── Chart: Activity Trend ─────────────────────────────────── #}
+      {% elif card.card_type == 'activity_trend' %}
+      {% if total_tasks %}
+      <div style="height:180px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='{{ chart_labels_json|safe }}'
+                data-datasets='[{"label":"Created","data":{{ chart_created_json|safe }},"backgroundColor":"rgba(5,75,112,0.55)","borderColor":"rgba(5,75,112,0.90)","borderWidth":1,"borderRadius":3},{"label":"Completed","data":{{ chart_done_json|safe }},"backgroundColor":"rgba(16,185,129,0.50)","borderColor":"rgba(16,185,129,0.90)","borderWidth":1,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No activity data yet</div>
+      {% endif %}
+
+      {# ─── Table: Overdue Tasks ──────────────────────────────────── #}
+      {% elif card.card_type == 'overdue_tasks' %}
+      {% if overdue_tasks %}
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs text-red-400 font-semibold bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">{{ overdue }} overdue</span>
+      </div>
+      <ul class="divide-y divide-white/5 max-h-64 overflow-y-auto">
+        {% for t in overdue_tasks %}
+        <li class="py-2 flex items-center gap-3">
+          <div class="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></div>
+          <a href="{% url 'workspaces:task_detail' t.id %}" class="flex-1 min-w-0 text-xs text-white hover:text-cu-accent transition-colors font-medium truncate">{{ t.title }}</a>
+          <span class="text-[11px] text-red-400 flex-shrink-0">{{ t.due_date|date:"M j" }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="text-sm text-emerald-400/70 text-center py-6">No overdue tasks</div>
+      {% endif %}
+
+      {# ─── Table: Tasks Due Soon ─────────────────────────────────── #}
+      {% elif card.card_type == 'tasks_due_soon' %}
+      {% if due_soon_tasks %}
+      <ul class="divide-y divide-white/5 max-h-64 overflow-y-auto">
+        {% for t in due_soon_tasks %}
+        <li class="py-2 flex items-center gap-3">
+          <a href="{% url 'workspaces:task_detail' t.id %}" class="flex-1 min-w-0 text-xs text-white hover:text-cu-accent transition-colors font-medium truncate">{{ t.title }}</a>
+          <span class="text-[11px] text-white/50 flex-shrink-0">{{ t.due_date|date:"M j" }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No tasks due soon</div>
+      {% endif %}
+
+      {# ─── Table: Team Performance ───────────────────────────────── #}
+      {% elif card.card_type == 'team_performance' %}
+      {% if team_rows %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="text-white/45 border-b border-white/10">
+              <th class="text-left pb-2 font-semibold pr-4">Member</th>
+              <th class="text-right pb-2 font-semibold px-2">Open</th>
+              <th class="text-right pb-2 font-semibold px-2">Done</th>
+              <th class="text-right pb-2 font-semibold px-2">Time</th>
+              <th class="pb-2 pl-3 w-24 font-semibold">Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in team_rows %}
+            <tr class="border-b border-white/5">
+              <td class="py-2 pr-4">
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-cu-purple text-[9px] flex items-center justify-center text-white font-bold flex-shrink-0">{{ r.name|slice:":1"|upper }}</span>
+                  <span class="text-white font-medium truncate">{{ r.name }}</span>
+                </div>
+              </td>
+              <td class="py-2 text-right text-cu-blue font-mono tabular-nums px-2">{{ r.open }}</td>
+              <td class="py-2 text-right text-emerald-400 font-mono tabular-nums px-2">{{ r.done }}</td>
+              <td class="py-2 text-right text-white/70 font-mono tabular-nums px-2">{{ r.time_label }}</td>
+              <td class="py-2 pl-3">
+                <div class="flex items-center gap-1.5">
+                  <div class="flex-1 h-1 rounded-full bg-cu-sidebar overflow-hidden">
+                    <div class="h-full bg-emerald-500 rounded-full" style="width:{{ r.done_pct }}%"></div>
+                  </div>
+                  <span class="text-white/50 tabular-nums text-[10px] w-7 text-right">{{ r.done_pct }}%</span>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No team data</div>
+      {% endif %}
+
+      {# ─── Table: Task List ──────────────────────────────────────── #}
+      {% elif card.card_type == 'task_list_table' %}
+      {% if recent_tasks %}
+      <ul class="divide-y divide-white/5 max-h-72 overflow-y-auto">
+        {% for t in recent_tasks %}
+        <li class="py-2 flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full flex-shrink-0
+            {% if t.status == 'done' %}bg-emerald-500
+            {% elif t.status == 'in_progress' %}bg-cu-purple
+            {% elif t.status == 'on_hold' %}bg-pink-500
+            {% elif t.status == 'review' %}bg-orange-500
+            {% else %}bg-white/30{% endif %}"></span>
+          <a href="{% url 'workspaces:task_detail' t.id %}" class="flex-1 min-w-0 text-xs text-white hover:text-cu-accent transition-colors font-medium truncate">{{ t.title }}</a>
+          <div class="flex items-center gap-2 text-[11px] text-white/40 flex-shrink-0">
+            {% if t.due_date %}<span class="{% if t.due_date < today %}text-red-400{% endif %}">{{ t.due_date|date:"M j" }}</span>{% endif %}
+            {% for u in t.assignees.all %}{% if forloop.first %}{{ u.get_full_name|default:u.username }}{% endif %}{% endfor %}
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No tasks yet</div>
+      {% endif %}
+
+      {# ─── KPI: Subtask Progress ──────────────────────────────────── #}
+      {% elif card.card_type == 'subtask_progress' %}
+      <div class="text-3xl font-bold text-cu-accent leading-none">{{ subtask_completion }}<span class="text-lg font-semibold">%</span></div>
+      <div class="mt-2 h-1.5 rounded-full dash-bar-track bg-cu-sidebar overflow-hidden">
+        <div class="h-full bg-cu-accent rounded-full" style="width:{{ subtask_completion }}%"></div>
+      </div>
+      <div class="dash-kpi-sub mt-2 text-[11px] text-white/50 tabular-nums">{{ done_subtasks }} done · {{ open_subtasks }} open</div>
+
+      {# ─── KPI: Total Subtasks ──────────────────────────────────── #}
+      {% elif card.card_type == 'subtask_total' %}
+      <div class="text-3xl font-bold text-cu-blue leading-none">{{ total_subtasks }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">total subtasks</div>
+
+      {# ─── KPI: Overdue Subtasks ────────────────────────────────── #}
+      {% elif card.card_type == 'subtask_overdue' %}
+      <div class="text-3xl font-bold {% if subtask_overdue %}text-red-400{% else %}text-emerald-400{% endif %} leading-none">{{ subtask_overdue }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">
+        {% if subtask_overdue %}subtasks past due{% else %}no overdue subtasks{% endif %}
+      </div>
+
+      {# ─── Chart: Subtask Status Pie ────────────────────────────── #}
+      {% elif card.card_type == 'subtask_status_pie' %}
+      {% if subtask_statuses_list %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="doughnut"
+                data-labels='["{% for s in subtask_statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"data":[{% for s in subtask_statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#F472B6","#FB923C","#EF4444","#10B981"],"borderWidth":0}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No subtask status data yet</div>
+      {% endif %}
+
+      {# ─── Chart: Subtask Status Bar ────────────────────────────── #}
+      {% elif card.card_type == 'subtask_status_bar' %}
+      {% if subtask_statuses_list %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for s in subtask_statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Subtasks","data":[{% for s in subtask_statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#F472B6","#FB923C","#EF4444","#10B981"],"borderWidth":0,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No subtask status data yet</div>
+      {% endif %}
+
+      {# ─── Chart: Subtask Priority Pie ──────────────────────────── #}
+      {% elif card.card_type == 'subtask_priority_pie' %}
+      {% if subtask_priority_list %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="doughnut"
+                data-labels='["{% for p in subtask_priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"data":[{% for p in subtask_priority_list %}{{ p.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#94A3B8","#8BB7C4","#FB923C","#EF4444"],"borderWidth":0}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No subtask priority data yet</div>
+      {% endif %}
+
+      {# ─── Chart: Subtasks by Assignee Bar ────────────────────────── #}
+      {% elif card.card_type == 'subtask_by_assignee' %}
+      {% if subtask_assignee_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for a in subtask_assignee_rows %}{{ a.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Subtasks","data":[{% for a in subtask_assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(5,75,112,0.65)","borderColor":"rgba(5,75,112,0.90)","borderWidth":1,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">No subtask assignee data yet</div>
+      {% endif %}
+
+      {# ─── NEW: Task Breakdown KPIs ────────────────────────────── #}
+      {% elif card.card_type == 'total_tasks_kpi' %}
+      <div class="text-3xl font-bold text-cu-blue leading-none">{{ total_tasks }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">total tasks · {{ open_tasks }} open · {{ closed_tasks }} done</div>
+
+      {% elif card.card_type == 'completion_rate_kpi' %}
+      <div class="text-3xl font-bold text-emerald-400 leading-none">{{ completion_rate }}<span class="text-lg font-semibold">%</span></div>
+      <div class="mt-2 h-1.5 rounded-full dash-bar-track bg-cu-sidebar overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-full" style="width:{{ completion_rate }}%"></div>
+      </div>
+      <div class="dash-kpi-sub mt-2 text-[11px] text-white/50">{{ closed_tasks }} of {{ total_tasks }} tasks completed</div>
+
+      {% elif card.card_type == 'overdue_pct_kpi' %}
+      <div class="text-3xl font-bold {% if overdue_pct > 20 %}text-red-400{% elif overdue_pct > 0 %}text-amber-400{% else %}text-emerald-400{% endif %} leading-none">{{ overdue_pct }}<span class="text-lg font-semibold">%</span></div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">{{ overdue }} of {{ total_tasks }} tasks overdue</div>
+
+      {% elif card.card_type == 'tasks_no_due_date' %}
+      <div class="text-3xl font-bold {% if no_due_date_count %}text-amber-400{% else %}text-emerald-400{% endif %} leading-none">{{ no_due_date_count }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">{% if no_due_date_count %}tasks missing a due date{% else %}all tasks have due dates{% endif %}</div>
+
+      {% elif card.card_type == 'tasks_due_this_week' %}
+      <div class="text-3xl font-bold text-cu-purple leading-none">{{ due_this_week }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">tasks due this week</div>
+
+      {# ─── NEW: Tasks by Workspace Pie ─────────────────────────── #}
+      {% elif card.card_type == 'tasks_by_workspace_pie' %}
+      {% if tasks_by_workspace_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="doughnut"
+                data-labels='["{% for r in tasks_by_workspace_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"data":[{% for r in tasks_by_workspace_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#8BB7C4","#10B981","#FB923C","#F472B6","#EF4444","#8B5CF6","#14B8A6","#F59E0B"],"borderWidth":0}]'>
+        </canvas>
+      </div>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No data yet</div>{% endif %}
+
+      {# ─── NEW: Tasks by Workspace Bar ─────────────────────────── #}
+      {% elif card.card_type == 'tasks_by_workspace_bar' %}
+      {% if tasks_by_workspace_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for r in tasks_by_workspace_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Tasks","data":[{% for r in tasks_by_workspace_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(5,75,112,0.65)","borderColor":"rgba(5,75,112,0.90)","borderWidth":1,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No data yet</div>{% endif %}
+
+      {# ─── NEW: Tasks by List Bar ──────────────────────────────── #}
+      {% elif card.card_type == 'tasks_by_list_bar' %}
+      {% if tasks_by_list_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for r in tasks_by_list_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Tasks","data":[{% for r in tasks_by_list_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(10,109,158,0.65)","borderColor":"rgba(10,109,158,0.90)","borderWidth":1,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No data yet</div>{% endif %}
+
+      {# ─── NEW: Tasks by Category Pie ──────────────────────────── #}
+      {% elif card.card_type == 'tasks_by_category_pie' %}
+      {% if tasks_by_category_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="doughnut"
+                data-labels='["{% for r in tasks_by_category_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"data":[{% for r in tasks_by_category_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#8BB7C4","#10B981","#FB923C","#F472B6","#EF4444","#8B5CF6","#14B8A6"],"borderWidth":0}]'>
+        </canvas>
+      </div>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No category data yet</div>{% endif %}
+
+      {# ─── NEW: Subtask KPIs ───────────────────────────────────── #}
+      {% elif card.card_type == 'subtask_unassigned' %}
+      <div class="text-3xl font-bold {% if subtask_unassigned %}text-amber-400{% else %}text-emerald-400{% endif %} leading-none">{{ subtask_unassigned }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">{% if subtask_unassigned %}subtasks with no assignee{% else %}all subtasks assigned{% endif %}</div>
+
+      {% elif card.card_type == 'subtask_no_due_date' %}
+      <div class="text-3xl font-bold {% if subtask_no_due %}text-amber-400{% else %}text-emerald-400{% endif %} leading-none">{{ subtask_no_due }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">{% if subtask_no_due %}subtasks missing a due date{% else %}all subtasks have due dates{% endif %}</div>
+
+      {% elif card.card_type == 'subtask_due_soon' %}
+      <div class="text-3xl font-bold text-cu-purple leading-none">{{ subtask_due_soon_count }}</div>
+      <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">subtasks due in next 14 days</div>
+
+      {# ─── NEW: Subtask Charts ─────────────────────────────────── #}
+      {% elif card.card_type == 'subtask_priority_bar' %}
+      {% if subtask_priority_list %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for p in subtask_priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Subtasks","data":[{% for p in subtask_priority_list %}{{ p.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#94A3B8","#8BB7C4","#FB923C","#EF4444"],"borderWidth":0,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No subtask priority data yet</div>{% endif %}
+
+      {% elif card.card_type == 'subtask_assignee_pie' %}
+      {% if subtask_assignee_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="doughnut"
+                data-labels='["{% for a in subtask_assignee_rows %}{{ a.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"data":[{% for a in subtask_assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#8BB7C4","#10B981","#FB923C","#F472B6","#EF4444","#8B5CF6","#14B8A6","#F59E0B","#0A6D9E"],"borderWidth":0}]'>
+        </canvas>
+      </div>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No subtask assignee data yet</div>{% endif %}
+
+      {% elif card.card_type == 'subtask_by_workspace' %}
+      {% if subtask_by_workspace_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for r in subtask_by_workspace_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Subtasks","data":[{% for r in subtask_by_workspace_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(5,75,112,0.65)","borderColor":"rgba(5,75,112,0.90)","borderWidth":1,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No data yet</div>{% endif %}
+
+      {% elif card.card_type == 'subtask_by_list' %}
+      {% if subtask_by_list_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for r in subtask_by_list_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Subtasks","data":[{% for r in subtask_by_list_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(10,109,158,0.65)","borderColor":"rgba(10,109,158,0.90)","borderWidth":1,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No data yet</div>{% endif %}
+
+      {% elif card.card_type == 'subtask_by_parent' %}
+      {% if subtask_by_parent_status_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for r in subtask_by_parent_status_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Subtasks","data":[{% for r in subtask_by_parent_status_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#F472B6","#FB923C","#EF4444","#10B981"],"borderWidth":0,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No data yet</div>{% endif %}
+
+      {% elif card.card_type == 'subtask_by_category' %}
+      {% if subtask_by_category_rows %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="bar"
+                data-labels='["{% for r in subtask_by_category_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
+                data-datasets='[{"label":"Subtasks","data":[{% for r in subtask_by_category_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(118,18,250,0.55)","borderColor":"rgba(118,18,250,0.90)","borderWidth":1,"borderRadius":3}]'>
+        </canvas>
+      </div>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No category data yet</div>{% endif %}
+
+      {% elif card.card_type == 'subtask_done_vs_open' %}
+      <div style="height:200px; position:relative;">
+        <canvas data-dash-chart="doughnut"
+                data-labels='["Done","Open"]'
+                data-datasets='[{"data":[{{ done_subtasks }},{{ open_subtasks }}],"backgroundColor":["#10B981","#054B70"],"borderWidth":0}]'>
+        </canvas>
+      </div>
+
+      {# ─── NEW: Subtask Tables ─────────────────────────────────── #}
+      {% elif card.card_type == 'subtask_overdue_table' %}
+      {% if subtask_overdue_qs %}
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs text-red-400 font-semibold bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">{{ subtask_overdue }} overdue</span>
+      </div>
+      <ul class="divide-y divide-white/5 max-h-64 overflow-y-auto">
+        {% for st in subtask_overdue_qs %}
+        <li class="py-2 flex items-center gap-3">
+          <div class="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs text-white font-medium truncate">{{ st.title }}</div>
+            <div class="text-[10px] text-white/40 truncate">{{ st.task.title }}</div>
+          </div>
+          <span class="text-[11px] text-red-400 flex-shrink-0">{{ st.due_date|date:"M j" }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<div class="text-sm text-emerald-400/70 text-center py-6">No overdue subtasks</div>{% endif %}
+
+      {% elif card.card_type == 'subtask_due_soon_table' %}
+      {% if subtask_due_soon_qs %}
+      <ul class="divide-y divide-white/5 max-h-64 overflow-y-auto">
+        {% for st in subtask_due_soon_qs %}
+        <li class="py-2 flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full {% if st.is_done %}bg-emerald-500{% else %}bg-amber-400{% endif %} flex-shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs text-white font-medium truncate">{{ st.title }}</div>
+            <div class="text-[10px] text-white/40 truncate">{{ st.task.title }}</div>
+          </div>
+          <span class="text-[11px] text-white/50 flex-shrink-0">{{ st.due_date|date:"M j" }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No subtasks due soon</div>{% endif %}
+
+      {% elif card.card_type == 'subtask_table' %}
+      {% if subtask_recent_qs %}
+      <ul class="divide-y divide-white/5 max-h-72 overflow-y-auto">
+        {% for st in subtask_recent_qs %}
+        <li class="py-2 flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full {% if st.is_done %}bg-emerald-500{% elif st.status == 'in_progress' %}bg-cu-purple{% else %}bg-white/30{% endif %} flex-shrink-0"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs text-white font-medium truncate">{{ st.title }}</div>
+            <div class="text-[10px] text-white/40 truncate">{{ st.task.title }}</div>
+          </div>
+          <div class="flex items-center gap-2 text-[11px] text-white/40 flex-shrink-0">
+            {% if st.due_date %}<span class="{% if st.due_date < today %}text-red-400{% endif %}">{{ st.due_date|date:"M j" }}</span>{% endif %}
+            <span class="{% if st.is_done %}text-emerald-400{% endif %}">{% if st.is_done %}Done{% else %}{{ st.get_status_display }}{% endif %}</span>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}<div class="text-sm text-white/30 text-center py-6">No subtasks yet</div>{% endif %}
+
+      {# ─── Fallback ──────────────────────────────────────────────── #}
+      {% else %}
+      <div class="text-sm text-white/30 text-center py-6">Unknown card type</div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>

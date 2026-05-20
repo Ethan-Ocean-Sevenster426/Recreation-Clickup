@@ -3,47 +3,164 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sign in</title>
+    <title>Sign in — Luma</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { theme: { extend: { colors: {
-            'ms-blue': '#0078D4',
-            'ms-blue-dark': '#106EBE',
+            'moc-dark': '#054B70',
+            'moc-mid': '#0A6D9E',
+            'moc-light': '#8BB7C4',
+            'moc-accent': '#064B70',
             'ms-neutral-10': '#F3F2F1',
+            'ms-neutral-20': '#EDEBE9',
             'ms-neutral-30': '#E1DFDD',
             'ms-neutral-60': '#605E5C',
             'ms-neutral-80': '#323130',
         }}}}
     </script>
-    <style> body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif; } </style>
+    <style>
+        body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, -20px); }
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-30px, 25px) scale(1.05); }
+        }
+        .blob-1 { animation: float 8s ease-in-out infinite; }
+        .blob-2 { animation: floatSlow 12s ease-in-out infinite; }
+
+        /* Dark mode — respects browser / OS preference */
+        @media (prefers-color-scheme: dark) {
+            body { background: #032D45 !important; }
+            .login-form-panel { background: #032D45 !important; }
+            .login-heading { color: #FFFFFF !important; }
+            .login-subtext { color: rgba(255,255,255,0.60) !important; }
+            .login-label { color: rgba(255,255,255,0.55) !important; }
+            .login-input {
+                background: #0A4A6B !important;
+                border-color: rgba(255,255,255,0.15) !important;
+                color: #FFFFFF !important;
+            }
+            .login-input::placeholder { color: rgba(255,255,255,0.35) !important; }
+            .login-input-icon { color: rgba(255,255,255,0.50) !important; }
+            .login-error { background: rgba(220,38,38,0.15) !important; border-color: rgba(220,38,38,0.30) !important; color: #FCA5A5 !important; }
+            .login-footer { color: rgba(255,255,255,0.45) !important; }
+            .login-mobile-name { color: rgba(255,255,255,0.85) !important; }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-ms-neutral-10 flex items-center justify-center px-4">
-    <div class="bg-white w-full max-w-md border border-ms-neutral-30 shadow-xl rounded-lg p-8">
-        <h1 class="text-2xl font-semibold text-ms-neutral-80 mb-1">Sign in</h1>
-        <p class="text-sm text-ms-neutral-60 mb-6">Access your workspaces</p>
+<body class="min-h-screen bg-white">
+<div class="min-h-screen flex">
 
-        {% if form.errors %}
-        <div class="mb-4 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded text-sm">
-            Username or password is incorrect.
+    <!-- Left: brand panel -->
+    <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-moc-dark via-moc-mid to-moc-light">
+        <!-- Decorative blobs -->
+        <div class="blob-1 absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="blob-2 absolute -bottom-32 -right-10 w-96 h-96 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute top-1/3 right-20 w-40 h-40 rounded-full bg-moc-light/30 blur-2xl blob-1"></div>
+
+        <div class="relative z-10 flex flex-col justify-between p-12 text-white w-full">
+            <!-- Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center font-bold text-lg shadow-lg text-[#054B70]">L</div>
+                <span class="text-xl font-semibold tracking-tight">Luma</span>
+            </div>
+
+            <!-- Pitch -->
+            <div class="max-w-md">
+                <h1 class="text-5xl font-bold leading-tight mb-4">
+                    One app to replace them&nbsp;all.
+                </h1>
+                <p class="text-white/85 text-lg leading-relaxed">
+                    Tasks, boards, docs, goals and timelines — organised across workspaces, lists and views. Sign in to jump back in.
+                </p>
+
+                <div class="mt-10 grid grid-cols-3 gap-3 max-w-sm">
+                    <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
+                        <div class="text-2xl font-bold">List</div>
+                        <div class="text-xs text-white/70">view</div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
+                        <div class="text-2xl font-bold">Board</div>
+                        <div class="text-xs text-white/70">view</div>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
+                        <div class="text-2xl font-bold">Gantt</div>
+                        <div class="text-xs text-white/70">view</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer note -->
+            <div class="text-sm text-white/70">
+                © {% now "Y" %} Magnum Opus Consultants · All your work in one place.
+            </div>
         </div>
-        {% endif %}
-
-        <form method="post" class="space-y-4">
-            {% csrf_token %}
-            <label class="block text-sm text-ms-neutral-60">
-                Username
-                <input name="username" type="text" required autofocus
-                       class="mt-1 w-full px-3 py-2 border border-ms-neutral-30 rounded focus:ring-2 focus:ring-ms-blue focus:border-ms-blue outline-none text-ms-neutral-80">
-            </label>
-            <label class="block text-sm text-ms-neutral-60">
-                Password
-                <input name="password" type="password" required
-                       class="mt-1 w-full px-3 py-2 border border-ms-neutral-30 rounded focus:ring-2 focus:ring-ms-blue focus:border-ms-blue outline-none text-ms-neutral-80">
-            </label>
-            <input type="hidden" name="next" value="{{ next }}">
-            <button type="submit"
-                    class="w-full px-4 py-2 rounded bg-ms-blue hover:bg-ms-blue-dark text-white font-medium">Sign in</button>
-        </form>
     </div>
+
+    <!-- Right: sign-in form -->
+    <div class="login-form-panel flex-1 flex items-center justify-center px-6 py-12">
+        <div class="w-full max-w-sm">
+
+            <!-- Mobile logo -->
+            <div class="flex items-center gap-2 mb-10 lg:hidden">
+                <div class="w-9 h-9 rounded-lg bg-white flex items-center justify-center font-bold shadow text-[#054B70]">L</div>
+                <span class="login-mobile-name font-semibold text-ms-neutral-80">Luma</span>
+            </div>
+
+            <h2 class="login-heading text-3xl font-bold text-ms-neutral-80 mb-2">Welcome back</h2>
+            <p class="login-subtext text-sm text-ms-neutral-60 mb-8">Sign in to your workspace.</p>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="mb-5 px-3 py-2 {% if message.tags == 'success' %}bg-emerald-50 border border-emerald-200 text-emerald-700{% else %}bg-blue-50 border border-blue-200 text-blue-700{% endif %} rounded text-sm flex items-start gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>{{ message }}</span>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            {% if form.errors %}
+            <div class="login-error mb-5 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded text-sm flex items-start gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>Username or password is incorrect.</span>
+            </div>
+            {% endif %}
+
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="login-label block text-xs font-semibold text-ms-neutral-60 uppercase tracking-wide mb-1.5" for="id_username">Username</label>
+                    <div class="relative">
+                        <svg class="login-input-icon absolute left-3 top-1/2 -translate-y-1/2 text-ms-neutral-60" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <input id="id_username" name="username" type="text" required autofocus autocomplete="username"
+                               class="login-input w-full pl-10 pr-3 py-2.5 border border-ms-neutral-30 rounded-md text-sm text-ms-neutral-80 focus:ring-2 focus:ring-moc-dark focus:border-moc-dark outline-none transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="login-label block text-xs font-semibold text-ms-neutral-60 uppercase tracking-wide mb-1.5" for="id_password">Password</label>
+                    <div class="relative">
+                        <svg class="login-input-icon absolute left-3 top-1/2 -translate-y-1/2 text-ms-neutral-60" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <input id="id_password" name="password" type="password" required autocomplete="current-password"
+                               class="login-input w-full pl-10 pr-3 py-2.5 border border-ms-neutral-30 rounded-md text-sm text-ms-neutral-80 focus:ring-2 focus:ring-moc-dark focus:border-moc-dark outline-none transition">
+                    </div>
+                </div>
+                <input type="hidden" name="next" value="{{ next }}">
+                <button type="submit"
+                        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-gradient-to-r from-moc-dark via-moc-mid to-moc-light text-white font-semibold shadow-md hover:shadow-lg hover:opacity-95 transition mt-2">
+                    Sign in
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+            </form>
+
+            <p class="login-footer mt-8 text-xs text-center text-ms-neutral-60">
+                Need help? Ask your workspace owner for an account.
+            </p>
+        </div>
+    </div>
+</div>
 </body>
 </html>

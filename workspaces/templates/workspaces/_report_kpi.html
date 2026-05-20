@@ -1,0 +1,8 @@
+{# Required: label, value, tone (purple/blue/green/red/orange/pink/gray) #}
+<div class="bg-cu-panel border border-white/10 rounded-lg p-4">
+    <div class="text-[11px] uppercase tracking-wide font-semibold text-white/60">{{ label }}</div>
+    <div class="mt-1 text-2xl font-bold
+        {% if tone == 'purple' %}text-cu-accent{% elif tone == 'blue' %}text-cu-blue{% elif tone == 'green' %}text-emerald-400{% elif tone == 'red' %}text-red-400{% elif tone == 'orange' %}text-orange-400{% elif tone == 'pink' %}text-cu-pink{% else %}text-white{% endif %}">
+        {{ value }}{% if suffix %}<span class="text-base font-semibold">{{ suffix }}</span>{% endif %}
+    </div>
+</div>

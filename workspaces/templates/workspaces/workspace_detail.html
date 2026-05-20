@@ -1,81 +1,250 @@
 {% extends 'workspaces/base.html' %}
 
-{% block title %}{{ workspace.name }}{% endblock %}
+{% block title %}Overview | {{ workspace.name }}{% endblock %}
 
 {% block content %}
-<div class="flex-1 overflow-auto px-8 py-6">
-    <div class="flex items-center gap-2 text-ms-neutral-80 mb-1">
-        <span class="text-sm text-ms-neutral-60">Workspaces</span>
-        <span class="text-ms-neutral-30">/</span>
-        <span class="font-semibold">{{ workspace.name }}</span>
-    </div>
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-ms-neutral-80">{{ workspace.name }}</h1>
-        <div class="flex items-center gap-2">
-            <a href="{% url 'workspaces:members' workspace.id %}"
-               class="inline-flex items-center gap-1 px-3 py-2 rounded border border-ms-neutral-30 text-ms-neutral-80 hover:bg-ms-neutral-10 text-sm font-medium">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                Members
-            </a>
-            <button type="button" onclick="document.getElementById('newListModal').classList.remove('hidden')"
-                    class="inline-flex items-center gap-1 px-4 py-2 rounded bg-ms-blue hover:bg-ms-blue-dark text-white text-sm font-medium">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                New list
+<div class="flex-1 overflow-auto">
+
+    <!-- Header: workspace name + view tabs -->
+    <div class="px-6 pt-4 border-b border-white/10">
+        <div class="flex items-center gap-2 mb-3">
+            <div class="relative group flex-shrink-0">
+                {% if workspace.image %}
+                <img src="{{ workspace.image.url }}" alt="" class="w-6 h-6 rounded object-cover">
+                {% else %}
+                <span class="w-6 h-6 rounded bg-cu-accent text-white text-xs font-semibold inline-flex items-center justify-center">{{ workspace.name|slice:":1"|upper }}</span>
+                {% endif %}
+                <label class="hidden group-hover:flex absolute inset-0 items-center justify-center rounded bg-black/50 cursor-pointer" title="Change image">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <form method="post" action="{% url 'workspaces:workspace_update' workspace.id %}" enctype="multipart/form-data" class="absolute inset-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="field" value="image">
+                        <input type="file" name="image" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="this.form.submit()">
+                    </form>
+                </label>
+            </div>
+            <span class="text-base font-semibold text-white">{{ workspace.name }}</span>
+            {% if workspace.purpose %}
+            <span class="px-2 py-0.5 text-[10px] uppercase tracking-wide font-semibold rounded-full border
+                {% if workspace.purpose == 'project' %}border-cu-blue/40 text-cu-blue bg-cu-blue/10
+                {% elif workspace.purpose == 'retainer' %}border-cu-pink/40 text-cu-pink bg-cu-pink/10
+                {% else %}border-white/20 text-white/60 bg-white/5{% endif %}">{{ workspace.get_purpose_display }}</span>
+            {% endif %}
+
+            <!-- Workspace dates -->
+            <span class="text-white/20 mx-1">|</span>
+            <div class="inline-flex items-center gap-1.5 text-xs">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-white/40"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <form method="post" action="{% url 'workspaces:workspace_update' workspace.id %}" class="inline-flex items-center gap-1" id="wsStartDateForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="field" value="start_date">
+                    <input type="date" name="value" value="{% if workspace.start_date %}{{ workspace.start_date|date:'Y-m-d' }}{% endif %}"
+                           onchange="this.form.submit()"
+                           title="Start date"
+                           class="bg-transparent border-0 text-xs text-white/70 hover:text-white cursor-pointer px-1 py-0.5 rounded hover:bg-cu-panel focus:ring-1 focus:ring-cu-accent outline-none {% if not workspace.start_date %}text-white/30{% endif %}"
+                           style="width:auto; min-width:5.5rem;">
+                </form>
+                <span class="text-white/30">→</span>
+                <form method="post" action="{% url 'workspaces:workspace_update' workspace.id %}" class="inline-flex items-center gap-1" id="wsEndDateForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="field" value="end_date">
+                    <input type="date" name="value" value="{% if workspace.end_date %}{{ workspace.end_date|date:'Y-m-d' }}{% endif %}"
+                           onchange="this.form.submit()"
+                           title="End date"
+                           class="bg-transparent border-0 text-xs text-white/70 hover:text-white cursor-pointer px-1 py-0.5 rounded hover:bg-cu-panel focus:ring-1 focus:ring-cu-accent outline-none {% if not workspace.end_date %}text-white/30{% endif %}"
+                           style="width:auto; min-width:5.5rem;">
+                </form>
+            </div>
+
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A19F9D" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <button type="button" class="ml-1 text-white/40 hover:text-yellow-400" title="Favorite">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </button>
+        </div>
+
+        <!-- View tabs -->
+        <div class="flex items-center gap-1">
+            <button type="button" onclick="document.getElementById('newListModal').classList.remove('hidden')"
+                    class="px-3 py-2 text-sm text-white/50 hover:text-white transition-colors">+ Add List</button>
+            <span class="px-3 py-2 text-sm font-semibold text-white border-b-2 border-ms-neutral-80 inline-flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                Overview
+            </span>
+            {% if first_list %}
+            <a href="{% url 'workspaces:list_detail' first_list.id %}" class="px-3 py-2 text-sm font-medium text-white/60 hover:text-white inline-flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                List
+            </a>
+            <a href="{% url 'workspaces:list_board' first_list.id %}" class="px-3 py-2 text-sm font-medium text-white/60 hover:text-white inline-flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="12" rx="1"/></svg>
+                Board
+            </a>
+            <a href="{% url 'workspaces:list_calendar' first_list.id %}" class="px-3 py-2 text-sm font-medium text-white/60 hover:text-white inline-flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Calendar
+            </a>
+            <a href="{% url 'workspaces:list_gantt' first_list.id %}" class="px-3 py-2 text-sm font-medium text-white/60 hover:text-white inline-flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><line x1="3" y1="6" x2="12" y2="6"/><line x1="7" y1="12" x2="18" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/></svg>
+                Gantt
+            </a>
+            {% else %}
+            <span class="px-3 py-2 text-sm text-white/30 cursor-not-allowed inline-flex items-center gap-1.5" title="Create a list first">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
+                List
+            </span>
+            {% endif %}
+            <a href="{% url 'workspaces:custom_field_manager' workspace.id %}" class="ml-auto px-3 py-2 text-xs text-white/60 hover:text-cu-accent inline-flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 7h16M4 12h10M4 17h6"/></svg>
+                Categories
+            </a>
         </div>
     </div>
 
-    {% if workspace.lists.all %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {% for tl in workspace.lists.all %}
-        <div class="bg-white rounded-lg border border-ms-neutral-30 p-4 hover:shadow-sm transition group"
-             data-list-id="{{ tl.id }}" data-list-name="{{ tl.name }}" data-list-color="{{ tl.color }}">
-            <a href="{% url 'workspaces:list_detail' tl.id %}" class="flex items-center gap-3 mb-3">
-                {% include 'workspaces/_list_chip.html' with tl=tl size='lg' %}
-                <div class="flex-1 min-w-0">
-                    <h2 class="text-base font-semibold text-ms-neutral-80 truncate">{{ tl.name }}</h2>
-                    <p class="text-xs text-ms-neutral-60">{{ tl.tasks.count }} task{{ tl.tasks.count|pluralize }}</p>
+    <!-- Toolbar -->
+    <div class="px-6 py-3 flex items-center justify-between border-b border-white/10 bg-cu-panel">
+        <button type="button"
+                class="inline-flex items-center gap-1 px-2 py-1 border border-white/10 rounded text-xs text-white hover:bg-cu-sidebar-hover cursor-not-allowed opacity-60"
+                title="Filters — coming soon">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filters
+        </button>
+        <div class="flex items-center gap-3 text-xs">
+            <span class="inline-flex items-center gap-1 text-green-600">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                Up to date
+            </span>
+            <span class="text-white/40">·</span>
+            <span class="text-white/60">Overview</span>
+        </div>
+    </div>
+
+    <!-- Three cards -->
+    <div class="px-6 py-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+        <!-- Recent -->
+        <div class="bg-cu-panel border border-white/10 rounded-lg flex flex-col">
+            <div class="px-4 py-3 border-b border-white/10">
+                <h3 class="text-sm font-semibold text-white">Recent</h3>
+            </div>
+            {% if recent_lists %}
+            <ul class="py-1">
+                {% for tl in recent_lists %}
+                <li>
+                    <a href="{% url 'workspaces:list_detail' tl.id %}"
+                       class="flex items-center gap-2 px-4 py-2 hover:bg-cu-sidebar-hover text-sm">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A19F9D" stroke-width="1.5" class="flex-shrink-0"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                        <span class="text-white font-medium truncate">{{ tl.name }}</span>
+                        <span class="text-xs text-white/60 truncate">· in {{ workspace.name }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="flex-1 flex items-center justify-center p-6 text-xs text-white/60">No recent items yet.</div>
+            {% endif %}
+        </div>
+
+        <!-- Docs (placeholder empty state) -->
+        <div class="bg-cu-panel border border-white/10 rounded-lg flex flex-col">
+            <div class="px-4 py-3 border-b border-white/10">
+                <h3 class="text-sm font-semibold text-white">Docs</h3>
+            </div>
+            <div class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                <div class="w-16 h-16 rounded-lg bg-cu-sidebar-hover flex items-center justify-center mb-3">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A19F9D" stroke-width="1.25"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 </div>
-            </a>
-            <div class="flex items-center justify-between text-xs">
-                <button type="button" onclick="openEditListModal({{ tl.id }}, '{{ tl.name|escapejs }}', '{{ tl.color }}')"
-                        class="text-ms-neutral-60 hover:text-ms-blue inline-flex items-center gap-1">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                    Edit
-                </button>
-                <form method="post" action="{% url 'workspaces:list_delete' tl.id %}"
-                      onsubmit="return confirm('Delete this list and all its tasks?');">
-                    {% csrf_token %}
-                    <button class="text-ms-neutral-40 hover:text-red-500 inline-flex items-center gap-1">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
-                        Delete
-                    </button>
-                </form>
+                <p class="text-xs text-white/60 mb-3">There are no Docs in this location yet.</p>
+                <button type="button" disabled
+                        title="Docs aren't implemented yet"
+                        class="px-4 py-1.5 rounded bg-white/10 text-white/60 text-xs font-medium cursor-not-allowed">Add a Doc</button>
             </div>
         </div>
-        {% endfor %}
+
+        <!-- Bookmarks (placeholder empty state) -->
+        <div class="bg-cu-panel border border-white/10 rounded-lg flex flex-col">
+            <div class="px-4 py-3 border-b border-white/10">
+                <h3 class="text-sm font-semibold text-white">Bookmarks</h3>
+            </div>
+            <div class="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                <div class="w-16 h-16 rounded-lg bg-cu-sidebar-hover flex items-center justify-center mb-3">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#A19F9D" stroke-width="1.25"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <p class="text-xs text-white/60 mb-3">Bookmarks make it easy to save items or any URL from around the web.</p>
+                <button type="button" disabled
+                        title="Bookmarks aren't implemented yet"
+                        class="px-4 py-1.5 rounded bg-white/10 text-white/60 text-xs font-medium cursor-not-allowed">Add Bookmark</button>
+            </div>
+        </div>
     </div>
-    {% else %}
-    <div class="text-center py-20 text-ms-neutral-60">No lists in this workspace yet. Click <strong>New list</strong> to add one (e.g. MOC, AWA, Condor Cargo).</div>
-    {% endif %}
+
+    <!-- Lists -->
+    <div class="px-6 pb-10">
+        <h2 class="text-base font-semibold text-white mb-3">Lists</h2>
+
+        {% if workspace.lists.all %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {% for tl in workspace.lists.all %}
+            <div class="bg-cu-panel rounded-lg border border-white/10 p-4 hover:shadow-sm transition group"
+                 data-list-id="{{ tl.id }}" data-list-name="{{ tl.name }}" data-list-color="{{ tl.color }}" data-list-icon="{{ tl.icon }}">
+                <a href="{% url 'workspaces:reports' %}?workspace={{ workspace.id }}&list={{ tl.id }}" class="flex items-center gap-3 mb-3">
+                    {% include 'workspaces/_list_chip.html' with tl=tl size='lg' %}
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-sm font-semibold text-white truncate">{{ tl.name }}</h3>
+                        <p class="text-xs text-white/60">{{ tl.tasks.count }} task{{ tl.tasks.count|pluralize }}</p>
+                    </div>
+                </a>
+                <div class="flex items-center justify-between text-xs">
+                    <button type="button" onclick="openEditListModal({{ tl.id }}, '{{ tl.name|escapejs }}', '{{ tl.color }}', '{{ tl.icon|escapejs }}')"
+                            class="text-white/60 hover:text-cu-accent inline-flex items-center gap-1">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                        Edit
+                    </button>
+                    <form method="post" action="{% url 'workspaces:list_delete' tl.id %}"
+                          onsubmit="return confirm('Delete this list and all its tasks?');">
+                        {% csrf_token %}
+                        <button class="text-white/40 hover:text-red-500 inline-flex items-center gap-1">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+
+            <button type="button" onclick="document.getElementById('newListModal').classList.remove('hidden')"
+                    class="border-2 border-dashed border-white/10 rounded-lg min-h-[7rem] flex flex-col items-center justify-center text-white/60 hover:text-cu-accent hover:border-cu-accent transition">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span class="text-xs font-medium mt-1">New list</span>
+            </button>
+        </div>
+        {% else %}
+        <div class="bg-cu-panel border border-white/10 rounded-lg p-10 flex flex-col items-center text-center">
+            <div class="w-20 h-20 rounded-lg bg-cu-sidebar-hover flex items-center justify-center mb-4">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A19F9D" stroke-width="1.25"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <p class="text-sm text-white/60 mb-4">Add a new list to this space</p>
+            <button type="button" onclick="document.getElementById('newListModal').classList.remove('hidden')"
+                    class="px-4 py-2 rounded bg-cu-accent hover:bg-[#523BCF] text-white text-sm font-medium">Add list</button>
+        </div>
+        {% endif %}
+    </div>
 </div>
 
 <!-- New list modal -->
 <div id="newListModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl border border-ms-neutral-30">
-        <h2 class="text-lg font-semibold mb-4 text-ms-neutral-80">New list</h2>
+    <div class="bg-cu-panel rounded-lg p-6 w-full max-w-md shadow-2xl border border-white/10">
+        <h2 class="text-lg font-semibold mb-4 text-white">New list</h2>
         <form method="post" action="{% url 'workspaces:list_create' workspace.id %}" class="space-y-3">
             {% csrf_token %}
             <input name="name" required autofocus placeholder="List name (e.g. MOC, AWA)"
-                   class="w-full px-3 py-2 border border-ms-neutral-30 rounded focus:ring-2 focus:ring-ms-blue outline-none">
+                   class="w-full px-3 py-2 border border-white/10 rounded focus:ring-2 focus:ring-cu-accent outline-none">
             <div class="flex justify-end gap-2 pt-2">
                 <button type="button" onclick="document.getElementById('newListModal').classList.add('hidden')"
-                        class="px-4 py-2 text-sm text-ms-neutral-80 border border-ms-neutral-30 rounded hover:bg-ms-neutral-10">Cancel</button>
+                        class="px-4 py-2 text-sm text-white border border-white/10 rounded hover:bg-cu-sidebar-hover">Cancel</button>
                 <button type="submit"
-                        class="px-4 py-2 text-sm rounded bg-ms-blue hover:bg-ms-blue-dark text-white font-medium">Create list</button>
+                        class="px-4 py-2 text-sm rounded bg-gradient-to-r from-cu-pink via-cu-purple to-cu-blue hover:opacity-90 text-white font-medium">Create list</button>
             </div>
         </form>
     </div>
 </div>
-
 {% endblock %}

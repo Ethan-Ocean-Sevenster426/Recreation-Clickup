@@ -1,17 +1,18 @@
 {% extends 'workspaces/base.html' %}
+{% load ws_extras %}
 
-{% block title %}Users{% endblock %}
+{% block title %}Users · Luma{% endblock %}
 
 {% block content %}
 <div class="flex-1 overflow-auto px-8 py-6">
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-ms-neutral-80">Users</h1>
-            <p class="text-sm text-ms-neutral-60">Manage who can sign in and who's an admin.</p>
+            <h1 class="text-2xl font-bold text-white">Users</h1>
+            <p class="text-sm text-white/60">Manage team members, roles, and access.</p>
         </div>
         <button type="button" onclick="document.getElementById('newUserModal').classList.remove('hidden')"
-                class="inline-flex items-center gap-1 px-4 py-2 rounded bg-ms-blue hover:bg-ms-blue-dark text-white text-sm font-medium">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-cu-accent hover:bg-[#523BCF] text-white text-sm font-semibold shadow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             New user
         </button>
     </div>
@@ -19,61 +20,51 @@
     {% if messages %}
     <div class="mb-4 space-y-1">
         {% for m in messages %}
-        <div class="px-3 py-2 rounded text-sm {% if m.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-green-50 text-green-700 border border-green-200{% endif %}">{{ m }}</div>
+        <div class="px-3 py-2 rounded text-sm {% if m.tags == 'error' %}bg-red-500/15 text-red-400 border border-red-500/30{% else %}bg-emerald-500/15 text-emerald-400 border border-emerald-500/30{% endif %}">{{ m }}</div>
         {% endfor %}
     </div>
     {% endif %}
 
-    <div class="bg-white border border-ms-neutral-30 rounded-lg overflow-hidden">
+    <div class="bg-cu-panel border border-white/10 rounded-xl overflow-hidden">
         <table class="w-full text-sm">
-            <thead class="bg-ms-neutral-10 text-xs font-medium text-ms-neutral-60 text-left">
+            <thead class="bg-cu-sidebar text-xs font-semibold text-white/50 text-left">
                 <tr>
-                    <th class="px-4 py-2">User</th>
-                    <th class="px-4 py-2">Email</th>
-                    <th class="px-4 py-2">Admin</th>
-                    <th class="px-4 py-2">Joined</th>
-                    <th class="px-4 py-2 text-right">Actions</th>
+                    <th class="px-4 py-3">User</th>
+                    <th class="px-4 py-3">Email</th>
+                    <th class="px-4 py-3">Role</th>
+                    <th class="px-4 py-3">Joined</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-white/5">
                 {% for u in users_all %}
-                <tr class="border-t border-ms-neutral-20 hover:bg-ms-neutral-10">
+                <tr class="hover:bg-cu-panel-2 transition-colors">
                     <td class="px-4 py-3">
-                        <div class="flex items-center gap-2">
-                            <span class="avatar bg-ms-blue" style="width:1.75rem;height:1.75rem;font-size:0.75rem">{{ u.username|slice:":1"|upper }}</span>
+                        <div class="flex items-center gap-2.5">
+                            <span class="avatar flex-shrink-0
+                                {% if u.role == 'manager' %}bg-cu-purple{% else %}bg-cu-accent{% endif %}"
+                                  style="width:2rem;height:2rem;font-size:0.75rem">{{ u.username|slice:":1"|upper }}</span>
                             <div>
-                                <div class="font-medium text-ms-neutral-80">{{ u.username }}</div>
-                                <div class="text-xs text-ms-neutral-60">{{ u.get_full_name }}</div>
+                                <div class="font-semibold text-white">{{ u.username }}</div>
+                                {% if u.get_full_name %}<div class="text-xs text-white/50">{{ u.get_full_name }}</div>{% endif %}
                             </div>
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-ms-neutral-60">{{ u.email|default:"—" }}</td>
+                    <td class="px-4 py-3 text-white/60 text-xs">{{ u.email|default:"—" }}</td>
                     <td class="px-4 py-3">
-                        {% if u.is_staff %}
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-ms-blue text-white rounded text-xs font-medium">Admin</span>
-                        {% else %}
-                        <span class="text-xs text-ms-neutral-60">—</span>
-                        {% endif %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold
+                            {% if u.role == 'manager' %}bg-cu-purple/20 text-purple-300{% else %}bg-cu-accent/15 text-blue-300{% endif %}">
+                            {{ u.get_role_display|default:"Employee" }}
+                        </span>
                     </td>
-                    <td class="px-4 py-3 text-xs text-ms-neutral-60">{{ u.date_joined|date:"M j, Y" }}</td>
+                    <td class="px-4 py-3 text-xs text-white/50">{{ u.date_joined|date:"M j, Y" }}</td>
                     <td class="px-4 py-3 text-right">
-                        <div class="inline-flex items-center gap-2">
-                            <form method="post" action="{% url 'workspaces:user_toggle_staff' u.id %}" class="inline">
-                                {% csrf_token %}
-                                <button type="submit" class="text-xs text-ms-neutral-60 hover:text-ms-blue"
-                                        {% if u.id == request.user.id %}disabled title="You can't change your own admin flag"{% endif %}>
-                                    {% if u.is_staff %}Revoke admin{% else %}Make admin{% endif %}
-                                </button>
-                            </form>
-                            <button type="button" class="text-xs text-ms-neutral-60 hover:text-ms-blue"
-                                    onclick="openResetPasswordModal({{ u.id }}, '{{ u.username|escapejs }}')">Reset password</button>
-                            <form method="post" action="{% url 'workspaces:user_delete' u.id %}" class="inline"
-                                  onsubmit="return confirm('Delete user {{ u.username|escapejs }}? This cannot be undone.');">
-                                {% csrf_token %}
-                                <button type="submit" class="text-xs text-red-600 hover:text-red-700"
-                                        {% if u.id == request.user.id %}disabled{% endif %}>Delete</button>
-                            </form>
-                        </div>
+                        <button type="button"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white/70 hover:text-white bg-white/5 hover:bg-cu-accent/20 border border-white/10 hover:border-cu-accent/30 transition-all"
+                                onclick="openManageModal({{ u.id }}, '{{ u.username|escapejs }}', '{{ u.first_name|escapejs }}', '{{ u.last_name|escapejs }}', '{{ u.email|escapejs }}', '{{ u.phone_number|escapejs }}', '{{ u.company_name|escapejs }}', '{{ u.position|escapejs }}', '{{ u.role|escapejs }}', '{{ u.date_joined|date:"M j, Y" }}')">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            Manage
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -82,83 +73,805 @@
     </div>
 </div>
 
-<!-- New user modal -->
-<div id="newUserModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl w-full max-w-md shadow-2xl border border-ms-neutral-30">
-        <div class="flex items-center justify-between px-6 pt-5 pb-3">
-            <h2 class="text-lg font-semibold text-ms-neutral-80">New user</h2>
-            <button type="button" onclick="document.getElementById('newUserModal').classList.add('hidden')"
-                    class="w-8 h-8 rounded hover:bg-ms-neutral-10 text-ms-neutral-60 inline-flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+<!-- ─── New user modal ─────────────────────────────────────────────────────── -->
+<div id="newUserModal" class="hidden fixed inset-0 bg-black/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="luma-modal rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden border luma-border max-h-[90vh] flex flex-col">
+
+        <div class="relative px-7 pt-6 pb-4 luma-modal-header border-b luma-border">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cu-pink via-cu-purple to-cu-blue"></div>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold luma-title">Create new user</h2>
+                    <p class="text-xs luma-muted mt-0.5">Add a team member to Luma.</p>
+                </div>
+                <button type="button" onclick="document.getElementById('newUserModal').classList.add('hidden')"
+                        class="w-8 h-8 rounded-full luma-close-btn inline-flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
         </div>
-        <form method="post" action="{% url 'workspaces:user_create' %}" class="px-6 pb-5 space-y-3">
+
+        <form method="post" action="{% url 'workspaces:user_create' %}" class="px-7 py-6 space-y-5 overflow-y-auto flex-1">
             {% csrf_token %}
-            <div class="grid grid-cols-2 gap-3">
-                <label class="block text-xs font-semibold text-ms-neutral-60 uppercase tracking-wide">
-                    Username
-                    <input name="username" required class="mt-1 w-full px-3 py-2 border border-ms-neutral-30 rounded text-sm text-ms-neutral-80 focus:ring-2 focus:ring-ms-blue outline-none">
+
+            <div class="grid grid-cols-2 gap-4">
+                <label class="block">
+                    <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">First name</span>
+                    <input name="first_name" placeholder="Jane" class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none transition">
                 </label>
-                <label class="block text-xs font-semibold text-ms-neutral-60 uppercase tracking-wide">
-                    Email
-                    <input name="email" type="email" class="mt-1 w-full px-3 py-2 border border-ms-neutral-30 rounded text-sm text-ms-neutral-80 focus:ring-2 focus:ring-ms-blue outline-none">
-                </label>
-                <label class="block text-xs font-semibold text-ms-neutral-60 uppercase tracking-wide">
-                    First name
-                    <input name="first_name" class="mt-1 w-full px-3 py-2 border border-ms-neutral-30 rounded text-sm text-ms-neutral-80 focus:ring-2 focus:ring-ms-blue outline-none">
-                </label>
-                <label class="block text-xs font-semibold text-ms-neutral-60 uppercase tracking-wide">
-                    Last name
-                    <input name="last_name" class="mt-1 w-full px-3 py-2 border border-ms-neutral-30 rounded text-sm text-ms-neutral-80 focus:ring-2 focus:ring-ms-blue outline-none">
+                <label class="block">
+                    <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">Last name</span>
+                    <input name="last_name" placeholder="Smith" class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none transition">
                 </label>
             </div>
-            <label class="block text-xs font-semibold text-ms-neutral-60 uppercase tracking-wide">
-                Password
-                <input name="password" type="password" required class="mt-1 w-full px-3 py-2 border border-ms-neutral-30 rounded text-sm text-ms-neutral-80 focus:ring-2 focus:ring-ms-blue outline-none">
+
+            <label class="block">
+                <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">Email <span class="text-red-400">*</span></span>
+                <input name="email" type="email" required placeholder="jane@example.com" class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none transition">
             </label>
-            <label class="inline-flex items-center gap-2 text-sm text-ms-neutral-80">
-                <input type="checkbox" name="is_staff" value="1" class="rounded border-ms-neutral-30 text-ms-blue">
-                Make this user an admin
+
+            <!-- OTP notice -->
+            <div class="px-3 py-2.5 rounded-lg bg-cu-accent/10 border border-cu-accent/20 text-xs">
+                <div class="flex items-start gap-2">
+                    <svg class="flex-shrink-0 mt-0.5 text-cu-accent" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <div>
+                        <span class="luma-title font-semibold">A setup code will be emailed to this user.</span>
+                        <span class="luma-muted"> They will choose their own username and password using the code.</span>
+                    </div>
+                </div>
+            </div>
+
+            <label class="block">
+                <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">Role</span>
+                <select name="role" id="newUserRole" onchange="toggleNewUserSpaces()" class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none">
+                    <option value="employee">Employee</option>
+                    <option value="manager">Manager</option>
+                </select>
             </label>
-            <div class="flex justify-end gap-2 pt-2">
+
+            <div id="newUserSpaces">
+                <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">Allocate to workspace &amp; spaces</span>
+                <div class="luma-input rounded-lg max-h-56 overflow-y-auto divide-y luma-border">
+                    {% for org_name, ws_list in workspaces_by_org.items %}
+                    <div class="nu-org-group">
+                        <button type="button" onclick="toggleOrgGroup(this)"
+                                class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-white/5 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-5 h-5 rounded bg-cu-accent/20 text-cu-accent inline-flex items-center justify-center text-[10px] font-bold flex-shrink-0">{{ org_name|first }}</span>
+                                <span class="text-sm font-semibold luma-title">{{ org_name }}</span>
+                                <span class="text-[10px] luma-muted">({{ ws_list|length }} spaces)</span>
+                            </div>
+                            <svg class="nu-org-arrow w-3.5 h-3.5 luma-muted transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="nu-org-spaces hidden px-3 pb-2.5 space-y-1">
+                            <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-cu-accent hover:opacity-80 mb-1">
+                                <input type="checkbox" onchange="toggleOrgAll(this)" class="rounded border-gray-300 text-cu-accent focus:ring-cu-accent">
+                                <span>Select all</span>
+                            </label>
+                            {% for ws in ws_list %}
+                            <label class="flex items-center gap-2 cursor-pointer text-sm luma-title hover:opacity-80 pl-1">
+                                <input type="checkbox" name="workspaces" value="{{ ws.id }}" onchange="updateOrgToggle(this)" class="nu-space-cb rounded border-gray-300 text-cu-accent focus:ring-cu-accent">
+                                <span>{{ ws.name }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs luma-muted px-3 py-3">No spaces available yet.</p>
+                    {% endfor %}
+                </div>
+                <p class="text-xs luma-muted mt-1">Expand a workspace, then select the spaces this user can access.</p>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-3 border-t luma-border">
                 <button type="button" onclick="document.getElementById('newUserModal').classList.add('hidden')"
-                        class="px-4 py-2 text-sm text-ms-neutral-80 border border-ms-neutral-30 rounded hover:bg-ms-neutral-10">Cancel</button>
-                <button type="submit" class="px-4 py-2 text-sm rounded bg-ms-blue hover:bg-ms-blue-dark text-white font-medium">Create user</button>
+                        class="px-5 py-2 text-sm luma-title border luma-border rounded-lg luma-btn-secondary transition">Cancel</button>
+                <button type="submit"
+                        class="px-6 py-2 text-sm rounded-lg bg-cu-accent hover:bg-[#523BCF] text-white font-semibold transition shadow">Create user</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Reset password modal -->
-<div id="resetPasswordModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl w-full max-w-sm shadow-2xl border border-ms-neutral-30">
-        <div class="flex items-center justify-between px-6 pt-5 pb-3">
-            <h2 class="text-lg font-semibold text-ms-neutral-80">Reset password</h2>
-            <button type="button" onclick="document.getElementById('resetPasswordModal').classList.add('hidden')"
-                    class="w-8 h-8 rounded hover:bg-ms-neutral-10 text-ms-neutral-60 inline-flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-        </div>
-        <form id="resetPasswordForm" method="post" class="px-6 pb-5 space-y-3">
-            {% csrf_token %}
-            <p class="text-sm text-ms-neutral-60">New password for <span id="resetPasswordUsername" class="font-semibold text-ms-neutral-80"></span>.</p>
-            <input name="password" type="password" required placeholder="New password"
-                   class="w-full px-3 py-2 border border-ms-neutral-30 rounded text-sm text-ms-neutral-80 focus:ring-2 focus:ring-ms-blue outline-none">
-            <div class="flex justify-end gap-2 pt-2">
-                <button type="button" onclick="document.getElementById('resetPasswordModal').classList.add('hidden')"
-                        class="px-4 py-2 text-sm text-ms-neutral-80 border border-ms-neutral-30 rounded hover:bg-ms-neutral-10">Cancel</button>
-                <button type="submit" class="px-4 py-2 text-sm rounded bg-ms-blue hover:bg-ms-blue-dark text-white font-medium">Reset</button>
+<!-- ─── Manage user modal (unified: edit, access, allocations, password, delete) ── -->
+<div id="manageUserModal" class="hidden fixed inset-0 bg-black/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="luma-modal rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden border luma-border max-h-[90vh] flex flex-col">
+
+        <!-- Header -->
+        <div class="relative px-7 pt-6 pb-4 luma-modal-header border-b luma-border flex-shrink-0">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cu-blue via-cu-purple to-cu-pink"></div>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span id="manageAvatar" class="avatar flex-shrink-0 bg-cu-accent" style="width:2.5rem;height:2.5rem;font-size:0.85rem"></span>
+                    <div>
+                        <h2 class="text-lg font-semibold luma-title">Manage user</h2>
+                        <p class="text-xs luma-muted mt-0.5"><span id="manageUsername" class="font-semibold luma-title"></span></p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeManageModal()"
+                        class="w-8 h-8 rounded-full luma-close-btn inline-flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
             </div>
-        </form>
+            <!-- Tabs -->
+            <div class="flex gap-1 mt-4 -mb-4">
+                <button type="button" onclick="switchManageTab('profile')" id="tabBtn-profile"
+                        class="manage-tab-btn px-4 py-2 text-xs font-semibold rounded-t-lg border-b-2 transition-colors">Profile</button>
+                <button type="button" onclick="switchManageTab('access')" id="tabBtn-access"
+                        class="manage-tab-btn px-4 py-2 text-xs font-semibold rounded-t-lg border-b-2 transition-colors">Access &amp; Spaces</button>
+                <button type="button" onclick="switchManageTab('security')" id="tabBtn-security"
+                        class="manage-tab-btn px-4 py-2 text-xs font-semibold rounded-t-lg border-b-2 transition-colors">Security</button>
+            </div>
+        </div>
+
+        <!-- Scrollable body -->
+        <div class="flex-1 overflow-y-auto">
+
+            <!-- ── Tab 1: Profile ──────────────────────────────────── -->
+            <div id="manageTab-profile" class="manage-tab-content">
+                <!-- Read-only summary card -->
+                <div class="px-7 pt-5 pb-4">
+                    <div class="flex items-center gap-4 mb-4">
+                        <span id="profileAvatar" class="avatar flex-shrink-0 bg-cu-accent" style="width:3.5rem;height:3.5rem;font-size:1.1rem"></span>
+                        <div class="flex-1 min-w-0">
+                            <h3 id="profileFullName" class="text-base font-semibold luma-title"></h3>
+                            <p id="profileUsername2" class="text-xs luma-muted"></p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <span id="profileRoleBadge" class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold"></span>
+                            <div id="profileJoined" class="text-[10px] luma-muted mt-1"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="px-3 py-2 rounded-lg bg-white/[0.03] border border-white/5">
+                            <div class="text-[10px] luma-label uppercase tracking-wide mb-0.5">Email</div>
+                            <div id="profileEmail" class="text-xs luma-title truncate"></div>
+                        </div>
+                        <div class="px-3 py-2 rounded-lg bg-white/[0.03] border border-white/5">
+                            <div class="text-[10px] luma-label uppercase tracking-wide mb-0.5">Phone</div>
+                            <div id="profilePhone" class="text-xs luma-title truncate"></div>
+                        </div>
+                        <div class="px-3 py-2 rounded-lg bg-white/[0.03] border border-white/5">
+                            <div class="text-[10px] luma-label uppercase tracking-wide mb-0.5">Company</div>
+                            <div id="profileCompany" class="text-xs luma-title truncate"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Editable form -->
+                <form id="manageEditForm" method="post" class="px-7 pb-6 pt-2 space-y-5 border-t luma-border">
+                    {% csrf_token %}
+                    <p class="text-xs luma-muted">Update this user's profile information.</p>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="block">
+                            <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">First name</span>
+                            <input name="first_name" id="mEditFirstName" class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none transition">
+                        </label>
+                        <label class="block">
+                            <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">Last name</span>
+                            <input name="last_name" id="mEditLastName" class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none transition">
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="block">
+                            <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">Email</span>
+                            <input name="email" id="mEditEmail" type="email" class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none transition">
+                        </label>
+                        <label class="block">
+                            <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">Phone</span>
+                            <input name="phone_number" id="mEditPhone" class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none transition">
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="block">
+                            <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">Company</span>
+                            <input name="company_name" id="mEditCompany" class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none transition">
+                        </label>
+                        <label class="block">
+                            <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">Position</span>
+                            <input name="position" id="mEditPosition" class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none transition">
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="block">
+                            <span class="block text-xs font-semibold luma-label uppercase tracking-wide mb-1.5">Role</span>
+                            <select name="role" id="mEditRoleProfile"
+                                    class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none cursor-pointer transition">
+                                <option value="employee">Employee</option>
+                                <option value="manager">Manager</option>
+                                        </select>
+                        </label>
+                        <div></div>
+                    </div>
+
+                    <div class="flex justify-end pt-3 border-t luma-border">
+                        <button type="submit"
+                                class="px-6 py-2 text-sm rounded-lg bg-cu-accent hover:bg-[#523BCF] text-white font-semibold transition shadow">Save profile</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ── Tab 2: Access & Spaces ─────────────────────────── -->
+            <div id="manageTab-access" class="manage-tab-content hidden">
+                <div class="px-7 py-6 space-y-6">
+
+                    <!-- Role -->
+                    <div>
+                        <h3 class="text-xs font-semibold luma-label uppercase tracking-wide mb-3">Role &amp; permissions</h3>
+                        <div>
+                            <span class="block text-xs luma-muted mb-1.5">Role</span>
+                            <form id="manageRoleForm" method="post" class="inline">
+                                {% csrf_token %}
+                                <select name="role" onchange="this.form.submit()"
+                                        id="mEditRole"
+                                        class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none cursor-pointer">
+                                    <option value="employee">Employee</option>
+                                    <option value="manager">Manager</option>
+                                                </select>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Workspace & List allocations -->
+                    <div>
+                        <h3 class="text-xs font-semibold luma-label uppercase tracking-wide mb-3">Workspace &amp; list allocations</h3>
+                        <p class="text-xs luma-muted mb-3">Control which workspaces and lists this user can access. Tick individual lists to grant list-level access.</p>
+
+                        <!-- Add workspace with search (at top) -->
+                        <div class="relative mb-3" id="mAllocAddWrap">
+                            <button type="button" onclick="toggleManageAllocDD()"
+                                    class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs text-white/50 hover:text-cu-accent hover:bg-cu-panel transition-colors border border-dashed border-white/15">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Add workspace
+                            </button>
+                            <div id="mAllocDD" class="hidden absolute z-30 top-full mt-1 left-0 w-full bg-cu-sidebar border border-white/10 rounded-lg shadow-xl overflow-hidden">
+                                <div class="p-2 border-b border-white/10">
+                                    <input type="text" id="mAllocSearch" placeholder="Search workspaces..."
+                                           class="w-full px-2.5 py-1.5 rounded-md bg-white/5 border border-white/10 text-xs text-white placeholder-white/30 outline-none focus:border-cu-accent/50"
+                                           oninput="filterAllocDD()">
+                                </div>
+                                <div id="mAllocDDList" class="p-1.5 max-h-48 overflow-y-auto">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="mAllocList" class="space-y-1.5">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Tab 3: Security ────────────────────────────────── -->
+            <div id="manageTab-security" class="manage-tab-content hidden">
+                <div class="px-7 py-6 space-y-6">
+
+                    <!-- Send OTP -->
+                    <div>
+                        <h3 class="text-xs font-semibold luma-label uppercase tracking-wide mb-3">Send password reset code</h3>
+                        <p class="text-xs luma-muted mb-3">Send a one-time code to this user's email so they can set their own password.</p>
+                        <div class="flex items-center gap-3">
+                            <button type="button" id="mSendOtpBtn" onclick="sendOtp()"
+                                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-cu-accent/15 text-cu-accent border border-cu-accent/30 hover:bg-cu-accent/25 transition">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                Send OTP via email
+                            </button>
+                            <span id="mOtpStatus" class="text-xs luma-muted hidden"></span>
+                        </div>
+                    </div>
+
+                    <!-- Manual reset password -->
+                    <div class="pt-4 border-t luma-border">
+                        <h3 class="text-xs font-semibold luma-label uppercase tracking-wide mb-3">Manual password reset</h3>
+                        <p class="text-xs luma-muted mb-3">Set a password manually for this user.</p>
+                        <form id="manageResetPwdForm" method="post" class="space-y-4" onsubmit="return validateManagePwd(event)">
+                            {% csrf_token %}
+                            <div class="grid grid-cols-2 gap-4">
+                                <label class="block">
+                                    <span class="block text-xs luma-muted mb-1.5">New password</span>
+                                    <input name="password" id="mPwd1" type="password" required placeholder="••••••••"
+                                           class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none">
+                                </label>
+                                <label class="block">
+                                    <span class="block text-xs luma-muted mb-1.5">Confirm password</span>
+                                    <input id="mPwd2" type="password" required placeholder="••••••••"
+                                           class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                                           oninput="checkManagePwds()">
+                                    <p id="mPwMismatch" class="hidden text-xs text-red-400 mt-1">Passwords do not match.</p>
+                                </label>
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="submit"
+                                        class="px-5 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold transition">Reset password</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Danger zone -->
+                    <div class="pt-4 border-t luma-border">
+                        <h3 class="text-xs font-semibold text-red-400 uppercase tracking-wide mb-2">Danger zone</h3>
+                        <p class="text-xs luma-muted mb-3">Permanently delete this user and all associated data. This cannot be undone.</p>
+                        <form id="manageDeleteForm" method="post"
+                              onsubmit="return confirm('Are you sure you want to permanently delete this user? This cannot be undone.')">
+                            {% csrf_token %}
+                            <button type="submit" id="mDeleteBtn"
+                                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-red-500/15 text-red-400 border border-red-500/30 hover:bg-red-500/25 transition">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                    <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                                </svg>
+                                Delete user
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /scrollable body -->
     </div>
 </div>
+
+<style>
+    /* Dark mode (default) */
+    .luma-modal        { background: #221D44; }
+    .luma-modal-header { background: transparent; }
+    .luma-border       { border-color: rgba(255,255,255,0.10); }
+    .luma-title        { color: #fff; }
+    .luma-label        { color: rgba(255,255,255,0.55); }
+    .luma-muted        { color: rgba(255,255,255,0.55); }
+    .luma-input        { background: #032D45; border: 1px solid rgba(255,255,255,0.10); color: #fff; }
+    .luma-input::placeholder { color: rgba(255,255,255,0.30); }
+    .luma-input:focus  { outline: none; box-shadow: 0 0 0 2px #054B70; border-color: #054B70; }
+    .luma-close-btn    { color: rgba(255,255,255,0.60); }
+    .luma-close-btn:hover { background: rgba(255,255,255,0.08); }
+    .luma-btn-secondary:hover { background: rgba(255,255,255,0.06); }
+    .luma-checkbox     { border-color: rgba(255,255,255,0.20); background: #032D45; accent-color: #054B70; }
+
+    /* Tab styling */
+    .manage-tab-btn { color: rgba(255,255,255,0.40); border-color: transparent; }
+    .manage-tab-btn:hover { color: rgba(255,255,255,0.70); }
+    .manage-tab-btn.active { color: #054B70; border-color: #054B70; background: rgba(5,75,112,0.08); }
+
+    /* Light mode overrides */
+    body.theme-light .luma-modal        { background: #FFFFFF; }
+    body.theme-light .luma-border       { border-color: rgba(26,22,57,0.12) !important; }
+    body.theme-light .luma-title        { color: #032D45 !important; }
+    body.theme-light .luma-label        { color: rgba(26,22,57,0.60) !important; }
+    body.theme-light .luma-muted        { color: rgba(26,22,57,0.55) !important; }
+    body.theme-light .luma-input        { background: #F7F7FA !important; border: 1px solid rgba(26,22,57,0.15) !important; color: #032D45 !important; }
+    body.theme-light .luma-input::placeholder { color: rgba(26,22,57,0.35) !important; }
+    body.theme-light .luma-input:focus  { box-shadow: 0 0 0 2px #054B70; border-color: #054B70 !important; }
+    body.theme-light .luma-close-btn    { color: rgba(26,22,57,0.50) !important; }
+    body.theme-light .luma-close-btn:hover { background: rgba(26,22,57,0.06) !important; }
+    body.theme-light .luma-btn-secondary:hover { background: rgba(26,22,57,0.05) !important; }
+    body.theme-light .luma-checkbox     { border-color: rgba(26,22,57,0.20) !important; background: #F7F7FA !important; }
+    body.theme-light .manage-tab-btn    { color: rgba(26,22,57,0.40); }
+    body.theme-light .manage-tab-btn:hover { color: rgba(26,22,57,0.70); }
+    body.theme-light .manage-tab-btn.active { color: #054B70; border-color: #054B70; background: rgba(5,75,112,0.06); }
+
+    /* Table in light mode */
+    body.theme-light .bg-cu-panel table thead { background: #F0EFF5 !important; }
+    body.theme-light .bg-cu-panel table thead th { color: rgba(26,22,57,0.55) !important; }
+    body.theme-light .bg-cu-panel table tbody td { color: #032D45 !important; }
+    body.theme-light .bg-cu-panel table tbody .text-white { color: #032D45 !important; }
+    body.theme-light .bg-cu-panel table tbody .text-white\/50,
+    body.theme-light .bg-cu-panel table tbody .text-white\/60 { color: rgba(26,22,57,0.55) !important; }
+    body.theme-light .bg-cu-panel table tbody .text-white\/30 { color: rgba(26,22,57,0.35) !important; }
+    body.theme-light .bg-cu-panel table tbody .text-white\/70 { color: rgba(26,22,57,0.65) !important; }
+    body.theme-light .divide-white\/5 > * + * { border-color: rgba(26,22,57,0.06) !important; }
+    body.theme-light .hover\:text-cu-accent:hover { color: #054B70 !important; }
+    body.theme-light .text-white\/50 { color: rgba(26,22,57,0.50) !important; }
+
+    /* ── Page-level light mode (supplements globals from base.html) ── */
+
+    /* Info cards in profile tab — bg-white/[0.03] is invisible in light mode */
+    body.theme-light .bg-white\/\[0\.03\] { background: rgba(26,22,57,0.04) !important; }
+
+    /* Role badges — pale colors need darkening on white bg */
+    body.theme-light .text-purple-300 { color: #7C3AED !important; }
+    body.theme-light .text-blue-300 { color: #2563EB !important; }
+    body.theme-light .bg-cu-purple\/20 { background: rgba(124,58,237,0.10) !important; }
+    body.theme-light .bg-cu-accent\/15 { background: rgba(5,75,112,0.08) !important; }
+
+    /* Manage button hover accents */
+    body.theme-light .hover\:bg-cu-accent\/20:hover { background: rgba(5,75,112,0.12) !important; }
+    body.theme-light .hover\:border-cu-accent\/30:hover { border-color: rgba(5,75,112,0.30) !important; }
+
+    /* Org-group hover in New User modal */
+    body.theme-light .hover\:bg-white\/5:hover { background: rgba(26,22,57,0.04) !important; }
+
+    /* Allocation dropdown search border */
+    body.theme-light #mAllocDD .border-white\/10 { border-color: rgba(26,22,57,0.12) !important; }
+    body.theme-light #mAllocDD { border-color: rgba(26,22,57,0.15) !important; }
+</style>
 
 <script>
-    function openResetPasswordModal(id, name) {
-        const form = document.getElementById('resetPasswordForm');
-        form.action = '/workspaces/admin/users/' + id + '/reset-password/';
-        document.getElementById('resetPasswordUsername').textContent = name;
-        document.getElementById('resetPasswordModal').classList.remove('hidden');
+    function toggleNewUserSpaces() {
+        var role = document.getElementById('newUserRole').value;
+        document.getElementById('newUserSpaces').classList.toggle('hidden', role === 'manager');
+    }
+
+    function toggleOrgGroup(btn) {
+        var group = btn.closest('.nu-org-group');
+        var spaces = group.querySelector('.nu-org-spaces');
+        var arrow = group.querySelector('.nu-org-arrow');
+        spaces.classList.toggle('hidden');
+        arrow.style.transform = spaces.classList.contains('hidden') ? '' : 'rotate(180deg)';
+    }
+
+    function toggleOrgAll(masterCb) {
+        var group = masterCb.closest('.nu-org-group');
+        var cbs = group.querySelectorAll('.nu-space-cb');
+        cbs.forEach(function(cb) { cb.checked = masterCb.checked; });
+    }
+
+    function updateOrgToggle(cb) {
+        var group = cb.closest('.nu-org-group');
+        var cbs = group.querySelectorAll('.nu-space-cb');
+        var master = group.querySelector('.nu-org-spaces > label:first-child input');
+        var all = Array.from(cbs).every(function(c) { return c.checked; });
+        master.checked = all;
+        master.indeterminate = !all && Array.from(cbs).some(function(c) { return c.checked; });
+    }
+
+    /* ── Data (built server-side) ──────────────────────────────────────── */
+    var ALLOC_DATA = {};
+    {% for u in users_all %}
+    ALLOC_DATA[{{ u.id }}] = {
+        owned: [{% for ws in owned_workspaces|dict_get:u.id %}{ id: {{ ws.id }}, name: "{{ ws.name|escapejs }}" },{% endfor %}],
+        member: [{% for m in allocations|dict_get:u.id %}{ id: {{ m.workspace.id }}, name: "{{ m.workspace.name|escapejs }}" },{% endfor %}],
+        list_ids: [{% for lid in list_allocations|dict_get:u.id %}{{ lid }},{% endfor %}],
+    };
+    {% endfor %}
+
+    var ALL_WORKSPACES = [{% for ws in all_workspaces %}{ id: {{ ws.id }}, name: "{{ ws.name|escapejs }}", org: "{{ ws.organization.name|default:'No Organization'|escapejs }}" },{% endfor %}];
+
+    /* Lists grouped by workspace id */
+    var LISTS_BY_WS = {};
+    {% for ws in all_workspaces %}
+    LISTS_BY_WS[{{ ws.id }}] = [{% for tl in lists_by_workspace|dict_get:ws.id %}{ id: {{ tl.id }}, name: "{{ tl.name|escapejs }}" },{% endfor %}];
+    {% endfor %}
+
+    var currentManageUserId = null;
+    var currentManageIsSelf = false;
+
+    function getCSRF() {
+        var el = document.querySelector('[name=csrfmiddlewaretoken]');
+        return el ? el.value : '';
+    }
+
+    /* ── AJAX helpers ──────────────────────────────────────────────────── */
+    function allocateAjax(userId, wsId, action) {
+        var fd = new FormData();
+        fd.append('workspace_id', wsId);
+        fd.append('action', action);
+        fd.append('csrfmiddlewaretoken', getCSRF());
+        return fetch('/workspaces/admin/users/' + userId + '/allocate/', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: fd,
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.ok) {
+                ALLOC_DATA[userId] = { owned: data.owned, member: data.member, list_ids: data.list_ids || [] };
+                renderAllocations(userId);
+                renderAllocDD();
+            }
+        });
+    }
+
+    function allocateListAjax(userId, listId, action) {
+        var fd = new FormData();
+        fd.append('list_id', listId);
+        fd.append('action', action);
+        fd.append('csrfmiddlewaretoken', getCSRF());
+        return fetch('/workspaces/admin/users/' + userId + '/allocate-list/', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: fd,
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            if (data.ok) {
+                ALLOC_DATA[userId] = { owned: data.owned, member: data.member, list_ids: data.list_ids || [] };
+                renderAllocations(userId);
+            }
+        });
+    }
+
+    /* ── Send OTP ───────────────────────────────────────────────────────── */
+    function sendOtp() {
+        if (!currentManageUserId) return;
+        var btn = document.getElementById('mSendOtpBtn');
+        var status = document.getElementById('mOtpStatus');
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        status.classList.add('hidden');
+
+        var fd = new FormData();
+        fd.append('csrfmiddlewaretoken', getCSRF());
+        fetch('/workspaces/admin/users/' + currentManageUserId + '/send-otp/', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: fd,
+        }).then(function(r) { return r.json(); }).then(function(data) {
+            status.classList.remove('hidden');
+            if (data.ok) {
+                status.textContent = data.message;
+                status.style.color = '#16a34a';
+            } else {
+                status.textContent = data.error || 'Failed to send OTP.';
+                status.style.color = '#ef4444';
+            }
+        }).catch(function() {
+            status.classList.remove('hidden');
+            status.textContent = 'Network error.';
+            status.style.color = '#ef4444';
+        }).finally(function() {
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Send OTP via email';
+        });
+    }
+
+    /* ── Open the Manage modal ─────────────────────────────────────────── */
+    function openManageModal(id, username, firstName, lastName, email, phone, company, position, role, joinedDate) {
+        currentManageUserId = id;
+        currentManageIsSelf = (id === {{ request.user.id }});
+
+        var avatarClass = role === 'manager' ? 'bg-cu-purple' : 'bg-cu-accent';
+        var roleLabel = role === 'manager' ? 'Manager' : 'Employee';
+
+        // Header avatar
+        var av = document.getElementById('manageAvatar');
+        av.textContent = username.charAt(0).toUpperCase();
+        av.className = 'avatar flex-shrink-0 ' + avatarClass;
+        document.getElementById('manageUsername').textContent = username;
+
+        // Profile summary card
+        var pav = document.getElementById('profileAvatar');
+        pav.textContent = username.charAt(0).toUpperCase();
+        pav.className = 'avatar flex-shrink-0 ' + avatarClass;
+        var fullName = (firstName + ' ' + lastName).trim();
+        document.getElementById('profileFullName').textContent = fullName || username;
+        document.getElementById('profileUsername2').textContent = '@' + username;
+        var roleBadge = document.getElementById('profileRoleBadge');
+        roleBadge.textContent = roleLabel;
+        roleBadge.className = 'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold ' +
+            (role === 'manager' ? 'bg-cu-purple/20 text-purple-300' : 'bg-cu-accent/15 text-blue-300');
+        document.getElementById('profileJoined').textContent = 'Joined ' + (joinedDate || '—');
+        document.getElementById('profileEmail').textContent = email || '—';
+        document.getElementById('profilePhone').textContent = phone || '—';
+        document.getElementById('profileCompany').textContent = company || '—';
+
+        // Profile tab form
+        document.getElementById('manageEditForm').action = '/workspaces/admin/users/' + id + '/update/';
+        document.getElementById('mEditFirstName').value = firstName;
+        document.getElementById('mEditLastName').value = lastName;
+        document.getElementById('mEditEmail').value = email;
+        document.getElementById('mEditPhone').value = phone;
+        document.getElementById('mEditCompany').value = company;
+        document.getElementById('mEditPosition').value = position;
+
+        // Role – both profile form and access tab
+        var normalizedRole = (role === 'user' ? 'employee' : role);
+        document.getElementById('manageRoleForm').action = '/workspaces/admin/users/' + id + '/set-role/';
+        document.getElementById('mEditRole').value = normalizedRole;
+        document.getElementById('mEditRoleProfile').value = normalizedRole;
+
+        // Access tab – allocations
+        renderAllocations(id);
+        renderAllocDD();
+        document.getElementById('mAllocSearch').value = '';
+
+        // Security tab
+        document.getElementById('mOtpStatus').classList.add('hidden');
+        document.getElementById('manageResetPwdForm').action = '/workspaces/admin/users/' + id + '/reset-password/';
+        document.getElementById('mPwd1').value = '';
+        document.getElementById('mPwd2').value = '';
+        document.getElementById('mPwMismatch').classList.add('hidden');
+        document.getElementById('manageDeleteForm').action = '/workspaces/admin/users/' + id + '/delete/';
+        var deleteBtn = document.getElementById('mDeleteBtn');
+        if (currentManageIsSelf) {
+            deleteBtn.disabled = true;
+            deleteBtn.classList.add('opacity-40', 'cursor-not-allowed');
+            deleteBtn.title = "Can't delete yourself";
+        } else {
+            deleteBtn.disabled = false;
+            deleteBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+            deleteBtn.title = '';
+        }
+
+        switchManageTab('profile');
+        document.getElementById('manageUserModal').classList.remove('hidden');
+    }
+
+    function closeManageModal() {
+        document.getElementById('manageUserModal').classList.add('hidden');
+        document.getElementById('mAllocDD').classList.add('hidden');
+    }
+
+    /* ── Tab switching ──────────────────────────────────────────────────── */
+    function switchManageTab(tab) {
+        document.querySelectorAll('.manage-tab-content').forEach(function(el) { el.classList.add('hidden'); });
+        document.querySelectorAll('.manage-tab-btn').forEach(function(el) { el.classList.remove('active'); });
+        document.getElementById('manageTab-' + tab).classList.remove('hidden');
+        document.getElementById('tabBtn-' + tab).classList.add('active');
+    }
+
+    /* ── Render allocated workspaces list ───────────────────────────────── */
+    function renderAllocations(userId) {
+        var data = ALLOC_DATA[userId] || { owned: [], member: [], list_ids: [] };
+        var listIdSet = {};
+        (data.list_ids || []).forEach(function(id) { listIdSet[id] = true; });
+        var container = document.getElementById('mAllocList');
+        var html = '';
+
+        if (data.owned.length === 0 && data.member.length === 0) {
+            html = '<p class="text-xs luma-muted py-2">No workspaces allocated yet.</p>';
+        }
+
+        function renderListsForWs(wsId, isOwner) {
+            var lists = LISTS_BY_WS[wsId] || [];
+            if (lists.length === 0) return '';
+            var h = '<div class="pl-7 pr-2 pb-2 pt-1 space-y-0.5">';
+            lists.forEach(function(tl) {
+                var isOn = !!listIdSet[tl.id];
+                h += '<label class="flex items-center gap-2 px-2 py-1 rounded hover:bg-white/5 cursor-pointer transition-colors">' +
+                    '<input type="checkbox" ' + (isOn ? 'checked ' : '') +
+                        'onchange="toggleListAlloc(' + tl.id + ', this.checked)"' +
+                        ' class="rounded border-gray-300 text-cu-accent focus:ring-cu-accent" style="width:14px;height:14px;">' +
+                    '<span class="text-xs luma-title">' + tl.name + '</span>' +
+                '</label>';
+            });
+            h += '</div>';
+            return h;
+        }
+
+        data.owned.forEach(function(ws) {
+            html += '<div class="rounded-lg bg-cu-accent/10 border border-cu-accent/20 overflow-hidden">' +
+                '<div class="flex items-center justify-between px-3 py-2">' +
+                    '<div class="flex items-center gap-2">' +
+                        '<span class="w-5 h-5 rounded bg-cu-accent inline-flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">' + ws.name.charAt(0).toUpperCase() + '</span>' +
+                        '<span class="text-sm luma-title font-medium">' + ws.name + '</span>' +
+                    '</div>' +
+                    '<span class="text-[10px] font-semibold text-cu-accent uppercase tracking-wide">Owner</span>' +
+                '</div>' +
+                renderListsForWs(ws.id, true) +
+            '</div>';
+        });
+
+        data.member.forEach(function(ws) {
+            html += '<div class="rounded-lg bg-cu-panel border border-white/10 overflow-hidden" data-alloc-ws="' + ws.id + '">' +
+                '<div class="flex items-center justify-between px-3 py-2">' +
+                    '<div class="flex items-center gap-2">' +
+                        '<span class="w-5 h-5 rounded bg-cu-purple inline-flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">' + ws.name.charAt(0).toUpperCase() + '</span>' +
+                        '<span class="text-sm luma-title font-medium">' + ws.name + '</span>' +
+                    '</div>' +
+                    '<button type="button" onclick="removeAlloc(' + ws.id + ')" class="w-6 h-6 rounded-full inline-flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-red-500/10 transition" title="Remove">' +
+                        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+                    '</button>' +
+                '</div>' +
+                renderListsForWs(ws.id, false) +
+            '</div>';
+        });
+
+        container.innerHTML = html;
+    }
+
+    function toggleListAlloc(listId, isChecked) {
+        allocateListAjax(currentManageUserId, listId, isChecked ? 'add' : 'remove');
+    }
+
+    function removeAlloc(wsId) {
+        allocateAjax(currentManageUserId, wsId, 'remove');
+    }
+
+    function addAlloc(wsId) {
+        allocateAjax(currentManageUserId, wsId, 'add');
+        document.getElementById('mAllocDD').classList.add('hidden');
+        document.getElementById('mAllocSearch').value = '';
+    }
+
+    /* ── Render allocation dropdown (excluding already-allocated) ──────── */
+    function renderAllocDD() {
+        var data = ALLOC_DATA[currentManageUserId] || { owned: [], member: [] };
+        var allocatedIds = {};
+        data.owned.forEach(function(ws) { allocatedIds[ws.id] = true; });
+        data.member.forEach(function(ws) { allocatedIds[ws.id] = true; });
+
+        var container = document.getElementById('mAllocDDList');
+        var search = (document.getElementById('mAllocSearch').value || '').toLowerCase();
+        var count = 0;
+
+        // Group available workspaces by org
+        var byOrg = {};
+        ALL_WORKSPACES.forEach(function(ws) {
+            if (allocatedIds[ws.id]) return;
+            if (search && ws.name.toLowerCase().indexOf(search) === -1) return;
+            count++;
+            if (!byOrg[ws.org]) byOrg[ws.org] = [];
+            byOrg[ws.org].push(ws);
+        });
+
+        var html = '';
+        Object.keys(byOrg).sort().forEach(function(org) {
+            html += '<p class="px-2.5 pt-2 pb-0.5 text-[10px] font-bold text-white/35 uppercase tracking-wider">' + org + '</p>';
+            byOrg[org].forEach(function(ws) {
+                html += '<button type="button" onclick="addAlloc(' + ws.id + ')"' +
+                    ' class="w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-xs text-white hover:bg-cu-panel transition-colors text-left">' +
+                    '<span class="w-4 h-4 rounded bg-cu-accent inline-flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0">' + ws.name.charAt(0).toUpperCase() + '</span>' +
+                    ws.name +
+                '</button>';
+            });
+        });
+
+        if (count === 0) {
+            html = '<p class="px-2.5 py-2 text-xs text-white/40">' + (search ? 'No matching workspaces' : 'All workspaces allocated') + '</p>';
+        }
+
+        container.innerHTML = html;
+    }
+
+    function filterAllocDD() {
+        renderAllocDD();
+    }
+
+    /* ── Allocation dropdown toggle ────────────────────────────────────── */
+    function toggleManageAllocDD() {
+        var dd = document.getElementById('mAllocDD');
+        dd.classList.toggle('hidden');
+        if (!dd.classList.contains('hidden')) {
+            renderAllocDD();
+            setTimeout(function() { document.getElementById('mAllocSearch').focus(); }, 50);
+        }
+    }
+
+    // Close dropdown on outside click
+    document.addEventListener('click', function(e) {
+        var dd = document.getElementById('mAllocDD');
+        if (dd && !dd.classList.contains('hidden') && !dd.contains(e.target) && !e.target.closest('[onclick*="toggleManageAllocDD"]')) {
+            dd.classList.add('hidden');
+        }
+    });
+
+    // Close modal on backdrop click
+    document.getElementById('manageUserModal').addEventListener('click', function(e) {
+        if (e.target === this) closeManageModal();
+    });
+
+    /* ── New user helpers ─────────────────────────────────────────────── */
+    function checkPasswords() {
+        var p1 = document.getElementById('newUserPassword').value;
+        var p2 = document.getElementById('newUserPasswordConfirm').value;
+        document.getElementById('pwMismatch').classList.toggle('hidden', !p2 || p1 === p2);
+    }
+    function validateNewUser(e) {
+        var p1 = document.getElementById('newUserPassword').value;
+        var p2 = document.getElementById('newUserPasswordConfirm').value;
+        if (p1 !== p2) {
+            document.getElementById('pwMismatch').classList.remove('hidden');
+            e.preventDefault();
+            return false;
+        }
+        return true;
+    }
+    function checkManagePwds() {
+        var p1 = document.getElementById('mPwd1').value;
+        var p2 = document.getElementById('mPwd2').value;
+        document.getElementById('mPwMismatch').classList.toggle('hidden', !p2 || p1 === p2);
+    }
+    function validateManagePwd(e) {
+        var p1 = document.getElementById('mPwd1').value;
+        var p2 = document.getElementById('mPwd2').value;
+        if (p1 !== p2) {
+            document.getElementById('mPwMismatch').classList.remove('hidden');
+            e.preventDefault();
+            return false;
+        }
+        return true;
     }
 </script>
 {% endblock %}

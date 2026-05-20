@@ -1,84 +1,667 @@
-{# Microsoft-styled Add Task modal. Expects: task_list, status_choices, priority_choices, users #}
-<div id="newTaskModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg w-full max-w-2xl shadow-2xl border border-ms-neutral-30 flex flex-col max-h-[90vh] overflow-hidden">
-        <!-- Header -->
-        <div class="flex items-center justify-between px-5 pt-4 pb-3 border-b border-ms-neutral-20">
-            <h2 class="text-base font-semibold text-ms-neutral-80">New task · {{ task_list.name }}</h2>
+{# Add Task modal — ClickUp-style full dialog. Expects: task_list, status_choices, priority_choices, category_choices, users, custom_fields_for_list, workspace, nav_workspaces #}
+<div id="newTaskModal" class="hidden fixed inset-0 bg-black/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-cu-sidebar text-white rounded-2xl w-full max-w-2xl shadow-2xl border border-white/10 flex flex-col max-h-[90vh] overflow-hidden">
+
+        <!-- ── Top bar: location selector + close ─────────────────────── -->
+        <div class="flex items-center justify-between px-6 pt-5 pb-3">
+            <div class="flex items-center gap-2">
+                <!-- Workspace / List breadcrumb -->
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cu-panel border border-white/10 text-xs text-white/80">
+                    <span class="w-4 h-4 rounded bg-cu-accent inline-flex items-center justify-center text-[9px] font-bold flex-shrink-0" style="color:#fff">{{ workspace.name|slice:":1"|upper }}</span>
+                    {{ workspace.name }}
+                </span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white/30"><polyline points="9 18 15 12 9 6"/></svg>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cu-panel border border-white/10 text-xs text-white/80">
+                    {% include 'workspaces/_list_chip.html' with tl=task_list size='sm' %}
+                    {{ task_list.name }}
+                </span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white/30"><polyline points="9 18 15 12 9 6"/></svg>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cu-panel border border-white/10 text-xs text-white/80">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+                    Task
+                </span>
+            </div>
             <button type="button" onclick="document.getElementById('newTaskModal').classList.add('hidden')"
-                    class="w-8 h-8 rounded hover:bg-ms-neutral-10 text-ms-neutral-60 flex items-center justify-center">
+                    class="w-8 h-8 rounded-lg hover:bg-cu-sidebar-hover text-white/50 hover:text-white flex items-center justify-center transition-colors">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
         </div>
 
-        <form method="post" action="{% url 'workspaces:task_create' task_list.id %}" class="flex-1 overflow-auto">
+        <form method="post" action="{% url 'workspaces:task_create' task_list.id %}" class="flex-1 flex flex-col overflow-hidden">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
 
-            <!-- Title -->
-            <div class="px-5 pt-4">
+            <!-- ── Scrollable body ──────────────────────────────────── -->
+            <div class="flex-1 overflow-auto px-6">
+
+                <!-- Task name -->
                 <input name="title" required autofocus
                        placeholder="Task name"
-                       class="w-full px-3 py-2.5 border border-ms-neutral-30 rounded text-base focus:ring-2 focus:ring-ms-blue focus:border-ms-blue outline-none">
+                       class="w-full py-3 bg-transparent border-0 text-2xl font-semibold text-white placeholder-white/25 focus:ring-0 focus:outline-none">
+
+                <!-- Description -->
+                <div class="mt-1 mb-4">
+                    <textarea name="description" rows="3"
+                              placeholder="Add description..."
+                              class="w-full px-3 py-2.5 bg-cu-panel border border-white/10 rounded-lg text-sm text-white placeholder-white/30 focus:border-cu-accent focus:ring-0 focus:outline-none resize-y"></textarea>
+                </div>
+
+                <!-- ── Fields grid ─────────────────────────────────── -->
+                <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm mb-4">
+                    <!-- Status -->
+                    <div class="flex items-center gap-3 py-1.5">
+                        <span class="w-24 flex-shrink-0 text-white/50 text-xs flex items-center gap-1.5">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/></svg>
+                            Status
+                        </span>
+                        <select name="status" id="modalStatusSelect"
+                                class="appearance-none status-pill status-c-{% for s in task_list.statuses.all %}{% if forloop.first %}{{ s.color }}{% endif %}{% endfor %} border-0 cursor-pointer pr-5 bg-no-repeat"
+                                onchange="updateStatusColor(this)"
+                                style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22white%22 viewBox=%220 0 20 20%22><path d=%22M5.25 7.5L10 12.25 14.75 7.5z%22/></svg>'); background-position: right 0.25rem center; background-size: 12px;">
+                            {% for s in task_list.statuses.all %}
+                            <option value="{{ s.key }}" data-color="{{ s.color }}" class="bg-cu-panel text-white">{{ s.name|upper }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Assignees (searchable dropdown) -->
+                    <div class="flex items-start gap-3 py-1.5 relative col-span-2">
+                        <span class="w-24 flex-shrink-0 text-white/50 text-xs flex items-center gap-1.5 pt-1">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            Assignees
+                        </span>
+                        <div class="flex-1 relative">
+                            <button type="button" id="ntmAssignBtn"
+                                    onclick="toggleNtmAssignDD()"
+                                    class="w-full flex items-center gap-1.5 px-2 py-1 rounded text-xs text-left hover:bg-cu-panel transition-colors min-h-[28px]">
+                                <span id="ntmAssignDisplay" class="flex items-center gap-1 flex-1 text-white/40">Unassigned</span>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0 text-white/30"><polyline points="6 9 12 15 18 9"/></svg>
+                            </button>
+                            <div id="ntmAssignDD" class="hidden fixed z-[9999] rounded-lg shadow-xl overflow-hidden bg-cu-sidebar border border-white/10">
+                                <div class="p-2 border-b border-white/10">
+                                    <input type="text" placeholder="Search people…" oninput="filterNtmAssign(this)"
+                                           class="w-full rounded px-2.5 py-1.5 text-xs outline-none bg-cu-panel border border-white/10 text-white placeholder-white/40 focus:border-cu-accent">
+                                </div>
+                                <div class="p-1.5 max-h-44 overflow-y-auto">
+                                    {% for u in users %}
+                                    <label class="ntm-assign-label flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer text-xs text-white hover:bg-white/5"
+                                           data-name="{{ u.get_full_name|default:u.username|lower }}">
+                                        <input type="checkbox" name="assignees" value="{{ u.id }}"
+                                               onchange="updateNtmAssignDisplay()"
+                                               data-fullname="{{ u.get_full_name|default:u.username }}"
+                                               class="rounded border-white/15 bg-cu-panel text-cu-accent focus:ring-cu-accent">
+                                        <span class="avatar bg-cu-accent text-white" style="width:1.25rem;height:1.25rem;font-size:0.5rem">{{ u.username|slice:":1"|upper }}</span>
+                                        {{ u.get_full_name|default:u.username }}
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Due date -->
+                    <div class="flex items-center gap-3 py-1.5">
+                        <span class="w-24 flex-shrink-0 text-white/50 text-xs flex items-center gap-1.5">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            Due date
+                        </span>
+                        <button type="button" id="ntmDueDateBtn" onclick="ntmDpOpen('due_date')"
+                                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs text-white/40 hover:bg-cu-panel transition-colors">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            Due date
+                        </button>
+                        <input type="hidden" name="due_date" id="ntmDueDateVal">
+                    </div>
+
+                    <!-- Start date -->
+                    <div class="flex items-center gap-3 py-1.5">
+                        <span class="w-24 flex-shrink-0 text-white/50 text-xs flex items-center gap-1.5">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            Start date
+                        </span>
+                        <button type="button" id="ntmStartDateBtn" onclick="ntmDpOpen('start_date')"
+                                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs text-white/40 hover:bg-cu-panel transition-colors">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            Start date
+                        </button>
+                        <input type="hidden" name="start_date" id="ntmStartDateVal">
+                    </div>
+
+                    <!-- Priority -->
+                    <div class="flex items-center gap-3 py-1.5">
+                        <span class="w-24 flex-shrink-0 text-white/50 text-xs flex items-center gap-1.5">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="22" x2="4" y2="15"/><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/></svg>
+                            Priority
+                        </span>
+                        <select name="priority" id="modalPrioritySelect"
+                                class="appearance-none status-pill status-c-blue border-0 cursor-pointer pr-5 bg-no-repeat"
+                                onchange="updatePriorityColor(this)"
+                                style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22white%22 viewBox=%220 0 20 20%22><path d=%22M5.25 7.5L10 12.25 14.75 7.5z%22/></svg>'); background-position: right 0.25rem center; background-size: 12px;">
+                            {% for key, label in priority_choices %}
+                            <option value="{{ key }}"
+                                    data-color="{% if key == 'urgent' %}red{% elif key == 'high' %}orange{% elif key == 'low' %}gray{% else %}blue{% endif %}"
+                                    {% if key == 'normal' %}selected{% endif %} class="opt-priority-{{ key }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="flex items-center gap-3 py-1.5">
+                        <span class="w-24 flex-shrink-0 text-white/50 text-xs flex items-center gap-1.5">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h10M4 17h6"/></svg>
+                            Category
+                        </span>
+                        <select name="category" id="modalCategorySelect"
+                                class="appearance-none status-pill status-c-gray border-0 cursor-pointer pr-5 bg-no-repeat"
+                                onchange="updateCategoryColor(this)"
+                                style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22white%22 viewBox=%220 0 20 20%22><path d=%22M5.25 7.5L10 12.25 14.75 7.5z%22/></svg>'); background-position: right 0.25rem center; background-size: 12px;">
+                            <option value="" data-color="gray" class="bg-cu-panel text-white">None</option>
+                            {% for key, label in category_choices %}
+                            <option value="{{ key }}" data-color="purple" class="bg-cu-panel text-white">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Time estimate -->
+                    <div class="flex items-center gap-3 py-1.5 col-span-2">
+                        <span class="w-24 flex-shrink-0 text-white/50 text-xs flex items-center gap-1.5">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            Estimate
+                        </span>
+                        <div class="inline-flex items-center gap-1 text-xs">
+                            <input id="estHours" type="number" min="0" placeholder="0"
+                                   class="w-10 bg-transparent text-xs text-right focus:ring-0 outline-none hover:bg-cu-panel px-1 py-0.5 rounded">
+                            <span class="text-white/40">h</span>
+                            <input id="estMinutes" type="number" min="0" max="59" placeholder="0"
+                                   class="w-10 bg-transparent text-xs text-right focus:ring-0 outline-none hover:bg-cu-panel px-1 py-0.5 rounded">
+                            <span class="text-white/40">min</span>
+                            <input type="hidden" name="estimated_minutes" id="estMinutesTotal" value="">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Date picker popup (fixed, shared by start/due) ── -->
+                <div id="ntmDatePicker" class="hidden fixed z-[9999] bg-cu-sidebar border border-white/10 rounded-xl shadow-2xl w-[320px] text-sm overflow-hidden" onclick="event.stopPropagation()">
+                    <!-- Tabs -->
+                    <div class="flex border-b border-white/10">
+                        <button type="button" onclick="ntmDpSwitchTab('start_date')"
+                                id="ntmDpTabStart" class="ntm-dp-tab flex-1 px-4 py-2.5 text-xs font-semibold text-center transition-colors text-white/50 hover:text-white/80">Start date</button>
+                        <button type="button" onclick="ntmDpSwitchTab('due_date')"
+                                id="ntmDpTabDue" class="ntm-dp-tab flex-1 px-4 py-2.5 text-xs font-semibold text-center transition-colors text-cu-accent border-b-2 border-cu-accent">Due date</button>
+                    </div>
+                    <!-- Quick options -->
+                    <div class="px-3 py-2 grid grid-cols-4 gap-1.5">
+                        <button type="button" onclick="ntmDpQuick('today')" class="px-2 py-1.5 text-[11px] rounded bg-cu-panel hover:bg-cu-accent/20 text-white/80 hover:text-white text-center transition-colors">Today</button>
+                        <button type="button" onclick="ntmDpQuick('tomorrow')" class="px-2 py-1.5 text-[11px] rounded bg-cu-panel hover:bg-cu-accent/20 text-white/80 hover:text-white text-center transition-colors">Tomorrow</button>
+                        <button type="button" onclick="ntmDpQuick('next_week')" class="px-2 py-1.5 text-[11px] rounded bg-cu-panel hover:bg-cu-accent/20 text-white/80 hover:text-white text-center transition-colors">Next week</button>
+                        <button type="button" onclick="ntmDpQuick('2_weeks')" class="px-2 py-1.5 text-[11px] rounded bg-cu-panel hover:bg-cu-accent/20 text-white/80 hover:text-white text-center transition-colors">2 weeks</button>
+                        <button type="button" onclick="ntmDpQuick('4_weeks')" class="px-2 py-1.5 text-[11px] rounded bg-cu-panel hover:bg-cu-accent/20 text-white/80 hover:text-white text-center transition-colors">4 weeks</button>
+                        <button type="button" onclick="ntmDpQuick('next_weekend')" class="px-2 py-1.5 text-[11px] rounded bg-cu-panel hover:bg-cu-accent/20 text-white/80 hover:text-white text-center transition-colors">Weekend</button>
+                        <button type="button" onclick="ntmDpQuick('later')" class="px-2 py-1.5 text-[11px] rounded bg-cu-panel hover:bg-cu-accent/20 text-white/80 hover:text-white text-center transition-colors">Later</button>
+                        <button type="button" onclick="ntmDpClear()" class="px-2 py-1.5 text-[11px] rounded bg-cu-panel hover:bg-red-500/20 text-white/50 hover:text-red-400 text-center transition-colors">Clear</button>
+                    </div>
+                    <!-- Mini calendar -->
+                    <div class="px-3 pb-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <button type="button" onclick="ntmDpNav(-1)" class="w-6 h-6 rounded hover:bg-cu-panel flex items-center justify-center text-white/60">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                            </button>
+                            <span id="ntmDpMonthLabel" class="text-xs font-semibold text-white"></span>
+                            <button type="button" onclick="ntmDpNav(1)" class="w-6 h-6 rounded hover:bg-cu-panel flex items-center justify-center text-white/60">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-7 gap-0 text-center text-[10px] text-white/40 mb-1">
+                            <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+                        </div>
+                        <div id="ntmDpCalGrid" class="grid grid-cols-7 gap-0 text-center text-xs"></div>
+                    </div>
+                </div>
+
+                <!-- ── Recurring task ────────────────────────────── -->
+                <div class="mb-4">
+                    <label class="flex items-center gap-2 cursor-pointer select-none group"
+                           onclick="document.getElementById('ntmRecurPanel').classList.toggle('hidden'); this.querySelector('[data-caret]').classList.toggle('rotate-90')">
+                        <svg data-caret width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-white/30 transition-transform"><polyline points="9 6 15 12 9 18"/></svg>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-white/50"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                        <span class="text-[11px] uppercase tracking-wide font-semibold text-white/40 group-hover:text-white/60 transition-colors">Recurring</span>
+                    </label>
+
+                    <div id="ntmRecurPanel" class="hidden mt-2 bg-cu-panel border border-white/10 rounded-lg p-3 space-y-3">
+                        <!-- Frequency buttons -->
+                        <div>
+                            <label class="text-[10px] uppercase tracking-wide text-white/40 font-semibold mb-1 block">Frequency</label>
+                            <div class="flex flex-wrap gap-1">
+                                {% for key, label in recurrence_freq_choices %}
+                                <button type="button" onclick="ntmSetRecurFreq('{{ key }}')"
+                                        class="ntm-freq-btn px-2.5 py-1 rounded text-[11px] transition-colors bg-cu-sidebar text-white/70 hover:bg-cu-accent/20"
+                                        data-freq="{{ key }}">{{ label }}</button>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="recurrence_frequency" id="ntmRecurFreqInput" value="">
+                        </div>
+
+                        <!-- Interval -->
+                        <div class="flex items-center gap-2">
+                            <label class="text-[10px] uppercase tracking-wide text-white/40 font-semibold flex-shrink-0">Every</label>
+                            <input type="number" name="recurrence_interval" value="1" min="1" max="365"
+                                   class="w-14 px-2 py-1 bg-cu-sidebar border border-white/10 rounded text-xs text-white text-center focus:ring-2 focus:ring-cu-accent outline-none">
+                            <span class="text-xs text-white/60" id="ntmRecurUnit">day(s)</span>
+                        </div>
+
+                        <!-- Day picker (for weekly) -->
+                        <div id="ntmRecurDays" class="hidden">
+                            <label class="text-[10px] uppercase tracking-wide text-white/40 font-semibold mb-1 block">On days</label>
+                            <div class="flex gap-1">
+                                <label class="cursor-pointer"><input type="checkbox" name="recurrence_days" value="0" class="sr-only peer"><span class="inline-flex w-7 h-7 items-center justify-center rounded-full text-[11px] font-semibold bg-cu-sidebar text-white/60 peer-checked:bg-cu-accent peer-checked:text-white transition-colors">Mo</span></label>
+                                <label class="cursor-pointer"><input type="checkbox" name="recurrence_days" value="1" class="sr-only peer"><span class="inline-flex w-7 h-7 items-center justify-center rounded-full text-[11px] font-semibold bg-cu-sidebar text-white/60 peer-checked:bg-cu-accent peer-checked:text-white transition-colors">Tu</span></label>
+                                <label class="cursor-pointer"><input type="checkbox" name="recurrence_days" value="2" class="sr-only peer"><span class="inline-flex w-7 h-7 items-center justify-center rounded-full text-[11px] font-semibold bg-cu-sidebar text-white/60 peer-checked:bg-cu-accent peer-checked:text-white transition-colors">We</span></label>
+                                <label class="cursor-pointer"><input type="checkbox" name="recurrence_days" value="3" class="sr-only peer"><span class="inline-flex w-7 h-7 items-center justify-center rounded-full text-[11px] font-semibold bg-cu-sidebar text-white/60 peer-checked:bg-cu-accent peer-checked:text-white transition-colors">Th</span></label>
+                                <label class="cursor-pointer"><input type="checkbox" name="recurrence_days" value="4" class="sr-only peer"><span class="inline-flex w-7 h-7 items-center justify-center rounded-full text-[11px] font-semibold bg-cu-sidebar text-white/60 peer-checked:bg-cu-accent peer-checked:text-white transition-colors">Fr</span></label>
+                                <label class="cursor-pointer"><input type="checkbox" name="recurrence_days" value="5" class="sr-only peer"><span class="inline-flex w-7 h-7 items-center justify-center rounded-full text-[11px] font-semibold bg-cu-sidebar text-white/60 peer-checked:bg-cu-accent peer-checked:text-white transition-colors">Sa</span></label>
+                                <label class="cursor-pointer"><input type="checkbox" name="recurrence_days" value="6" class="sr-only peer"><span class="inline-flex w-7 h-7 items-center justify-center rounded-full text-[11px] font-semibold bg-cu-sidebar text-white/60 peer-checked:bg-cu-accent peer-checked:text-white transition-colors">Su</span></label>
+                            </div>
+                        </div>
+
+                        <!-- Trigger buttons -->
+                        <div>
+                            <label class="text-[10px] uppercase tracking-wide text-white/40 font-semibold mb-1 block">Trigger</label>
+                            <div class="flex flex-wrap gap-1">
+                                {% for key, label in recurrence_trigger_choices %}
+                                <button type="button" onclick="ntmSetRecurTrigger('{{ key }}')"
+                                        class="ntm-trigger-btn px-2.5 py-1 rounded text-[11px] transition-colors
+                                               {% if forloop.first %}bg-cu-accent text-white{% else %}bg-cu-sidebar text-white/70 hover:bg-cu-accent/20{% endif %}"
+                                        data-trigger="{{ key }}">{{ label }}</button>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="recurrence_trigger" id="ntmRecurTriggerInput" value="on_complete">
+                        </div>
+
+                        <!-- Action -->
+                        <div>
+                            <label class="text-[10px] uppercase tracking-wide text-white/40 font-semibold mb-1 block">Action</label>
+                            <select name="recurrence_action"
+                                    class="w-full px-2 py-1.5 bg-cu-sidebar border border-white/10 rounded text-xs text-white focus:ring-2 focus:ring-cu-accent outline-none">
+                                {% for key, label in recurrence_action_choices %}
+                                <option value="{{ key }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Repeat count -->
+                        <div class="flex items-center gap-2">
+                            <label class="cursor-pointer flex items-center gap-1.5">
+                                <input type="checkbox" name="recur_forever" value="1" checked
+                                       onchange="document.getElementById('ntmRecurCount').classList.toggle('hidden', this.checked)"
+                                       class="rounded border-white/15 bg-cu-sidebar text-cu-accent focus:ring-cu-accent">
+                                <span class="text-xs text-white/70">Recur forever</span>
+                            </label>
+                        </div>
+                        <div id="ntmRecurCount" class="hidden flex items-center gap-2">
+                            <label class="text-xs text-white/50 flex-shrink-0">Repeat</label>
+                            <input type="number" name="recurrence_count" value="1" min="1"
+                                   class="w-14 px-2 py-1 bg-cu-sidebar border border-white/10 rounded text-xs text-white text-center focus:ring-2 focus:ring-cu-accent outline-none">
+                            <span class="text-xs text-white/50">times</span>
+                        </div>
+
+                        <!-- Reset to status -->
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs text-white/50 flex-shrink-0">Reset to status</label>
+                            <select name="recurrence_status_reset"
+                                    class="px-2 py-1 bg-cu-sidebar border border-white/10 rounded text-xs text-white focus:ring-2 focus:ring-cu-accent outline-none">
+                                <option value="">-- Default --</option>
+                                {% for s in task_list.statuses.all %}
+                                <option value="{{ s.key }}">{{ s.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Custom fields ───────────────────────────────── -->
+                {% if custom_fields_for_list %}
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] uppercase tracking-wide font-semibold text-white/40">Custom fields</span>
+                        <a href="{% url 'workspaces:custom_field_manager' workspace.id %}" target="_blank"
+                           class="text-[11px] text-cu-accent hover:underline">Manage</a>
+                    </div>
+                    <div class="space-y-2 bg-cu-panel border border-white/10 rounded-lg p-3">
+                    {% for cf in custom_fields_for_list %}
+                        <div class="grid grid-cols-[8rem_1fr] gap-2 items-center">
+                            <span class="text-xs text-white/60 truncate">{{ cf.name }}</span>
+                            {% if cf.field_type == 'dropdown' %}
+                            <select name="cf_{{ cf.id }}" class="px-2 py-1 bg-cu-sidebar border border-white/10 rounded text-xs text-white focus:ring-2 focus:ring-cu-accent outline-none">
+                                <option value="" class="bg-cu-panel">-- None --</option>
+                                {% for opt in cf.options.all %}
+                                <option value="{{ opt.id }}" class="bg-cu-panel">{{ opt.name }}</option>
+                                {% endfor %}
+                            </select>
+                            {% elif cf.field_type == 'labels' %}
+                            <div class="flex flex-wrap gap-1.5">
+                                {% for opt in cf.options.all %}
+                                <label class="cursor-pointer">
+                                    <input type="checkbox" name="cf_{{ cf.id }}" value="{{ opt.id }}" class="sr-only peer">
+                                    <span class="status-pill status-c-{{ opt.color }} opacity-50 peer-checked:opacity-100 peer-checked:ring-2 peer-checked:ring-offset-1 peer-checked:ring-cu-accent transition">{{ opt.name }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            {% elif cf.field_type == 'checkbox' %}
+                            <div class="flex items-center gap-2">
+                                <input type="hidden" name="cf_{{ cf.id }}" value="0">
+                                <input type="checkbox" name="cf_{{ cf.id }}" value="1" class="rounded border-white/15 bg-cu-sidebar text-cu-accent focus:ring-cu-accent">
+                            </div>
+                            {% elif cf.field_type == 'number' %}
+                            <input type="number" step="any" name="cf_{{ cf.id }}"
+                                   class="px-2 py-1 bg-cu-sidebar border border-white/10 rounded text-xs text-white focus:ring-2 focus:ring-cu-accent outline-none">
+                            {% elif cf.field_type == 'date' %}
+                            <input type="date" name="cf_{{ cf.id }}"
+                                   class="px-2 py-1 bg-cu-sidebar border border-white/10 rounded text-xs text-white focus:ring-2 focus:ring-cu-accent outline-none">
+                            {% else %}
+                            <input type="{% if cf.field_type == 'url' %}url{% elif cf.field_type == 'email' %}email{% else %}text{% endif %}"
+                                   name="cf_{{ cf.id }}"
+                                   class="px-2 py-1 bg-cu-sidebar border border-white/10 rounded text-xs text-white placeholder-white/30 focus:ring-2 focus:ring-cu-accent outline-none">
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
 
-            <!-- Description -->
-            <div class="px-5 pt-3">
-                <textarea name="description" rows="3"
-                          placeholder="Add a description"
-                          class="w-full px-3 py-2 border border-ms-neutral-30 rounded text-sm focus:ring-2 focus:ring-ms-blue focus:border-ms-blue outline-none resize-none"></textarea>
-            </div>
-
-            <!-- Fields grid -->
-            <div class="px-5 pt-4 grid grid-cols-2 gap-4">
-                <label class="text-xs font-medium text-ms-neutral-60">
-                    Status
-                    <select name="status" class="mt-1 w-full px-2 py-1.5 border border-ms-neutral-30 rounded text-sm bg-white focus:ring-2 focus:ring-ms-blue outline-none">
-                        {% for key, label in status_choices %}
-                        <option value="{{ key }}">{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
-                <label class="text-xs font-medium text-ms-neutral-60">
-                    Priority
-                    <select name="priority" class="mt-1 w-full px-2 py-1.5 border border-ms-neutral-30 rounded text-sm bg-white focus:ring-2 focus:ring-ms-blue outline-none">
-                        {% for key, label in priority_choices %}
-                        <option value="{{ key }}" {% if key == 'normal' %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
-                <label class="text-xs font-medium text-ms-neutral-60">
-                    Assignee
-                    <select name="assignee" class="mt-1 w-full px-2 py-1.5 border border-ms-neutral-30 rounded text-sm bg-white focus:ring-2 focus:ring-ms-blue outline-none">
-                        <option value="">Unassigned</option>
-                        {% for u in users %}
-                        <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
-                <label class="text-xs font-medium text-ms-neutral-60">
-                    Tags (comma separated)
-                    <input type="text" name="tags" placeholder="design, urgent"
-                           class="mt-1 w-full px-2 py-1.5 border border-ms-neutral-30 rounded text-sm focus:ring-2 focus:ring-ms-blue outline-none">
-                </label>
-                <label class="text-xs font-medium text-ms-neutral-60">
-                    Start date
-                    <input type="date" name="start_date"
-                           class="mt-1 w-full px-2 py-1.5 border border-ms-neutral-30 rounded text-sm focus:ring-2 focus:ring-ms-blue outline-none">
-                </label>
-                <label class="text-xs font-medium text-ms-neutral-60">
-                    Due date
-                    <input type="date" name="due_date"
-                           class="mt-1 w-full px-2 py-1.5 border border-ms-neutral-30 rounded text-sm focus:ring-2 focus:ring-ms-blue outline-none">
-                </label>
-            </div>
-
-            <!-- Footer -->
-            <div class="mt-5 px-5 py-3 border-t border-ms-neutral-20 flex items-center justify-end gap-2 bg-ms-neutral-10">
-                <button type="button" onclick="document.getElementById('newTaskModal').classList.add('hidden')"
-                        class="px-4 py-2 text-sm text-ms-neutral-80 border border-ms-neutral-30 rounded hover:bg-white">Cancel</button>
-                <button type="submit"
-                        class="px-4 py-2 text-sm rounded bg-ms-blue text-white font-medium hover:bg-ms-blue-dark">Create task</button>
+            <!-- ── Footer ──────────────────────────────────────────── -->
+            <div class="px-6 py-3 border-t border-white/10 flex items-center justify-between bg-cu-sidebar flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <span class="text-[11px] text-white/35">Press Enter to create</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="document.getElementById('newTaskModal').classList.add('hidden')"
+                            class="px-4 py-2 text-xs text-white/70 border border-white/15 rounded-lg hover:bg-cu-sidebar-hover transition-colors">Cancel</button>
+                    <button type="submit"
+                            class="px-5 py-2 text-sm rounded-lg bg-cu-accent hover:bg-[#523BCF] text-white font-semibold inline-flex items-center gap-1.5 transition-colors">
+                        Create Task
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    // Update status select pill color when selection changes
+    function updateStatusColor(sel) {
+        var opt = sel.options[sel.selectedIndex];
+        var color = opt ? opt.dataset.color : 'gray';
+        // Remove any existing status-c-* class and add the new one
+        sel.className = sel.className.replace(/status-c-\w+/g, '') + ' status-c-' + color;
+    }
+
+    // Combine estimated hours + minutes into a single estimated_minutes value before submit
+    (function() {
+        const modal = document.getElementById('newTaskModal');
+        if (!modal) return;
+        const form = modal.querySelector('form');
+        const h = modal.querySelector('#estHours');
+        const m = modal.querySelector('#estMinutes');
+        const total = modal.querySelector('#estMinutesTotal');
+        form?.addEventListener('submit', () => {
+            const hv = parseInt(h?.value, 10) || 0;
+            const mv = parseInt(m?.value, 10) || 0;
+            const t = hv * 60 + mv;
+            if (total) total.value = t > 0 ? String(t) : '';
+        });
+    })();
+
+    // Priority color
+    function updatePriorityColor(sel) {
+        var opt = sel.options[sel.selectedIndex];
+        var color = opt ? opt.dataset.color : 'blue';
+        sel.className = sel.className.replace(/status-c-\w+/g, '') + ' status-c-' + color;
+    }
+    // Category color
+    function updateCategoryColor(sel) {
+        var opt = sel.options[sel.selectedIndex];
+        var color = opt ? opt.dataset.color : 'gray';
+        sel.className = sel.className.replace(/status-c-\w+/g, '') + ' status-c-' + color;
+    }
+
+    // ── Date Picker ─────────────────────────────────────
+    (function() {
+        var dp = document.getElementById('ntmDatePicker');
+        if (!dp) return;
+        var activeField = 'due_date';
+        var now = new Date();
+        var viewYear = now.getFullYear(), viewMonth = now.getMonth();
+        var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        var shortMonths = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        function pad(n) { return n < 10 ? '0' + n : '' + n; }
+        function fmtISO(d) { return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+        function fmtDisplay(iso) {
+            if (!iso) return '';
+            var p = iso.split('-');
+            return shortMonths[parseInt(p[1],10)-1] + ' ' + parseInt(p[2],10) + ', ' + p[0];
+        }
+
+        function getVal(field) {
+            return document.getElementById(field === 'start_date' ? 'ntmStartDateVal' : 'ntmDueDateVal').value;
+        }
+        function setVal(field, iso) {
+            document.getElementById(field === 'start_date' ? 'ntmStartDateVal' : 'ntmDueDateVal').value = iso;
+            var btn = document.getElementById(field === 'start_date' ? 'ntmStartDateBtn' : 'ntmDueDateBtn');
+            var icon = field === 'start_date'
+                ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'
+                : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+            if (iso) {
+                btn.innerHTML = icon + ' ' + fmtDisplay(iso);
+                btn.classList.remove('text-white/40');
+                btn.classList.add('text-white');
+            } else {
+                btn.innerHTML = icon + ' ' + (field === 'start_date' ? 'Start date' : 'Due date');
+                btn.classList.remove('text-white');
+                btn.classList.add('text-white/40');
+            }
+        }
+
+        function renderCal() {
+            var label = document.getElementById('ntmDpMonthLabel');
+            var grid = document.getElementById('ntmDpCalGrid');
+            label.textContent = months[viewMonth] + ' ' + viewYear;
+
+            var first = new Date(viewYear, viewMonth, 1);
+            var startDay = (first.getDay() + 6) % 7; // 0=Mon
+            var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+            var todayISO = fmtISO(new Date());
+            var selISO = getVal(activeField);
+
+            var html = '';
+            for (var i = 0; i < startDay; i++) html += '<span></span>';
+            for (var d = 1; d <= daysInMonth; d++) {
+                var iso = viewYear + '-' + pad(viewMonth + 1) + '-' + pad(d);
+                var cls = 'w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors hover:bg-cu-accent/20';
+                if (iso === selISO) cls += ' bg-cu-accent text-white font-semibold';
+                else if (iso === todayISO) cls += ' ring-1 ring-cu-accent text-white';
+                else cls += ' text-white/70';
+                html += '<span class="' + cls + '" onclick="ntmDpPick(\'' + iso + '\')">' + d + '</span>';
+            }
+            grid.innerHTML = html;
+        }
+
+        window.ntmDpOpen = function(field) {
+            activeField = field;
+            // Position popup near the clicked button
+            var btn = document.getElementById(field === 'start_date' ? 'ntmStartDateBtn' : 'ntmDueDateBtn');
+            var rect = btn.getBoundingClientRect();
+            var spaceBelow = window.innerHeight - rect.bottom;
+            dp.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 330)) + 'px';
+            if (spaceBelow < 380) {
+                dp.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+                dp.style.top = 'auto';
+            } else {
+                dp.style.top = (rect.bottom + 4) + 'px';
+                dp.style.bottom = 'auto';
+            }
+            // Update tabs
+            var tabStart = document.getElementById('ntmDpTabStart');
+            var tabDue = document.getElementById('ntmDpTabDue');
+            tabStart.className = 'ntm-dp-tab flex-1 px-4 py-2.5 text-xs font-semibold text-center transition-colors ' +
+                (field === 'start_date' ? 'text-cu-accent border-b-2 border-cu-accent' : 'text-white/50 hover:text-white/80');
+            tabDue.className = 'ntm-dp-tab flex-1 px-4 py-2.5 text-xs font-semibold text-center transition-colors ' +
+                (field === 'due_date' ? 'text-cu-accent border-b-2 border-cu-accent' : 'text-white/50 hover:text-white/80');
+            // Set calendar view to the selected date's month, or current month
+            var sel = getVal(field);
+            if (sel) {
+                var p = sel.split('-');
+                viewYear = parseInt(p[0],10);
+                viewMonth = parseInt(p[1],10) - 1;
+            } else {
+                viewYear = now.getFullYear();
+                viewMonth = now.getMonth();
+            }
+            renderCal();
+            dp.classList.remove('hidden');
+        };
+
+        window.ntmDpSwitchTab = function(field) {
+            activeField = field;
+            var tabStart = document.getElementById('ntmDpTabStart');
+            var tabDue = document.getElementById('ntmDpTabDue');
+            tabStart.className = 'ntm-dp-tab flex-1 px-4 py-2.5 text-xs font-semibold text-center transition-colors ' +
+                (field === 'start_date' ? 'text-cu-accent border-b-2 border-cu-accent' : 'text-white/50 hover:text-white/80');
+            tabDue.className = 'ntm-dp-tab flex-1 px-4 py-2.5 text-xs font-semibold text-center transition-colors ' +
+                (field === 'due_date' ? 'text-cu-accent border-b-2 border-cu-accent' : 'text-white/50 hover:text-white/80');
+            var sel = getVal(field);
+            if (sel) {
+                var p = sel.split('-');
+                viewYear = parseInt(p[0],10);
+                viewMonth = parseInt(p[1],10) - 1;
+            }
+            renderCal();
+        };
+
+        window.ntmDpNav = function(dir) {
+            viewMonth += dir;
+            if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+            if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+            renderCal();
+        };
+
+        window.ntmDpPick = function(dateStr) {
+            setVal(activeField, dateStr);
+            renderCal();
+            dp.classList.add('hidden');
+        };
+
+        window.ntmDpQuick = function(preset) {
+            var d = new Date();
+            switch (preset) {
+                case 'today': break;
+                case 'tomorrow': d.setDate(d.getDate()+1); break;
+                case 'next_week': d.setDate(d.getDate()+(8-d.getDay())%7||7); break;
+                case 'next_weekend': var dow=d.getDay(); d.setDate(d.getDate()+((6-dow+7)%7||7)); break;
+                case '2_weeks': d.setDate(d.getDate()+14); break;
+                case '4_weeks': d.setDate(d.getDate()+28); break;
+                case 'later': d.setDate(d.getDate()+56); break;
+            }
+            setVal(activeField, fmtISO(d));
+            dp.classList.add('hidden');
+        };
+
+        window.ntmDpClear = function() {
+            setVal(activeField, '');
+            renderCal();
+            dp.classList.add('hidden');
+        };
+
+        // Close on click outside
+        document.addEventListener('click', function(e) {
+            if (!dp.contains(e.target) && !e.target.closest('#ntmDueDateBtn') && !e.target.closest('#ntmStartDateBtn')) {
+                dp.classList.add('hidden');
+            }
+        });
+    })();
+
+    // Recurrence: frequency button toggle
+    function ntmSetRecurFreq(freq) {
+        document.getElementById('ntmRecurFreqInput').value = freq;
+        document.querySelectorAll('.ntm-freq-btn').forEach(function(b) {
+            b.classList.toggle('bg-cu-accent', b.dataset.freq === freq);
+            b.classList.toggle('text-white', b.dataset.freq === freq);
+            b.classList.toggle('bg-cu-sidebar', b.dataset.freq !== freq);
+            b.classList.toggle('text-white/70', b.dataset.freq !== freq);
+        });
+        var daysRow = document.getElementById('ntmRecurDays');
+        if (daysRow) daysRow.classList.toggle('hidden', freq !== 'weekly');
+        var unitEl = document.getElementById('ntmRecurUnit');
+        var units = {daily:'day',weekly:'week',monthly:'month',yearly:'year',days_after:'day',custom:'unit'};
+        if (unitEl) unitEl.textContent = (units[freq] || 'day') + '(s)';
+    }
+    // Recurrence: trigger button toggle
+    function ntmSetRecurTrigger(trigger) {
+        document.getElementById('ntmRecurTriggerInput').value = trigger;
+        document.querySelectorAll('.ntm-trigger-btn').forEach(function(b) {
+            b.classList.toggle('bg-cu-accent', b.dataset.trigger === trigger);
+            b.classList.toggle('text-white', b.dataset.trigger === trigger);
+            b.classList.toggle('bg-cu-sidebar', b.dataset.trigger !== trigger);
+            b.classList.toggle('text-white/70', b.dataset.trigger !== trigger);
+        });
+    }
+
+    // Assignee dropdown: toggle with fixed positioning to escape overflow
+    function toggleNtmAssignDD() {
+        var dd = document.getElementById('ntmAssignDD');
+        var btn = document.getElementById('ntmAssignBtn');
+        if (dd.classList.contains('hidden')) {
+            var rect = btn.getBoundingClientRect();
+            dd.style.left = rect.left + 'px';
+            dd.style.width = rect.width + 'px';
+            // Open downward or upward depending on space
+            var spaceBelow = window.innerHeight - rect.bottom;
+            if (spaceBelow < 250) {
+                dd.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+                dd.style.top = 'auto';
+            } else {
+                dd.style.top = (rect.bottom + 4) + 'px';
+                dd.style.bottom = 'auto';
+            }
+            dd.classList.remove('hidden');
+        } else {
+            dd.classList.add('hidden');
+        }
+    }
+
+    // Assignee dropdown: filter + display
+    function filterNtmAssign(input) {
+        var q = input.value.toLowerCase();
+        document.querySelectorAll('#ntmAssignDD .ntm-assign-label').forEach(function(label) {
+            var name = label.dataset.name || '';
+            label.style.display = name.indexOf(q) !== -1 ? '' : 'none';
+        });
+    }
+    function updateNtmAssignDisplay() {
+        var checked = document.querySelectorAll('#ntmAssignDD input[type="checkbox"]:checked');
+        var display = document.getElementById('ntmAssignDisplay');
+        if (checked.length === 0) {
+            display.innerHTML = '<span class="text-white/40">Unassigned</span>';
+            return;
+        }
+        var html = '';
+        checked.forEach(function(cb) {
+            var name = cb.dataset.fullname || '';
+            var letter = (name[0] || '?').toUpperCase();
+            html += '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-cu-accent/15 border border-cu-accent/30 text-white text-[11px]">'
+                  + '<span class="avatar bg-cu-accent text-white" style="width:0.9rem;height:0.9rem;font-size:0.4rem">' + letter + '</span>'
+                  + name + '</span>';
+        });
+        display.innerHTML = html;
+        display.style.color = '';
+    }
+    // Close dropdown on click outside
+    document.addEventListener('click', function(e) {
+        var dd = document.getElementById('ntmAssignDD');
+        var btn = document.getElementById('ntmAssignBtn');
+        if (dd && btn && !dd.contains(e.target) && !btn.contains(e.target)) {
+            dd.classList.add('hidden');
+        }
+    });
+</script>

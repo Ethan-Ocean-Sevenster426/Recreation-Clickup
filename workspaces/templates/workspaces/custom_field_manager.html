@@ -1,0 +1,384 @@
+{% extends 'workspaces/base.html' %}
+{% block title %}Categories | {{ workspace.name }}{% endblock %}
+
+{% block content %}
+<div class="flex-1 overflow-auto flex flex-col">
+
+    <!-- Header -->
+    <div class="px-4 sm:px-6 pt-4 pb-3 border-b border-white/15 flex items-center gap-2">
+        <!-- Mobile sidebar toggle -->
+        <button type="button" onclick="document.getElementById('cfLeftNav').classList.toggle('hidden')"
+                class="lg:hidden w-7 h-7 rounded hover:bg-white/10 inline-flex items-center justify-center text-white/50 flex-shrink-0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
+        <span class="w-6 h-6 rounded bg-cu-accent text-white text-xs font-semibold inline-flex items-center justify-center flex-shrink-0">{{ workspace.name|slice:":1"|upper }}</span>
+        <a href="{% url 'workspaces:detail' workspace.id %}" class="text-sm text-white/60 hover:text-cu-accent truncate">{{ workspace.name }}</a>
+        <span class="text-white/40">/</span>
+        <span class="text-sm font-semibold text-white">Categories</span>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- Left nav — hidden on small, toggleable -->
+        <aside id="cfLeftNav" class="hidden lg:flex w-60 border-r border-white/15 bg-cu-panel flex-shrink-0 flex-col overflow-y-auto
+                                     absolute lg:relative inset-y-0 left-0 z-30">
+            <div class="px-4 pt-4 pb-2 flex items-center justify-between">
+                <h2 class="text-base font-semibold text-white">Categories</h2>
+                <button type="button" onclick="document.getElementById('cfLeftNav').classList.add('hidden')"
+                        class="lg:hidden w-6 h-6 rounded hover:bg-white/10 inline-flex items-center justify-center text-white/40">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="px-4 pt-2 pb-2 flex items-center justify-between">
+                <span class="text-xs uppercase tracking-wide font-semibold text-white/60">Workspaces</span>
+            </div>
+            <ul class="px-2 text-sm space-y-0.5 pb-4">
+                {% for ws in nav_workspaces %}
+                <li>
+                    <a href="{% url 'workspaces:custom_field_manager' ws.id %}"
+                       class="flex items-center gap-2 px-2 py-1.5 rounded truncate transition-colors
+                              {% if ws.id == workspace.id %}bg-cu-sidebar text-white font-medium{% else %}text-white/60 hover:bg-cu-sidebar-hover hover:text-white{% endif %}">
+                        <span class="w-4 h-4 rounded bg-cu-accent text-white text-[10px] inline-flex items-center justify-center flex-shrink-0">{{ ws.name|slice:":1"|upper }}</span>
+                        <span class="truncate">{{ ws.name }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </aside>
+
+        <!-- Middle: list of fields — flexible width -->
+        <section class="flex-1 min-w-0 lg:max-w-md xl:max-w-lg border-r border-white/15 flex flex-col overflow-hidden">
+            <div class="px-4 sm:px-5 pt-4 pb-3 border-b border-white/15 flex items-center gap-2 flex-shrink-0">
+                <a href="{% url 'workspaces:detail' workspace.id %}" class="text-sm text-white/60 hover:text-cu-accent flex items-center gap-1">
+                    <span class="w-4 h-4 rounded bg-cu-accent text-white text-[10px] inline-flex items-center justify-center">{{ workspace.name|slice:":1"|upper }}</span>
+                    {{ workspace.name }}
+                </a>
+            </div>
+
+            <div class="px-4 sm:px-5 py-3 flex items-center gap-2 border-b border-white/15 flex-shrink-0 flex-wrap">
+                <input type="text" id="fieldSearch" placeholder="Search categories…"
+                       class="flex-1 min-w-[120px] px-3 py-1.5 rounded text-sm border border-white/15 bg-cu-panel text-white placeholder-white/40 focus:ring-2 focus:ring-cu-accent focus:border-cu-accent outline-none">
+                {% if import_sources %}
+                <div class="relative" id="cfCopyDropdownWrap">
+                    <button type="button" onclick="document.getElementById('cfCopyDropdownMenu').classList.toggle('hidden')"
+                            class="text-xs px-3 py-1.5 rounded border border-white/15 hover:bg-white/[0.06] text-white/60 font-medium flex items-center gap-1.5 whitespace-nowrap">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Import
+                    </button>
+                    <div id="cfCopyDropdownMenu" class="hidden absolute right-0 top-full mt-1 z-50 w-72 bg-cu-panel border border-white/15 rounded-xl shadow-xl overflow-hidden">
+                        <form method="post" id="importForm">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="import_fields">
+                            <div class="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between">
+                                <span class="text-[10px] uppercase tracking-wider text-white/30 font-semibold">Select categories to import</span>
+                                <button type="button" onclick="toggleAllImports(this)" class="text-[10px] text-cu-accent hover:text-white transition-colors font-medium">Select All</button>
+                            </div>
+                            <div class="max-h-80 overflow-y-auto">
+                                {% for src in import_sources %}
+                                <div class="border-b border-white/[0.04] last:border-0">
+                                    <div class="px-4 py-2 flex items-center gap-2">
+                                        {% if src.ws.image %}
+                                        <img src="{{ src.ws.image.url }}" alt="" class="w-4 h-4 rounded object-cover flex-shrink-0">
+                                        {% else %}
+                                        <span class="w-4 h-4 rounded bg-cu-accent text-white text-[8px] flex items-center justify-center flex-shrink-0 font-bold">{{ src.ws.name|slice:":1"|upper }}</span>
+                                        {% endif %}
+                                        <span class="text-[10px] font-semibold text-white/30 uppercase tracking-wider truncate">{{ src.ws.name }}</span>
+                                    </div>
+                                    {% for f in src.fields %}
+                                    <label class="w-full flex items-center gap-2.5 px-4 pl-8 py-1.5 hover:bg-white/[0.06] transition-colors cursor-pointer">
+                                        <input type="checkbox" name="field_ids" value="{{ f.id }}" class="import-cb accent-[#054B70] w-3.5 h-3.5 rounded border-white/20 bg-transparent" onchange="updateImportCount()">
+                                        <span class="text-xs text-white/70 truncate flex-1">{{ f.name }}</span>
+                                        <span class="text-[10px] text-white/20">{{ f.get_field_type_display }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="px-4 py-2.5 border-t border-white/[0.06] flex items-center justify-between">
+                                <span class="text-[10px] text-white/30" id="importCountLabel">0 selected</span>
+                                <button type="submit" id="importSubmitBtn" disabled
+                                        class="text-xs px-3 py-1.5 rounded bg-cu-accent hover:bg-[#065a87] text-white font-semibold transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                                    Import Selected
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+                <button type="button" id="addFieldBtn" class="text-xs px-3 py-1.5 rounded bg-cu-accent hover:bg-[#065a87] text-white font-medium whitespace-nowrap">+ Create</button>
+            </div>
+
+            <div id="fieldListPanel" class="flex-1 overflow-y-auto">
+                <div class="px-4 sm:px-5 py-2 grid grid-cols-[1fr_auto] text-xs font-semibold text-white/60 border-b border-white/10">
+                    <span>Name</span>
+                    <span>Type</span>
+                </div>
+
+                {# Group by type #}
+                {% regroup fields by get_field_type_display as field_groups %}
+                {% for group in field_groups %}
+                <details open class="border-b border-white/10">
+                    <summary class="px-4 sm:px-5 py-2 cursor-pointer flex items-center gap-2 list-none">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-medium">
+                            {{ group.grouper }}
+                        </span>
+                        <span class="text-xs text-white/60">{{ group.list|length }}</span>
+                    </summary>
+                    <ul>
+                        {% for f in group.list %}
+                        <li class="group/row relative">
+                            <a href="{% url 'workspaces:custom_field_manager_with_field' workspace.id f.id %}"
+                               class="px-4 sm:px-5 py-2 pr-10 grid grid-cols-[1fr_auto] items-center gap-3 text-sm hover:bg-cu-sidebar-hover {% if selected and selected.id == f.id %}bg-cu-panel text-cu-accent font-semibold{% else %}text-white{% endif %}">
+                                <span class="truncate">{{ f.name }}</span>
+                                <svg class="text-white/40 hidden sm:block" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="18" height="14" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+                            </a>
+                            <form method="post" action="{% url 'workspaces:custom_field_delete' f.id %}" class="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/row:opacity-100 transition-opacity cf-delete-form">
+                                {% csrf_token %}
+                                <button type="button" onclick="showConfirmModal(this.closest('form'), '{{ f.name|escapejs }}')"
+                                        class="w-6 h-6 rounded hover:bg-red-500/15 inline-flex items-center justify-center text-white/30 hover:text-red-400 transition-colors" title="Delete">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                                </button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </details>
+                {% empty %}
+                <div class="px-5 py-10 text-center text-sm text-white/60">
+                    No categories yet. Click <strong>+ Create</strong> to add one.
+                </div>
+                {% endfor %}
+
+            </div>
+        </section>
+
+        <!-- Right: edit panel — hidden on small, overlay on md, inline on xl -->
+        <section id="cfEditPanel" class="{% if selected %}flex{% else %}hidden xl:flex{% endif %}
+                     w-full md:w-auto md:flex-1 min-w-0
+                     absolute md:relative inset-y-0 right-0 z-20
+                     overflow-y-auto bg-cu-sidebar border-l border-white/15 flex-col">
+            {% if selected %}
+            <div class="max-w-3xl mx-auto px-5 sm:px-8 py-6 w-full">
+
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-white">Edit field</h2>
+                    <a href="{% url 'workspaces:custom_field_manager' workspace.id %}"
+                       class="md:hidden w-7 h-7 rounded hover:bg-white/10 inline-flex items-center justify-center text-white/40">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </a>
+                </div>
+
+                <!-- Name + type -->
+                <form method="post" action="{% url 'workspaces:custom_field_update' selected.id %}" class="mb-6">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-white/60 uppercase tracking-wide mb-1.5">Name</label>
+                            <input name="name" value="{{ selected.name }}" required
+                                   class="w-full px-3 py-2 border border-white/15 rounded-md text-sm bg-cu-panel text-white placeholder-white/40 focus:ring-2 focus:ring-cu-accent focus:border-cu-accent outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-white/60 uppercase tracking-wide mb-1.5">Type</label>
+                            <select name="field_type"
+                                    class="w-full px-3 py-2 border border-white/15 rounded-md text-sm bg-cu-panel text-white placeholder-white/40 focus:ring-2 focus:ring-cu-accent focus:border-cu-accent outline-none">
+                                {% for key, label in field_types %}
+                                <option value="{{ key }}" {% if selected.field_type == key %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Options (for dropdown / labels) -->
+                {% if selected.field_type == 'dropdown' or selected.field_type == 'labels' %}
+                <div class="mb-8">
+                    <h3 class="text-sm font-semibold text-white mb-3">Options</h3>
+                    <ul class="space-y-2">
+                        {% for opt in selected.options.all %}
+                        <li class="flex items-center gap-2 bg-cu-panel border border-white/15 rounded-md px-2 py-1.5 flex-wrap sm:flex-nowrap">
+                            <form method="post" action="{% url 'workspaces:custom_field_option_update' opt.id %}" class="flex items-center gap-2 flex-1 min-w-0 flex-wrap sm:flex-nowrap">
+                                {% csrf_token %}
+                                <span class="status-pill status-c-{{ opt.color }}">{{ opt.color }}</span>
+                                <select name="color" class="text-xs border border-white/15 rounded px-1 py-0.5 bg-cu-sidebar" onchange="this.form.submit()">
+                                    {% for c in option_colors %}
+                                    <option value="{{ c }}" {% if opt.color == c %}selected{% endif %}>{{ c }}</option>
+                                    {% endfor %}
+                                </select>
+                                <input name="name" value="{{ opt.name }}"
+                                       class="flex-1 min-w-0 px-2 py-1 border border-white/15 rounded text-sm bg-cu-sidebar focus:ring-2 focus:ring-cu-accent focus:border-cu-accent outline-none">
+                                <button type="submit" class="text-xs px-2 py-1 rounded bg-cu-accent text-white hover:opacity-90">Save</button>
+                            </form>
+                            <form method="post" action="{% url 'workspaces:custom_field_option_delete' opt.id %}" class="opt-delete-form">
+                                {% csrf_token %}
+                                <button type="button" onclick="showConfirmModal(this.closest('form'), '{{ opt.name|escapejs }}', 'option')"
+                                        class="text-white/40 hover:text-red-500 px-1" title="Delete">×</button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <form method="post" action="{% url 'workspaces:custom_field_option_create' selected.id %}" class="mt-3 flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                        {% csrf_token %}
+                        <input name="name" placeholder="New option name" required
+                               class="flex-1 min-w-0 px-3 py-1.5 border border-white/15 rounded-md text-sm bg-cu-panel text-white placeholder-white/40 focus:ring-2 focus:ring-cu-accent focus:border-cu-accent outline-none">
+                        <select name="color" class="text-xs border border-white/15 rounded-md px-2 py-1.5 bg-cu-sidebar">
+                            {% for c in option_colors %}
+                            <option value="{{ c }}">{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="text-xs px-3 py-1.5 rounded bg-cu-accent hover:bg-[#523BCF] text-white font-medium whitespace-nowrap">+ Add</button>
+                    </form>
+                </div>
+                {% endif %}
+
+                <!-- Danger zone -->
+                <div class="border-t border-white/15 pt-4">
+                    <h3 class="text-sm font-semibold text-red-600 mb-3">Danger Zone</h3>
+                    <form method="post" action="{% url 'workspaces:custom_field_delete' selected.id %}" id="dangerDeleteForm"
+                          class="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+                        {% csrf_token %}
+                        <div class="min-w-0">
+                            <div class="text-sm font-semibold text-white">Delete Custom Field</div>
+                            <p class="text-xs text-white/60">{{ selected.name }} is used in {{ selected.location_count }} location{{ selected.location_count|pluralize }}.</p>
+                        </div>
+                        <button type="button" onclick="showConfirmModal(document.getElementById('dangerDeleteForm'), '{{ selected.name|escapejs }}', 'field')"
+                                class="px-4 py-2 text-sm rounded bg-red-500 hover:bg-red-600 text-white font-medium whitespace-nowrap flex-shrink-0">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="h-full hidden xl:flex items-center justify-center text-sm text-white/60">
+                Select a category on the left, or create one.
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+<!-- Create field modal -->
+<div id="newFieldModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div class="bg-cu-sidebar rounded-lg p-6 w-full max-w-md shadow-2xl border border-white/15">
+        <h2 class="text-lg font-semibold mb-4">New Category</h2>
+        <form method="post" action="{% url 'workspaces:custom_field_create' workspace.id %}" class="space-y-3">
+            {% csrf_token %}
+            <input name="name" required autofocus placeholder="Name"
+                   class="w-full px-3 py-2 border border-white/15 rounded text-sm bg-cu-panel text-white placeholder-white/40 focus:ring-2 focus:ring-cu-accent focus:border-cu-accent outline-none">
+            <input type="hidden" name="field_type" value="dropdown">
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="document.getElementById('newFieldModal').classList.add('hidden')"
+                        class="px-4 py-2 text-sm text-white border border-white/15 rounded hover:bg-cu-sidebar-hover">Cancel</button>
+                <button type="submit"
+                        class="px-4 py-2 text-sm rounded bg-cu-accent hover:bg-[#523BCF] text-white font-medium">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div id="confirmDeleteModal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+    <div class="bg-cu-sidebar rounded-xl p-0 w-full max-w-sm shadow-2xl border border-white/15 overflow-hidden">
+        <div class="px-6 pt-5 pb-4">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-red-400"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </span>
+                <div>
+                    <h3 class="text-sm font-semibold text-white" id="confirmTitle">Delete item?</h3>
+                    <p class="text-xs text-white/50 mt-0.5" id="confirmMessage">This action cannot be undone.</p>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-3 bg-white/[0.03] border-t border-white/10 flex items-center justify-end gap-2">
+            <button type="button" id="confirmCancelBtn"
+                    class="px-4 py-2 text-sm text-white/70 border border-white/15 rounded-lg hover:bg-white/[0.06] transition-colors font-medium">
+                Cancel
+            </button>
+            <button type="button" id="confirmDeleteBtn"
+                    class="px-4 py-2 text-sm rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors">
+                Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const open = () => document.getElementById('newFieldModal').classList.remove('hidden');
+    document.getElementById('addFieldBtn')?.addEventListener('click', open);
+    // search filter
+    const search = document.getElementById('fieldSearch');
+    const panel = document.getElementById('fieldListPanel');
+    search?.addEventListener('input', () => {
+        const q = search.value.toLowerCase();
+        if (!panel) return;
+        panel.querySelectorAll('details ul li').forEach(li => {
+            const txt = li.textContent.toLowerCase();
+            li.style.display = txt.includes(q) ? '' : 'none';
+        });
+    });
+    // Close copy-template dropdown on outside click
+    document.addEventListener('click', function(e) {
+        var wrap = document.getElementById('cfCopyDropdownWrap');
+        var menu = document.getElementById('cfCopyDropdownMenu');
+        if (wrap && menu && !wrap.contains(e.target)) menu.classList.add('hidden');
+    });
+})();
+
+/* Import checkbox helpers */
+function updateImportCount() {
+    var checked = document.querySelectorAll('.import-cb:checked').length;
+    var label = document.getElementById('importCountLabel');
+    var btn = document.getElementById('importSubmitBtn');
+    if (label) label.textContent = checked + ' selected';
+    if (btn) btn.disabled = checked === 0;
+}
+function toggleAllImports(el) {
+    var cbs = document.querySelectorAll('.import-cb');
+    var allChecked = Array.from(cbs).every(function(cb) { return cb.checked; });
+    cbs.forEach(function(cb) { cb.checked = !allChecked; });
+    el.textContent = allChecked ? 'Select All' : 'Deselect All';
+    updateImportCount();
+}
+
+/* Confirm delete modal */
+var _pendingDeleteForm = null;
+function showConfirmModal(form, name, type) {
+    _pendingDeleteForm = form;
+    var title = document.getElementById('confirmTitle');
+    var msg = document.getElementById('confirmMessage');
+    if (type === 'option') {
+        title.textContent = 'Delete option "' + name + '"?';
+        msg.textContent = 'This option will be removed from all tasks.';
+    } else if (type === 'field') {
+        title.textContent = 'Delete "' + name + '"?';
+        msg.textContent = 'This category and all its values on tasks will be permanently removed.';
+    } else {
+        title.textContent = 'Delete "' + name + '"?';
+        msg.textContent = 'This category will be permanently deleted.';
+    }
+    document.getElementById('confirmDeleteModal').classList.remove('hidden');
+}
+document.getElementById('confirmCancelBtn')?.addEventListener('click', function() {
+    _pendingDeleteForm = null;
+    document.getElementById('confirmDeleteModal').classList.add('hidden');
+});
+document.getElementById('confirmDeleteBtn')?.addEventListener('click', function() {
+    if (_pendingDeleteForm) _pendingDeleteForm.submit();
+});
+document.getElementById('confirmDeleteModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        _pendingDeleteForm = null;
+        this.classList.add('hidden');
+    }
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var modal = document.getElementById('confirmDeleteModal');
+        if (modal && !modal.classList.contains('hidden')) {
+            _pendingDeleteForm = null;
+            modal.classList.add('hidden');
+        }
+    }
+});
+</script>
+{% endblock %}
