@@ -11,7 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-# Use production settings for deployment
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eclick.settings_production')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eclick.settings')
 
 application = get_wsgi_application()
