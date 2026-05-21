@@ -101,13 +101,13 @@ def _email_html(title, lines, task):
     body_lines = ''.join(f'<p style="margin:4px 0;color:#333;">{l}</p>' for l in lines)
     return f'''
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;">
-        <div style="background:#6347EA;padding:16px 24px;border-radius:8px 8px 0 0;">
+        <div style="background:#054B70;padding:16px 24px;border-radius:8px 8px 0 0;">
             <span style="color:#fff;font-size:18px;font-weight:600;">Luma</span>
         </div>
         <div style="background:#ffffff;padding:24px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 8px 8px;">
             <h2 style="margin:0 0 12px;font-size:16px;color:#1A1639;">{title}</h2>
             {body_lines}
-            <a href="{url}" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#6347EA;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:500;">
+            <a href="{url}" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#054B70;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:500;">
                 View Task
             </a>
         </div>
@@ -235,7 +235,7 @@ def _otp_email_html(user, otp_code, is_new_user=True):
 
     return f'''
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;">
-        <div style="background:#6347EA;padding:16px 24px;border-radius:8px 8px 0 0;">
+        <div style="background:#054B70;padding:16px 24px;border-radius:8px 8px 0 0;">
             <span style="color:#fff;font-size:18px;font-weight:600;">Luma</span>
         </div>
         <div style="background:#ffffff;padding:24px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 8px 8px;">
@@ -243,10 +243,10 @@ def _otp_email_html(user, otp_code, is_new_user=True):
             <p style="margin:4px 0;color:#333;">{intro}</p>
             <p style="margin:4px 0;color:#333;">{action_text} using this one-time code:</p>
             <div style="text-align:center;margin:20px 0;">
-                <span style="display:inline-block;font-size:32px;font-weight:700;letter-spacing:8px;color:#6347EA;background:#F5F4FA;padding:14px 28px;border-radius:8px;border:2px dashed #6347EA;">{otp_code}</span>
+                <span style="display:inline-block;font-size:32px;font-weight:700;letter-spacing:8px;color:#054B70;background:#F5F4FA;padding:14px 28px;border-radius:8px;border:2px dashed #054B70;">{otp_code}</span>
             </div>
             <p style="margin:4px 0;color:#888;font-size:13px;">This code expires in 24 hours.</p>
-            <a href="{verify_url}" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#6347EA;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:500;">
+            <a href="{verify_url}" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#054B70;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:500;">
                 {action_text}
             </a>
         </div>
