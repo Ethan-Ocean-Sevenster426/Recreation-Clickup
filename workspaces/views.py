@@ -1613,6 +1613,10 @@ def user_set_role(request, user_id):
     u = get_object_or_404(User, pk=user_id)
     role = request.POST.get('role', 'employee')
     if role in ('employee', 'manager'):
+        # Prevent self-demotion (would lock yourself out of admin)
+        if u.pk == request.user.pk and role != 'manager':
+            messages.error(request, "You cannot demote yourself. Ask another manager to change your role.")
+            return redirect('workspaces:user_list')
         u.role = role
         u.save(update_fields=['role'])
         messages.success(request, f"Role updated for {u.username}.")
@@ -1734,6 +1738,10 @@ def user_update(request, user_id):
     u.position = (request.POST.get('position') or '').strip()
     role = request.POST.get('role', u.role)
     if role in ('employee', 'manager'):
+        # Prevent self-demotion
+        if u.pk == request.user.pk and role != 'manager':
+            messages.error(request, "You cannot demote yourself. Ask another manager to change your role.")
+            return redirect('workspaces:user_list')
         u.role = role
     u.is_staff = request.POST.get('is_staff') == '1'
     u.save()

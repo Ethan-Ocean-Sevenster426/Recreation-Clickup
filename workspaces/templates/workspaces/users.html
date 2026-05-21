@@ -306,18 +306,32 @@
                             <span class="block text-xs luma-muted mb-1.5">Role</span>
                             <form id="manageRoleForm" method="post" class="inline">
                                 {% csrf_token %}
-                                <select name="role" onchange="this.form.submit()"
+                                <select name="role" onchange="onRoleChange(this)"
                                         id="mEditRole"
                                         class="luma-input w-full px-3 py-2.5 rounded-lg text-sm outline-none cursor-pointer">
                                     <option value="employee">Employee</option>
                                     <option value="manager">Manager</option>
-                                                </select>
+                                </select>
                             </form>
+                        </div>
+                        <!-- Role-change confirmation banner (hidden by default) -->
+                        <div id="roleChangeBanner" class="hidden mt-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10">
+                            <p class="text-xs text-amber-300 font-medium mb-2" id="roleChangeBannerText"></p>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="confirmRoleChange()"
+                                        class="px-4 py-1.5 text-xs rounded-lg bg-cu-accent text-white font-semibold hover:bg-[#043858] transition">
+                                    Confirm role change
+                                </button>
+                                <button type="button" onclick="cancelRoleChange()"
+                                        class="px-4 py-1.5 text-xs rounded-lg bg-white/10 text-white/60 font-medium hover:bg-white/15 transition">
+                                    Cancel
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Workspace & List allocations -->
-                    <div>
+                    <div id="mAllocSection">
                         <h3 class="text-xs font-semibold luma-label uppercase tracking-wide mb-3">Workspace &amp; list allocations</h3>
                         <p class="text-xs luma-muted mb-3">Control which workspaces and lists this user can access. Tick individual lists to grant list-level access.</p>
 
@@ -546,10 +560,58 @@
 
     var currentManageUserId = null;
     var currentManageIsSelf = false;
+    var previousRole = 'employee';  // track original role before change
 
     function getCSRF() {
         var el = document.querySelector('[name=csrfmiddlewaretoken]');
         return el ? el.value : '';
+    }
+
+    /* ── Role change with workspace prompt ─────────────────────────────── */
+    function onRoleChange(sel) {
+        var newRole = sel.value;
+        var banner = document.getElementById('roleChangeBanner');
+        var bannerText = document.getElementById('roleChangeBannerText');
+        var allocSection = document.getElementById('mAllocSection');
+
+        // Self-demotion guard
+        if (currentManageIsSelf && newRole !== 'manager') {
+            sel.value = 'manager';
+            alert('You cannot demote yourself. Ask another manager to change your role.');
+            return;
+        }
+
+        if (newRole === 'manager') {
+            // Promoting to manager — submit immediately
+            banner.classList.add('hidden');
+            allocSection.style.border = '';
+            document.getElementById('manageRoleForm').submit();
+            return;
+        }
+
+        // Demoting to employee — show workspace prompt
+        bannerText.textContent = 'Before confirming, allocate this user to at least one workspace below so they can access their work.';
+        banner.classList.remove('hidden');
+        // Highlight the workspace allocation section
+        allocSection.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+        allocSection.style.borderRadius = '8px';
+        allocSection.style.padding = '12px';
+        allocSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function confirmRoleChange() {
+        document.getElementById('roleChangeBanner').classList.add('hidden');
+        document.getElementById('mAllocSection').style.border = '';
+        document.getElementById('mAllocSection').style.padding = '';
+        document.getElementById('manageRoleForm').submit();
+    }
+
+    function cancelRoleChange() {
+        // Revert to previous role
+        document.getElementById('mEditRole').value = previousRole;
+        document.getElementById('roleChangeBanner').classList.add('hidden');
+        document.getElementById('mAllocSection').style.border = '';
+        document.getElementById('mAllocSection').style.padding = '';
     }
 
     /* ── AJAX helpers ──────────────────────────────────────────────────── */
@@ -663,8 +725,13 @@
 
         // Role – both profile form and access tab
         var normalizedRole = (role === 'user' ? 'employee' : role);
+        previousRole = normalizedRole;  // track for cancel
         document.getElementById('manageRoleForm').action = '/workspaces/admin/users/' + id + '/set-role/';
         document.getElementById('mEditRole').value = normalizedRole;
+        // Reset banner state when opening modal
+        document.getElementById('roleChangeBanner').classList.add('hidden');
+        document.getElementById('mAllocSection').style.border = '';
+        document.getElementById('mAllocSection').style.padding = '';
         document.getElementById('mEditRoleProfile').value = normalizedRole;
 
         // Access tab – allocations
