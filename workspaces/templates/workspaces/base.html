@@ -170,6 +170,8 @@
         /* Keep accent-bg button text white in light mode */
         body.theme-light button[type="submit"].bg-cu-accent,
         body.theme-light a.bg-cu-accent { color: #FFFFFF !important; }
+        /* Keep text white on any status-colored badge (workspace icons, etc.) */
+        body.theme-light [class*="status-c-"].text-white { color: #FFFFFF !important; }
         /* Light-mode calendar picker icon */
         body.theme-light input[type="date"]::-webkit-calendar-picker-indicator,
         body.theme-light input[type="datetime-local"]::-webkit-calendar-picker-indicator,
