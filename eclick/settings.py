@@ -14,7 +14,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-your-secret-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,167.88.43.168,77.37.121.135,luma.moc-pty.com,eclick.co.za,www.eclick.co.za').split(',') if h.strip()]
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0,167.88.43.168,137.184.229.140,77.37.121.135,luma.moc-pty.com,eclick.co.za,www.eclick.co.za').split(',') if h.strip()]
 
 # Auth redirects
 LOGIN_URL = '/login/'
