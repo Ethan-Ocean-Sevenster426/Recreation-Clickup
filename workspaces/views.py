@@ -599,33 +599,20 @@ def _view_pref(user, task_list, view):
     return ViewPreference(user=user, task_list=task_list, view=view)
 
 
-def _columns_filtered(task_list, pref, user=None, status_filter='active'):
-    """Build columns honoring preferences and the status filter.
+def _columns_filtered(task_list, pref, user=None, status_keys=None, show_deleted=False):
+    """Build columns filtered by specific status keys.
 
-    status_filter values:
-        'all'     — all non-deleted statuses
-        'active'  — only non-done statuses (default)
-        'done'    — only done statuses
-        'deleted' — only soft-deleted tasks (shown in a single column)
+    status_keys: list of status key strings to include (empty = show all)
+    show_deleted: if True, add a "Deleted" column with soft-deleted tasks
     """
-    if status_filter == 'deleted':
-        deleted_qs = task_list.tasks.filter(deleted_at__isnull=False).prefetch_related('assignees')
-        if user:
-            deleted_qs = _filter_tasks_for_user(deleted_qs, user)
-        return [{
-            'status': type('S', (), {'key': '_deleted', 'name': 'Deleted', 'color': 'red', 'is_done': False})(),
-            'key': '_deleted', 'label': 'Deleted',
-            'color': 'red', 'tasks': list(deleted_qs),
-        }]
-
     cols = []
     for s in task_list.statuses.all():
-        # Filter by status category
-        if status_filter == 'done' and not s.is_done:
+        # If specific statuses requested, skip statuses not in the list
+        if status_keys and s.key not in status_keys:
             continue
-        if status_filter == 'active' and s.is_done:
-            if not pref.show_closed_tasks:
-                continue
+        # Default behaviour: respect show_closed_tasks pref when no filter active
+        if not status_keys and not pref.show_closed_tasks and s.is_done:
+            continue
         tasks_qs = task_list.tasks.filter(status=s.key, deleted_at__isnull=True).prefetch_related('assignees')
         if user:
             tasks_qs = _filter_tasks_for_user(tasks_qs, user)
@@ -636,6 +623,16 @@ def _columns_filtered(task_list, pref, user=None, status_filter='active'):
             'status': s, 'key': s.key, 'label': s.name,
             'color': s.color, 'tasks': tasks,
         })
+
+    if show_deleted:
+        deleted_qs = task_list.tasks.filter(deleted_at__isnull=False).prefetch_related('assignees')
+        if user:
+            deleted_qs = _filter_tasks_for_user(deleted_qs, user)
+        cols.append({
+            'status': type('S', (), {'key': '_deleted', 'name': 'Deleted', 'color': 'red', 'is_done': False})(),
+            'key': '_deleted', 'label': 'Deleted',
+            'color': 'red', 'tasks': list(deleted_qs),
+        })
     return cols
 
 
@@ -643,16 +640,21 @@ def _columns_filtered(task_list, pref, user=None, status_filter='active'):
 def list_detail(request, list_id):
     tl = get_object_or_404(TaskList, pk=list_id, workspace__in=_accessible_workspaces(request.user))
     pref = _view_pref(request.user, tl, 'list')
-    status_filter = request.GET.get('filter', 'active')
-    if status_filter not in ('all', 'active', 'done', 'deleted'):
-        status_filter = 'active'
+    raw_filter = request.GET.get('filter', '')
+    # Parse comma-separated status keys (e.g. "todo,in_progress" or "deleted")
+    filter_keys = [k.strip() for k in raw_filter.split(',') if k.strip()] if raw_filter else []
+    show_deleted = 'deleted' in filter_keys
+    status_keys = [k for k in filter_keys if k != 'deleted']
     ctx = _task_list_context(tl, user=request.user)
-    ctx['columns'] = _columns_filtered(tl, pref, user=request.user, status_filter=status_filter)
+    all_statuses = list(tl.statuses.all())
+    ctx['columns'] = _columns_filtered(tl, pref, user=request.user, status_keys=status_keys, show_deleted=show_deleted)
+    ctx['all_statuses'] = all_statuses
+    ctx['active_filter_keys'] = filter_keys
     return render(request, 'workspaces/detail.html', {
         **ctx,
         'view': 'list',
         'view_pref': pref,
-        'status_filter': status_filter,
+        'status_filter': 'deleted' if show_deleted and not status_keys else ('filtered' if status_keys else ''),
         **_nav_context(request.user, active_workspace=tl.workspace, active_list=tl, request=request),
     })
 

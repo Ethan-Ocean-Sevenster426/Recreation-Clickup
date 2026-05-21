@@ -15,30 +15,69 @@
                 Grouped by Status
             </span>
 
-            <!-- Status filter chips -->
-            <div class="flex items-center gap-1 border-l border-white/10 pl-3">
-                <a href="?filter=active"
-                   class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors
-                          {% if status_filter == 'active' %}bg-cu-accent text-white{% else %}text-white/50 hover:text-white hover:bg-white/10{% endif %}">
-                    Active
-                </a>
-                <a href="?filter=all"
-                   class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors
-                          {% if status_filter == 'all' %}bg-cu-accent text-white{% else %}text-white/50 hover:text-white hover:bg-white/10{% endif %}">
-                    All
-                </a>
-                <a href="?filter=done"
-                   class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors
-                          {% if status_filter == 'done' %}bg-emerald-600 text-white{% else %}text-white/50 hover:text-white hover:bg-white/10{% endif %}">
-                    Done
-                </a>
-                <a href="?filter=deleted"
-                   class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors
-                          {% if status_filter == 'deleted' %}bg-red-600 text-white{% else %}text-white/50 hover:text-white hover:bg-white/10{% endif %}">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline -mt-px mr-0.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
-                    Deleted
-                </a>
+            <!-- Filter dropdown -->
+            <div class="relative" id="statusFilterWrap">
+                <button type="button" onclick="document.getElementById('statusFilterDD').classList.toggle('hidden')"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/15 text-white/70 hover:text-white hover:border-white/30 transition-colors">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    Filter{% if active_filter_keys %} <span class="bg-cu-accent text-white rounded-full px-1.5 text-[10px] font-bold">{{ active_filter_keys|length }}</span>{% endif %}
+                </button>
+
+                <div id="statusFilterDD" class="hidden absolute z-40 top-full mt-1 left-0 w-56 bg-cu-sidebar border border-white/10 rounded-lg shadow-xl overflow-hidden">
+                    <div class="px-3 py-2 border-b border-white/10">
+                        <span class="text-[10px] uppercase tracking-wide font-semibold text-white/50">Filter by status</span>
+                    </div>
+                    <div class="p-1.5 space-y-0.5">
+                        {% for s in all_statuses %}
+                        <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-white/5 cursor-pointer transition-colors"
+                               data-filter-key="{{ s.key }}">
+                            <input type="checkbox" value="{{ s.key }}" class="statusFilterCB rounded border-white/20 bg-cu-panel text-cu-accent focus:ring-cu-accent" style="width:14px;height:14px;"
+                                   {% if s.key in active_filter_keys %}checked{% endif %}
+                                   onchange="applyStatusFilter()">
+                            <span class="status-pill status-c-{{ s.color }}" style="font-size:10px;">{{ s.name }}</span>
+                        </label>
+                        {% endfor %}
+
+                        <div class="border-t border-white/10 my-1"></div>
+
+                        <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-white/5 cursor-pointer transition-colors">
+                            <input type="checkbox" value="deleted" class="statusFilterCB rounded border-white/20 bg-cu-panel text-red-500 focus:ring-red-500" style="width:14px;height:14px;"
+                                   {% if 'deleted' in active_filter_keys %}checked{% endif %}
+                                   onchange="applyStatusFilter()">
+                            <span class="inline-flex items-center gap-1 text-xs text-red-400">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+                                Deleted
+                            </span>
+                        </label>
+                    </div>
+                    <div class="px-3 py-2 border-t border-white/10 flex items-center justify-between">
+                        <button type="button" onclick="clearStatusFilter()" class="text-[11px] text-white/50 hover:text-white">Clear all</button>
+                    </div>
+                </div>
             </div>
+
+            {% if active_filter_keys %}
+            <!-- Active filter chips (removable) -->
+            <div class="flex items-center gap-1 flex-wrap">
+                {% for s in all_statuses %}
+                {% if s.key in active_filter_keys %}
+                <button type="button" onclick="removeFilter('{{ s.key }}')"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cu-panel border border-white/10 text-white/80 hover:border-red-400/50 hover:text-red-300 transition-colors">
+                    <span class="status-pill status-c-{{ s.color }}" style="font-size:9px;padding:1px 5px;">{{ s.name }}</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                {% endif %}
+                {% endfor %}
+                {% if 'deleted' in active_filter_keys %}
+                <button type="button" onclick="removeFilter('deleted')"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-300 hover:border-red-400/50 transition-colors text-[11px]">
+                    Deleted
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                {% endif %}
+                <a href="?" class="text-[11px] text-white/40 hover:text-white ml-1">Clear</a>
+            </div>
+            {% endif %}
         </div>
         <div class="flex items-center gap-2">
             <button type="button" onclick="document.getElementById('newTaskModal').classList.remove('hidden')"
@@ -150,7 +189,7 @@
                         </form>
                     </div>
                     <div class="col-span-1 flex items-center justify-end">
-                        {% if status_filter == 'deleted' %}
+                        {% if col.key == '_deleted' %}
                         <form method="post" action="{% url 'workspaces:task_restore' task.id %}">
                             {% csrf_token %}
                             <button class="text-xs text-white/40 hover:text-emerald-400" title="Restore task">
@@ -171,7 +210,7 @@
                 {% endfor %}
                 </div>
 
-                {% if status_filter != 'deleted' %}
+                {% if col.key != '_deleted' %}
                 <!-- Inline add-task row (hidden by default) -->
                 <form method="post" action="{% url 'workspaces:task_create' task_list.id %}"
                       id="inlineTaskForm_{{ col.key }}" class="hidden border-t border-white/10">
@@ -345,6 +384,41 @@
                 dd.classList.add('hidden');
             }
         });
+    });
+
+    // ── Status filter ─────────────────────────────────────────────────
+    function applyStatusFilter() {
+        var checked = document.querySelectorAll('.statusFilterCB:checked');
+        var keys = [];
+        checked.forEach(function(cb) { keys.push(cb.value); });
+        if (keys.length === 0) {
+            window.location.search = '';
+        } else {
+            window.location.search = '?filter=' + keys.join(',');
+        }
+    }
+
+    function clearStatusFilter() {
+        window.location.search = '';
+    }
+
+    function removeFilter(key) {
+        var checked = document.querySelectorAll('.statusFilterCB:checked');
+        var keys = [];
+        checked.forEach(function(cb) { if (cb.value !== key) keys.push(cb.value); });
+        if (keys.length === 0) {
+            window.location.search = '';
+        } else {
+            window.location.search = '?filter=' + keys.join(',');
+        }
+    }
+
+    // Close filter dropdown on click outside
+    document.addEventListener('click', function(e) {
+        var dd = document.getElementById('statusFilterDD');
+        if (dd && !dd.classList.contains('hidden') && !dd.contains(e.target) && !e.target.closest('#statusFilterWrap')) {
+            dd.classList.add('hidden');
+        }
     });
 </script>
 {% endblock %}
