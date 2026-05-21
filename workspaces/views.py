@@ -599,30 +599,34 @@ def _view_pref(user, task_list, view):
     return ViewPreference(user=user, task_list=task_list, view=view)
 
 
-def _columns_filtered(task_list, pref, user=None, status_keys=None, show_deleted=False):
+def _columns_filtered(task_list, pref, user=None, status_keys=None, show_deleted=False, has_filter=False):
     """Build columns filtered by specific status keys.
 
     status_keys: list of status key strings to include (empty = show all)
     show_deleted: if True, add a "Deleted" column with soft-deleted tasks
+    has_filter: True when the user has an active filter selection (even if only 'deleted')
     """
     cols = []
-    for s in task_list.statuses.all():
-        # If specific statuses requested, skip statuses not in the list
-        if status_keys and s.key not in status_keys:
-            continue
-        # Default behaviour: respect show_closed_tasks pref when no filter active
-        if not status_keys and not pref.show_closed_tasks and s.is_done:
-            continue
-        tasks_qs = task_list.tasks.filter(status=s.key, deleted_at__isnull=True).prefetch_related('assignees')
-        if user:
-            tasks_qs = _filter_tasks_for_user(tasks_qs, user)
-        tasks = list(tasks_qs)
-        if not pref.show_empty_statuses and not tasks:
-            continue
-        cols.append({
-            'status': s, 'key': s.key, 'label': s.name,
-            'color': s.color, 'tasks': tasks,
-        })
+    # When the user explicitly filtered but status_keys is empty (e.g. only 'deleted'),
+    # skip regular status columns entirely.
+    if not (has_filter and not status_keys):
+        for s in task_list.statuses.all():
+            # If specific statuses requested, skip statuses not in the list
+            if status_keys and s.key not in status_keys:
+                continue
+            # Default behaviour: respect show_closed_tasks pref when no filter active
+            if not status_keys and not pref.show_closed_tasks and s.is_done:
+                continue
+            tasks_qs = task_list.tasks.filter(status=s.key, deleted_at__isnull=True).prefetch_related('assignees')
+            if user:
+                tasks_qs = _filter_tasks_for_user(tasks_qs, user)
+            tasks = list(tasks_qs)
+            if not pref.show_empty_statuses and not tasks:
+                continue
+            cols.append({
+                'status': s, 'key': s.key, 'label': s.name,
+                'color': s.color, 'tasks': tasks,
+            })
 
     if show_deleted:
         deleted_qs = task_list.tasks.filter(deleted_at__isnull=False).prefetch_related('assignees')
@@ -647,7 +651,7 @@ def list_detail(request, list_id):
     status_keys = [k for k in filter_keys if k != 'deleted']
     ctx = _task_list_context(tl, user=request.user)
     all_statuses = list(tl.statuses.all())
-    ctx['columns'] = _columns_filtered(tl, pref, user=request.user, status_keys=status_keys, show_deleted=show_deleted)
+    ctx['columns'] = _columns_filtered(tl, pref, user=request.user, status_keys=status_keys, show_deleted=show_deleted, has_filter=bool(filter_keys))
     ctx['all_statuses'] = all_statuses
     ctx['active_filter_keys'] = filter_keys
     return render(request, 'workspaces/detail.html', {

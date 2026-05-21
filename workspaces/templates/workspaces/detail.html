@@ -33,7 +33,7 @@
                                data-filter-key="{{ s.key }}">
                             <input type="checkbox" value="{{ s.key }}" class="statusFilterCB rounded border-white/20 bg-cu-panel text-cu-accent focus:ring-cu-accent" style="width:14px;height:14px;"
                                    {% if s.key in active_filter_keys %}checked{% endif %}
-                                   onchange="applyStatusFilter()">
+                                   >
                             <span class="status-pill status-c-{{ s.color }}" style="font-size:10px;">{{ s.name }}</span>
                         </label>
                         {% endfor %}
@@ -43,7 +43,7 @@
                         <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-white/5 cursor-pointer transition-colors">
                             <input type="checkbox" value="deleted" class="statusFilterCB rounded border-white/20 bg-cu-panel text-red-500 focus:ring-red-500" style="width:14px;height:14px;"
                                    {% if 'deleted' in active_filter_keys %}checked{% endif %}
-                                   onchange="applyStatusFilter()">
+                                   >
                             <span class="inline-flex items-center gap-1 text-xs text-red-400">
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
                                 Deleted
@@ -52,6 +52,7 @@
                     </div>
                     <div class="px-3 py-2 border-t border-white/10 flex items-center justify-between">
                         <button type="button" onclick="clearStatusFilter()" class="text-[11px] text-white/50 hover:text-white">Clear all</button>
+                        <button type="button" onclick="applyStatusFilter()" class="text-[11px] font-semibold text-white bg-cu-accent hover:bg-[#043858] rounded px-3 py-1 transition">Apply</button>
                     </div>
                 </div>
             </div>
