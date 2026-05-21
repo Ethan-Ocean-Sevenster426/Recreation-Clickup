@@ -41,7 +41,9 @@
         }
     </script>
     <style>
-        body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif; color: rgba(255,255,255,0.85); background: #0D0B1A; }
+        body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif; color: rgba(255,255,255,0.85); background: #0D0B1A; color-scheme: dark; }
+        select option { background: #1A1639; color: #fff; }
+        select.status-pill option { background: #1A1639; color: #fff; }
         /* Light theme override — flips dark-mode tokens to light surfaces */
         body.theme-light { color: #032D45; background: #F7F7FA; color-scheme: light; }
         body.theme-light .bg-cu-sidebar { background-color: #FFFFFF !important; }
@@ -536,7 +538,7 @@
                 </a>
                 <div class="relative" id="createMenuWrap">
                     <button type="button" id="createMenuBtn"
-                            class="inline-flex items-center gap-1 text-xs px-3 py-1 rounded bg-cu-accent hover:bg-[#523BCF] text-white font-medium shadow">
+                            class="inline-flex items-center gap-1 text-xs px-3 py-1 rounded bg-cu-accent hover:bg-[#043858] text-white font-medium shadow">
                         <svg class="menu-icon" style="stroke:#fff" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         Create
                         <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
@@ -807,7 +809,7 @@
                         class="px-4 py-1.5 text-xs rounded-lg border transition-colors" style="color:var(--gtm-text); border-color:var(--gtm-border)"
                         onmouseover="this.style.background='var(--gtm-hover)'" onmouseout="this.style.background='transparent'">Cancel</button>
                 <button type="submit"
-                        class="px-5 py-1.5 text-xs rounded-lg bg-cu-accent hover:bg-[#523BCF] text-white font-semibold transition-colors">
+                        class="px-5 py-1.5 text-xs rounded-lg bg-cu-accent hover:bg-[#043858] text-white font-semibold transition-colors">
                     Create Space
                 </button>
             </div>
@@ -847,7 +849,7 @@
                 <button type="button" onclick="document.getElementById('newOrgModal').classList.add('hidden')"
                         class="px-4 py-2 text-sm rounded-lg border transition-colors" style="color:var(--gtm-text); border-color:var(--gtm-border)" onmouseover="this.style.background='var(--gtm-hover)'" onmouseout="this.style.background='transparent'">Cancel</button>
                 <button type="submit"
-                        class="px-5 py-2 text-sm rounded-lg bg-cu-accent hover:bg-[#523BCF] text-white font-semibold">Create workspace</button>
+                        class="px-5 py-2 text-sm rounded-lg bg-cu-accent hover:bg-[#043858] text-white font-semibold">Create workspace</button>
             </div>
         </form>
     </div>
@@ -1284,7 +1286,7 @@
                         class="px-4 py-1.5 text-xs rounded-lg border transition-colors" style="color:var(--gtm-text); border-color:var(--gtm-border)"
                         onmouseover="this.style.background='var(--gtm-hover)'" onmouseout="this.style.background='transparent'">Cancel</button>
                 <button type="submit"
-                        class="px-5 py-1.5 text-xs rounded-lg bg-cu-accent hover:bg-[#523BCF] text-white font-semibold transition-colors">
+                        class="px-5 py-1.5 text-xs rounded-lg bg-cu-accent hover:bg-[#043858] text-white font-semibold transition-colors">
                     Create List
                 </button>
             </div>
@@ -1387,7 +1389,7 @@
                         class="px-4 py-1.5 text-xs rounded-lg border transition-colors" style="color:var(--gtm-text); border-color:var(--gtm-border)"
                         onmouseover="this.style.background='var(--gtm-hover)'" onmouseout="this.style.background='transparent'">Cancel</button>
                 <button type="submit"
-                        class="px-5 py-1.5 text-xs rounded-lg bg-cu-accent hover:bg-[#523BCF] text-white font-semibold transition-colors">
+                        class="px-5 py-1.5 text-xs rounded-lg bg-cu-accent hover:bg-[#043858] text-white font-semibold transition-colors">
                     Create Task
                 </button>
             </div>

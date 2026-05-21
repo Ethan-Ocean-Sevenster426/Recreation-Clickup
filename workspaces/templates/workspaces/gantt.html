@@ -159,7 +159,7 @@
                           {% if row.task.priority == 'urgent' %}bg-red-500 hover:bg-red-600
                           {% elif row.task.priority == 'high' %}bg-orange-500 hover:bg-orange-600
                           {% elif row.task.priority == 'low' %}bg-blue-500 hover:bg-blue-600
-                          {% else %}bg-cu-accent hover:bg-[#523BCF]{% endif %}"
+                          {% else %}bg-cu-accent hover:bg-[#043858]{% endif %}"
                    style="left: calc({{ row.left_days }} * {{ cell_w }}px); min-width: calc(max({{ row.span_days }}, 1) * {{ cell_w }}px - 4px); max-width: 360px;"
                    title="{{ row.task.title }}{% if row.tracked_label %} — {{ row.tracked_label }}{% endif %}">
                     <span class="truncate">{{ row.task.title }}</span>

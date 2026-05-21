@@ -18,7 +18,6 @@ class Organization(models.Model):
 
 class Workspace(models.Model):
     PURPOSE_CHOICES = [
-        ('work', 'Work'),
         ('project', 'Project'),
         ('retainer', 'Retainer'),
         ('personal', 'Personal'),
