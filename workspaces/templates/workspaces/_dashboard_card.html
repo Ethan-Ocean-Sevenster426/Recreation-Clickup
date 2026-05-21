@@ -109,7 +109,7 @@
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for s in statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
-                data-datasets='[{"data":[{% for s in statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#F472B6","#FB923C","#EF4444","#10B981"],"borderWidth":0}]'>
+                data-datasets='[{"data":[{% for s in statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#87909e","#5f55ee","#ab4aba","#f76808","#e5484d","#008844"],"borderWidth":0}]'>
         </canvas>
       </div>
       {% else %}
@@ -125,7 +125,7 @@
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for s in statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
-                data-datasets='[{"label":"Tasks","data":[{% for s in statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#F472B6","#FB923C","#EF4444","#10B981"],"borderWidth":0,"borderRadius":3}]'>
+                data-datasets='[{"label":"Tasks","data":[{% for s in statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#87909e","#5f55ee","#ab4aba","#f76808","#e5484d","#008844"],"borderWidth":0,"borderRadius":3}]'>
         </canvas>
       </div>
       {% else %}
@@ -141,7 +141,7 @@
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for a in assignee_rows %}{{ a.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
-                data-datasets='[{"data":[{% for a in assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#8BB7C4","#054B70","#10B981","#FB923C","#F472B6","#EF4444","#8B5CF6","#14B8A6","#F59E0B"],"borderWidth":0}]'>
+                data-datasets='[{"data":[{% for a in assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#064b70","#1e8197","#5f55ee","#008844","#f76808","#ab4aba","#e5484d","#4e6fb6","#0a63aa","#F59E0B"],"borderWidth":0}]'>
         </canvas>
       </div>
       {% else %}
@@ -374,7 +374,7 @@
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for s in subtask_statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
-                data-datasets='[{"data":[{% for s in subtask_statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#F472B6","#FB923C","#EF4444","#10B981"],"borderWidth":0}]'>
+                data-datasets='[{"data":[{% for s in subtask_statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#87909e","#5f55ee","#ab4aba","#f76808","#e5484d","#008844"],"borderWidth":0}]'>
         </canvas>
       </div>
       {% else %}
@@ -387,7 +387,7 @@
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for s in subtask_statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
-                data-datasets='[{"label":"Subtasks","data":[{% for s in subtask_statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#F472B6","#FB923C","#EF4444","#10B981"],"borderWidth":0,"borderRadius":3}]'>
+                data-datasets='[{"label":"Subtasks","data":[{% for s in subtask_statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#87909e","#5f55ee","#ab4aba","#f76808","#e5484d","#008844"],"borderWidth":0,"borderRadius":3}]'>
         </canvas>
       </div>
       {% else %}
@@ -465,7 +465,7 @@
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for r in tasks_by_workspace_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
-                data-datasets='[{"data":[{% for r in tasks_by_workspace_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#8BB7C4","#10B981","#FB923C","#F472B6","#EF4444","#8B5CF6","#14B8A6","#F59E0B"],"borderWidth":0}]'>
+                data-datasets='[{"data":[{% for r in tasks_by_workspace_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#064b70","#1e8197","#5f55ee","#008844","#f76808","#ab4aba","#e5484d","#4e6fb6","#0a63aa","#F59E0B"],"borderWidth":0}]'>
         </canvas>
       </div>
       {% else %}<div class="text-sm text-white/30 text-center py-6">No data yet</div>{% endif %}
@@ -498,7 +498,7 @@
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for r in tasks_by_category_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
-                data-datasets='[{"data":[{% for r in tasks_by_category_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#8BB7C4","#10B981","#FB923C","#F472B6","#EF4444","#8B5CF6","#14B8A6"],"borderWidth":0}]'>
+                data-datasets='[{"data":[{% for r in tasks_by_category_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#064b70","#1e8197","#008844","#f76808","#ab4aba","#e5484d","#4e6fb6","#0a63aa"],"borderWidth":0}]'>
         </canvas>
       </div>
       {% else %}<div class="text-sm text-white/30 text-center py-6">No category data yet</div>{% endif %}
@@ -532,7 +532,7 @@
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for a in subtask_assignee_rows %}{{ a.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
-                data-datasets='[{"data":[{% for a in subtask_assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#8BB7C4","#10B981","#FB923C","#F472B6","#EF4444","#8B5CF6","#14B8A6","#F59E0B","#0A6D9E"],"borderWidth":0}]'>
+                data-datasets='[{"data":[{% for a in subtask_assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#064b70","#1e8197","#008844","#f76808","#ab4aba","#e5484d","#4e6fb6","#0a63aa","#F59E0B","#87909e"],"borderWidth":0}]'>
         </canvas>
       </div>
       {% else %}<div class="text-sm text-white/30 text-center py-6">No subtask assignee data yet</div>{% endif %}
@@ -562,7 +562,7 @@
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for r in subtask_by_parent_status_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
-                data-datasets='[{"label":"Subtasks","data":[{% for r in subtask_by_parent_status_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#054B70","#0A6D9E","#F472B6","#FB923C","#EF4444","#10B981"],"borderWidth":0,"borderRadius":3}]'>
+                data-datasets='[{"label":"Subtasks","data":[{% for r in subtask_by_parent_status_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#87909e","#5f55ee","#ab4aba","#f76808","#e5484d","#008844"],"borderWidth":0,"borderRadius":3}]'>
         </canvas>
       </div>
       {% else %}<div class="text-sm text-white/30 text-center py-6">No data yet</div>{% endif %}
@@ -582,7 +582,7 @@
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["Done","Open"]'
-                data-datasets='[{"data":[{{ done_subtasks }},{{ open_subtasks }}],"backgroundColor":["#10B981","#054B70"],"borderWidth":0}]'>
+                data-datasets='[{"data":[{{ done_subtasks }},{{ open_subtasks }}],"backgroundColor":["#008844","#87909e"],"borderWidth":0}]'>
         </canvas>
       </div>
       {% else %}

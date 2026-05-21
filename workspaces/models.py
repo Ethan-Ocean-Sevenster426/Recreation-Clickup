@@ -131,6 +131,9 @@ STATUS_COLORS = [
     ('green', 'Green'),
     ('blue', 'Blue'),
     ('yellow', 'Yellow'),
+    ('navy', 'Navy'),
+    ('teal', 'Teal'),
+    ('indigo', 'Indigo'),
 ]
 
 

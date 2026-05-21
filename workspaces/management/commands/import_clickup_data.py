@@ -488,15 +488,15 @@ MOC_PORTAL_TASKS = [
 
 # All lists to create: (list_name, color, tasks_data)
 LISTS = [
-    ('MOC', 'blue', MOC_TASKS),
-    ('Food Safety Agency (FSA)', 'green', FSA_TASKS),
-    ('Condor Cargo', 'red', CONDOR_TASKS),
-    ('AWA', 'blue', AWA_TASKS),
-    ('Island Cargo Support (iCS)', 'purple', ICS_TASKS),
-    ('MOC Candidate Portal', 'blue', MOC_PORTAL_TASKS),
+    ('MOC', 'navy', MOC_TASKS),                         # #064b70
+    ('Food Safety Agency (FSA)', 'teal', FSA_TASKS),     # #1e8197
+    ('Condor Cargo', 'red', CONDOR_TASKS),               # #bf1118
+    ('AWA', 'blue', AWA_TASKS),                          # #0a63aa
+    ('Island Cargo Support (iCS)', 'indigo', ICS_TASKS), # #4e6fb6
+    ('MOC Candidate Portal', 'navy', MOC_PORTAL_TASKS),  # #064b70
     ('LANCorp Holdings', 'gray', []),
     ('E-Click', 'gray', []),
-    ('Fuel Refund Institute (FRI)', 'gray', []),
+    ('Fuel Refund Institute (FRI)', 'green', []),         # #37af6b
 ]
 
 

@@ -75,13 +75,13 @@
           <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
             <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
             {% for arc in status_arcs %}
-            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#054B70' '#0A6D9E' '#10B981' '#F472B6' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#87909e' '#5f55ee' '#008844' '#ab4aba' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
             {% endfor %}
           </svg>
           <div class="space-y-[3px] min-w-0">
             {% for s in statuses_list|slice:":4" %}
             <div class="flex items-center gap-1">
-              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#054B70' '#0A6D9E' '#10B981' '#F472B6' %}"></div>
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#87909e' '#5f55ee' '#008844' '#ab4aba' %}"></div>
               <span class="text-[6px] text-white/40 truncate">{{ s.label }} ({{ s.count }})</span>
             </div>
             {% endfor %}
@@ -96,13 +96,13 @@
           <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
             <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
             {% for arc in assignee_arcs %}
-            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#1e8197' '#064b70' '#008844' '#f76808' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
             {% endfor %}
           </svg>
           <div class="space-y-[3px] min-w-0">
             {% for a in assignee_rows|slice:":4" %}
             <div class="flex items-center gap-1">
-              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' %}"></div>
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#1e8197' '#064b70' '#008844' '#f76808' %}"></div>
               <span class="text-[6px] text-white/40 truncate">{{ a.name }} ({{ a.count }})</span>
             </div>
             {% endfor %}
@@ -137,7 +137,7 @@
         <div class="w-full px-1">
           <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for s in statuses_list|slice:":5" %}
-            <div class="flex-1 rounded-t" style="height:{% widthratio s.count total_tasks 100 %}%; background:{% cycle '#054B70' '#0A6D9E' '#F472B6' '#FB923C' '#10B981' %}"></div>
+            <div class="flex-1 rounded-t" style="height:{% widthratio s.count total_tasks 100 %}%; background:{% cycle '#87909e' '#5f55ee' '#ab4aba' '#f76808' '#008844' %}"></div>
             {% endfor %}
           </div>
           <div class="flex gap-[3px] mt-0.5 pl-0.5">
@@ -151,7 +151,7 @@
         <div class="w-full px-1">
           <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for a in assignee_rows|slice:":5" %}
-            <div class="flex-1 rounded-t bg-[#054B70]/70" style="height:{% widthratio a.count total_tasks 100 %}%"></div>
+            <div class="flex-1 rounded-t bg-[#064b70]/70" style="height:{% widthratio a.count total_tasks 100 %}%"></div>
             {% endfor %}
           </div>
           <div class="flex gap-[3px] mt-0.5 pl-0.5">
@@ -180,7 +180,7 @@
           {% if category_rows %}
           <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for c in category_rows|slice:":5" %}
-            <div class="flex-1 rounded-t bg-[#0A6D9E]/60" style="height:{% if c.pct %}{{ c.pct }}{% else %}2{% endif %}%"></div>
+            <div class="flex-1 rounded-t bg-[#5f55ee]/60" style="height:{% if c.pct %}{{ c.pct }}{% else %}2{% endif %}%"></div>
             {% endfor %}
           </div>
           <div class="flex gap-[3px] mt-0.5 pl-0.5">
@@ -198,7 +198,7 @@
           {% if workspace_hour_rows %}
           <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for r in workspace_hour_rows|slice:":4" %}
-            <div class="flex-1 rounded-t bg-[#054B70]/55" style="height:{% if r.pct %}{{ r.pct }}{% else %}2{% endif %}%"></div>
+            <div class="flex-1 rounded-t bg-[#064b70]/55" style="height:{% if r.pct %}{{ r.pct }}{% else %}2{% endif %}%"></div>
             {% endfor %}
           </div>
           <div class="flex gap-[3px] mt-0.5 pl-0.5">
@@ -216,8 +216,8 @@
           {% if trend_preview %}
           <div class="flex items-end gap-[2px] h-[36px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for b in trend_preview %}
-            <div class="flex-1 rounded-t bg-[#054B70]/60" style="height:{% if b.created_pct %}{{ b.created_pct }}{% else %}2{% endif %}%"></div>
-            <div class="flex-1 rounded-t bg-[#10B981]/55" style="height:{% if b.done_pct %}{{ b.done_pct }}{% else %}2{% endif %}%"></div>
+            <div class="flex-1 rounded-t bg-[#064b70]/60" style="height:{% if b.created_pct %}{{ b.created_pct }}{% else %}2{% endif %}%"></div>
+            <div class="flex-1 rounded-t bg-[#008844]/55" style="height:{% if b.done_pct %}{{ b.done_pct }}{% else %}2{% endif %}%"></div>
             {% if not forloop.last %}<div class="w-[1px]"></div>{% endif %}
             {% endfor %}
           </div>
@@ -227,8 +227,8 @@
           </div>
           {% endif %}
           <div class="flex items-center justify-center gap-2 mt-1">
-            <div class="flex items-center gap-0.5"><div class="w-1.5 h-1.5 rounded-sm bg-[#054B70]/60"></div><span class="text-[5px] text-white/25">Created</span></div>
-            <div class="flex items-center gap-0.5"><div class="w-1.5 h-1.5 rounded-sm bg-[#10B981]/55"></div><span class="text-[5px] text-white/25">Done</span></div>
+            <div class="flex items-center gap-0.5"><div class="w-1.5 h-1.5 rounded-sm bg-[#064b70]/60"></div><span class="text-[5px] text-white/25">Created</span></div>
+            <div class="flex items-center gap-0.5"><div class="w-1.5 h-1.5 rounded-sm bg-[#008844]/55"></div><span class="text-[5px] text-white/25">Done</span></div>
           </div>
         </div>
 
@@ -321,13 +321,13 @@
           <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
             <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
             {% for arc in subtask_status_arcs %}
-            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#054B70' '#0A6D9E' '#10B981' '#F472B6' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#87909e' '#5f55ee' '#008844' '#ab4aba' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
             {% endfor %}
           </svg>
           <div class="space-y-[3px] min-w-0">
             {% for s in subtask_statuses_list|slice:":4" %}
             <div class="flex items-center gap-1">
-              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#054B70' '#0A6D9E' '#10B981' '#F472B6' %}"></div>
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#87909e' '#5f55ee' '#008844' '#ab4aba' %}"></div>
               <span class="text-[6px] text-white/40 truncate">{{ s.label }} ({{ s.count }})</span>
             </div>
             {% endfor %}
@@ -341,7 +341,7 @@
         <div class="w-full px-1">
           <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for s in subtask_statuses_list|slice:":5" %}
-            <div class="flex-1 rounded-t" style="height:{% widthratio s.count total_subtasks 100 %}%; background:{% cycle '#054B70' '#0A6D9E' '#F472B6' '#FB923C' '#10B981' %}"></div>
+            <div class="flex-1 rounded-t" style="height:{% widthratio s.count total_subtasks 100 %}%; background:{% cycle '#87909e' '#5f55ee' '#ab4aba' '#f76808' '#008844' %}"></div>
             {% endfor %}
           </div>
           <div class="flex gap-[3px] mt-0.5 pl-0.5">
@@ -376,7 +376,7 @@
         <div class="w-full px-1">
           <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for a in subtask_assignee_rows|slice:":5" %}
-            <div class="flex-1 rounded-t bg-[#054B70]/70" style="height:{% widthratio a.count total_subtasks 100 %}%"></div>
+            <div class="flex-1 rounded-t bg-[#064b70]/70" style="height:{% widthratio a.count total_subtasks 100 %}%"></div>
             {% endfor %}
           </div>
           <div class="flex gap-[3px] mt-0.5 pl-0.5">
@@ -424,13 +424,13 @@
           <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
             <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
             {% for arc in tasks_ws_arcs %}
-            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#054B70' '#0A6D9E' '#10B981' '#FB923C' '#F472B6' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#87909e' '#5f55ee' '#008844' '#f76808' '#ab4aba' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
             {% endfor %}
           </svg>
           <div class="space-y-[3px] min-w-0">
             {% for r in tasks_by_workspace_rows|slice:":4" %}
             <div class="flex items-center gap-1">
-              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#054B70' '#0A6D9E' '#10B981' '#FB923C' '#F472B6' %}"></div>
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#87909e' '#5f55ee' '#008844' '#f76808' '#ab4aba' %}"></div>
               <span class="text-[6px] text-white/40 truncate">{{ r.name|truncatechars:10 }} ({{ r.count }})</span>
             </div>
             {% endfor %}
@@ -444,7 +444,7 @@
         <div class="w-full px-1">
           <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for r in tasks_by_workspace_rows|slice:":5" %}
-            <div class="flex-1 rounded-t bg-[#054B70]/70" style="height:{% widthratio r.count total_tasks 100 %}%"></div>
+            <div class="flex-1 rounded-t bg-[#064b70]/70" style="height:{% widthratio r.count total_tasks 100 %}%"></div>
             {% endfor %}
           </div>
           <div class="flex gap-[3px] mt-0.5 pl-0.5">
@@ -458,7 +458,7 @@
         <div class="w-full px-1">
           <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for r in tasks_by_list_rows|slice:":5" %}
-            <div class="flex-1 rounded-t bg-[#0A6D9E]/60" style="height:{% widthratio r.count total_tasks 100 %}%"></div>
+            <div class="flex-1 rounded-t bg-[#5f55ee]/60" style="height:{% widthratio r.count total_tasks 100 %}%"></div>
             {% endfor %}
           </div>
           <div class="flex gap-[3px] mt-0.5 pl-0.5">
@@ -473,13 +473,13 @@
           <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
             <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
             {% for arc in tasks_cat_arcs %}
-            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' '#F472B6' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#1e8197' '#064b70' '#008844' '#f76808' '#ab4aba' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
             {% endfor %}
           </svg>
           <div class="space-y-[3px] min-w-0">
             {% for r in tasks_by_category_rows|slice:":4" %}
             <div class="flex items-center gap-1">
-              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' '#F472B6' %}"></div>
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#1e8197' '#064b70' '#008844' '#f76808' '#ab4aba' %}"></div>
               <span class="text-[6px] text-white/40 truncate">{{ r.name|truncatechars:10 }} ({{ r.count }})</span>
             </div>
             {% endfor %}
@@ -528,13 +528,13 @@
           <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
             <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
             {% for arc in subtask_assignee_arcs %}
-            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="{% cycle '#1e8197' '#064b70' '#008844' '#f76808' %}" stroke-dasharray="{{ arc.arc_len }} {{ arc.gap }}" stroke-dashoffset="{{ arc.offset }}"/>
             {% endfor %}
           </svg>
           <div class="space-y-[3px] min-w-0">
             {% for a in subtask_assignee_rows|slice:":4" %}
             <div class="flex items-center gap-1">
-              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#8BB7C4' '#054B70' '#10B981' '#FB923C' %}"></div>
+              <div class="w-1.5 h-1.5 rounded-sm" style="background:{% cycle '#1e8197' '#064b70' '#008844' '#f76808' %}"></div>
               <span class="text-[6px] text-white/40 truncate">{{ a.name|truncatechars:10 }} ({{ a.count }})</span>
             </div>
             {% endfor %}
@@ -548,7 +548,7 @@
         <div class="w-full px-1">
           <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for r in subtask_by_workspace_rows|slice:":5" %}
-            <div class="flex-1 rounded-t bg-[#054B70]/70" style="height:{% widthratio r.count total_subtasks 100 %}%"></div>
+            <div class="flex-1 rounded-t bg-[#064b70]/70" style="height:{% widthratio r.count total_subtasks 100 %}%"></div>
             {% endfor %}
           </div>
           <div class="flex gap-[3px] mt-0.5 pl-0.5">
@@ -562,7 +562,7 @@
         <div class="w-full px-1">
           <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for r in subtask_by_list_rows|slice:":5" %}
-            <div class="flex-1 rounded-t bg-[#0A6D9E]/60" style="height:{% widthratio r.count total_subtasks 100 %}%"></div>
+            <div class="flex-1 rounded-t bg-[#5f55ee]/60" style="height:{% widthratio r.count total_subtasks 100 %}%"></div>
             {% endfor %}
           </div>
           <div class="flex gap-[3px] mt-0.5 pl-0.5">
@@ -576,7 +576,7 @@
         <div class="w-full px-1">
           <div class="flex items-end gap-[3px] h-[40px] border-b border-l border-white/[0.06] pl-0.5 pb-0.5">
             {% for r in subtask_by_parent_status_rows|slice:":5" %}
-            <div class="flex-1 rounded-t" style="height:{% widthratio r.count total_subtasks 100 %}%; background:{% cycle '#054B70' '#0A6D9E' '#10B981' '#F472B6' '#FB923C' %}"></div>
+            <div class="flex-1 rounded-t" style="height:{% widthratio r.count total_subtasks 100 %}%; background:{% cycle '#87909e' '#5f55ee' '#008844' '#ab4aba' '#f76808' %}"></div>
             {% endfor %}
           </div>
           <div class="flex gap-[3px] mt-0.5 pl-0.5">
@@ -605,8 +605,8 @@
           <svg width="42" height="42" viewBox="0 0 36 36" class="flex-shrink-0">
             <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="rgba(255,255,255,0.06)"/>
             {% if total_subtasks %}
-            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="#10B981" stroke-dasharray="{% widthratio done_subtasks total_subtasks 75 %} 75.4" stroke-dashoffset="0"/>
-            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="#054B70" stroke-dasharray="{% widthratio open_subtasks total_subtasks 75 %} 75.4" stroke-dashoffset="-{% widthratio done_subtasks total_subtasks 75 %}"/>
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="#008844" stroke-dasharray="{% widthratio done_subtasks total_subtasks 75 %} 75.4" stroke-dashoffset="0"/>
+            <circle cx="18" cy="18" r="12" fill="none" stroke-width="5" stroke="#87909e" stroke-dasharray="{% widthratio open_subtasks total_subtasks 75 %} 75.4" stroke-dashoffset="-{% widthratio done_subtasks total_subtasks 75 %}"/>
             {% endif %}
           </svg>
           <div class="space-y-[3px] min-w-0">
@@ -615,7 +615,7 @@
               <span class="text-[6px] text-white/40">Done ({{ done_subtasks }})</span>
             </div>
             <div class="flex items-center gap-1">
-              <div class="w-1.5 h-1.5 rounded-sm bg-[#054B70]"></div>
+              <div class="w-1.5 h-1.5 rounded-sm bg-[#87909e]"></div>
               <span class="text-[6px] text-white/40">Open ({{ open_subtasks }})</span>
             </div>
           </div>

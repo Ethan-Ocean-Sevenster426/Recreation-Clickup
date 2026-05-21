@@ -179,15 +179,19 @@
         }
         /* Status pills */
         .status-pill { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.125rem 0.625rem; border-radius: 4px; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; }
-        /* Status pill colors (dynamic by color name) */
-        .status-c-gray { background: #4B5563; color: #fff; }
-        .status-c-purple { background: #0A6D9E; color: #fff; }
-        .status-c-pink { background: #EC4899; color: #fff; }
-        .status-c-orange { background: #F7630C; color: #fff; }
-        .status-c-red { background: #D13438; color: #fff; }
-        .status-c-green { background: #107C10; color: #fff; }
+        /* Status pill colors — matched to ClickUp palette */
+        .status-c-gray { background: #87909e; color: #fff; }
+        .status-c-purple { background: #5f55ee; color: #fff; }
+        .status-c-pink { background: #ab4aba; color: #fff; }
+        .status-c-orange { background: #f76808; color: #fff; }
+        .status-c-red { background: #e5484d; color: #fff; }
+        .status-c-green { background: #008844; color: #fff; }
         .status-c-blue { background: #0078D4; color: #fff; }
         .status-c-yellow { background: #F59E0B; color: #fff; }
+        /* Additional list-level colors from ClickUp */
+        .status-c-navy { background: #064b70; color: #fff; }
+        .status-c-teal { background: #1e8197; color: #fff; }
+        .status-c-indigo { background: #4e6fb6; color: #fff; }
         /* Column tints — dark-mode friendly, very subtle */
         .col-c-gray { background: #221D44; }
         .col-c-purple { background: #2A2057; }
@@ -197,11 +201,14 @@
         .col-c-green { background: #1F2A3F; }
         .col-c-blue { background: #1B2240; }
         .col-c-yellow { background: #2C2530; }
+        .col-c-navy { background: #1A2540; }
+        .col-c-teal { background: #1C2A3D; }
+        .col-c-indigo { background: #1E2248; }
         .priority-flag { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; }
-        .priority-urgent { color: #F87171; }
-        .priority-high { color: #FB923C; }
-        .priority-normal { color: #60A5FA; }
-        .priority-low { color: #C8C6C4; }
+        .priority-urgent { color: #f50000; }
+        .priority-high { color: #f8ae00; }
+        .priority-normal { color: #6fddff; }
+        .priority-low { color: #d8d8d8; }
         .avatar { width: 1.75rem; height: 1.75rem; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff; }
         /* Rail buttons — white icon chip over purple rail */
         .rail-btn { width: 4rem; padding: 0.5rem 0; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; color: rgba(255,255,255,0.9); font-size: 0.6875rem; cursor: pointer; transition: all 0.15s; position: relative; text-decoration: none; border: none; background: transparent; }
@@ -994,8 +1001,9 @@
 <script>
     (function() {
         const COLOR_HEX = {
-            gray: '#EDEBE9', purple: '#0A6D9E', pink: '#8BB7C4', orange: '#F7630C',
-            red: '#D13438', green: '#107C10', blue: '#0078D4', yellow: '#F59E0B',
+            gray: '#87909e', purple: '#5f55ee', pink: '#ab4aba', orange: '#f76808',
+            red: '#e5484d', green: '#008844', blue: '#0078D4', yellow: '#F59E0B',
+            navy: '#064b70', teal: '#1e8197', indigo: '#4e6fb6',
         };
 
         function updatePreview() {
