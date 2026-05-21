@@ -1658,10 +1658,11 @@ def user_send_otp(request, user_id):
 
 
 def otp_verify(request):
-    """Public page: user enters OTP code, chooses username, and sets password."""
+    """Public page: user enters OTP code, (optionally) chooses username, and sets password."""
     from .models import PasswordSetupToken
     error = ''
-    success = ''
+    mode = request.GET.get('mode', request.POST.get('mode', 'setup'))  # 'setup' or 'reset'
+    prefill_username = request.GET.get('u', request.POST.get('u', ''))
 
     if request.method == 'POST':
         otp_code = (request.POST.get('otp') or '').strip()
@@ -1669,13 +1670,13 @@ def otp_verify(request):
         password1 = (request.POST.get('password') or '').strip()
         password2 = (request.POST.get('password_confirm') or '').strip()
 
-        if not all([otp_code, username, password1, password2]):
+        if not all([otp_code, password1, password2]):
             error = 'All fields are required.'
         elif password1 != password2:
             error = 'Passwords do not match.'
         elif len(password1) < 6:
             error = 'Password must be at least 6 characters.'
-        elif len(username) < 3:
+        elif mode == 'setup' and (not username or len(username) < 3):
             error = 'Username must be at least 3 characters.'
         else:
             token = PasswordSetupToken.objects.filter(
@@ -1690,20 +1691,31 @@ def otp_verify(request):
                 token.save()
             else:
                 u = token.user
-                # Check username availability (skip if user already has this username)
-                if u.username != username and User.objects.filter(username=username).exists():
-                    error = 'This username is already taken. Please choose another.'
-                else:
-                    u.username = username
+                if mode == 'reset':
+                    # Password reset — keep existing username
                     u.set_password(password1)
                     u.save()
                     token.is_used = True
                     token.save()
-                    messages.success(request, 'Your account has been set up. You can now sign in.')
+                    messages.success(request, 'Your password has been reset. You can now sign in.')
                     return redirect('login')
+                else:
+                    # Account setup — allow choosing username
+                    if u.username != username and User.objects.filter(username=username).exists():
+                        error = 'This username is already taken. Please choose another.'
+                    else:
+                        u.username = username
+                        u.set_password(password1)
+                        u.save()
+                        token.is_used = True
+                        token.save()
+                        messages.success(request, 'Your account has been set up. You can now sign in.')
+                        return redirect('login')
 
     return render(request, 'workspaces/otp_verify.html', {
         'error': error,
+        'mode': mode,
+        'prefill_username': prefill_username,
     })
 
 

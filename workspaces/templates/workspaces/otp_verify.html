@@ -3,13 +3,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Set your password · Luma</title>
+    <title>{% if mode == 'reset' %}Reset your password{% else %}Set up your account{% endif %} · Luma</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{% static 'images/favicon-192x192.png' %}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { theme: { extend: { colors: {
             'cu-pink': '#054B70',
             'cu-purple': '#0A6D9E',
             'cu-blue': '#8BB7C4',
+            'luma-accent': '#6347EA',
         }}}}
     </script>
     <style>
@@ -25,21 +30,27 @@
         .blob-1 { animation: float 8s ease-in-out infinite; }
         .blob-2 { animation: floatSlow 12s ease-in-out infinite; }
 
+        /* Dark mode */
         @media (prefers-color-scheme: dark) {
-            body { background: #032D45 !important; }
-            .otp-panel { background: #032D45 !important; }
+            body { background: #0D0B1A !important; }
+            .otp-panel { background: #0D0B1A !important; }
             .otp-heading { color: #FFFFFF !important; }
             .otp-subtext { color: rgba(255,255,255,0.60) !important; }
-            .otp-label { color: rgba(255,255,255,0.55) !important; }
+            .otp-label { color: rgba(255,255,255,0.70) !important; }
             .otp-input {
-                background: #0A4A6B !important;
+                background: #1A1639 !important;
                 border-color: rgba(255,255,255,0.15) !important;
                 color: #FFFFFF !important;
+            }
+            .otp-input:read-only {
+                background: #1A1639 !important;
+                opacity: 0.6;
             }
             .otp-input::placeholder { color: rgba(255,255,255,0.35) !important; }
             .otp-input-icon { color: rgba(255,255,255,0.50) !important; }
             .otp-footer { color: rgba(255,255,255,0.45) !important; }
             .otp-mobile-name { color: rgba(255,255,255,0.85) !important; }
+            .otp-error { background: rgba(239,68,68,0.12) !important; border-color: rgba(239,68,68,0.30) !important; color: #f87171 !important; }
         }
     </style>
 </head>
@@ -58,12 +69,17 @@
                 <span class="text-xl font-semibold tracking-tight">Luma</span>
             </div>
             <div class="max-w-md">
-                <h1 class="text-5xl font-bold leading-tight mb-4">
-                    Set your password
-                </h1>
+                {% if mode == 'reset' %}
+                <h1 class="text-5xl font-bold leading-tight mb-4">Reset your password</h1>
+                <p class="text-white/85 text-lg leading-relaxed">
+                    Enter the code you received via email along with your new password to regain access.
+                </p>
+                {% else %}
+                <h1 class="text-5xl font-bold leading-tight mb-4">Set your password</h1>
                 <p class="text-white/85 text-lg leading-relaxed">
                     Enter the code you received via email along with your new password to get started.
                 </p>
+                {% endif %}
             </div>
             <div class="text-sm text-white/70">
                 &copy; {% now "Y" %} &middot; All your work in one place.
@@ -81,11 +97,16 @@
                 <span class="otp-mobile-name font-semibold text-gray-800">Luma</span>
             </div>
 
+            {% if mode == 'reset' %}
+            <h2 class="otp-heading text-3xl font-bold text-gray-800 mb-2">Reset your password</h2>
+            <p class="otp-subtext text-sm text-gray-500 mb-8">Enter the 6-digit code sent to your email and choose a new password.</p>
+            {% else %}
             <h2 class="otp-heading text-3xl font-bold text-gray-800 mb-2">Set up your account</h2>
             <p class="otp-subtext text-sm text-gray-500 mb-8">Enter the 6-digit code sent to your email, choose a username, and set your password.</p>
+            {% endif %}
 
             {% if error %}
-            <div class="mb-5 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded text-sm flex items-start gap-2">
+            <div class="otp-error mb-5 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded text-sm flex items-start gap-2">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <span>{{ error }}</span>
             </div>
@@ -93,6 +114,10 @@
 
             <form method="post" class="space-y-4">
                 {% csrf_token %}
+                <input type="hidden" name="mode" value="{{ mode }}">
+                <input type="hidden" name="u" value="{{ prefill_username }}">
+
+                <!-- Verification code -->
                 <div>
                     <label class="otp-label block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" for="otp_code">Verification code</label>
                     <div class="relative">
@@ -103,6 +128,20 @@
                                class="otp-input w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-800 focus:ring-2 focus:ring-cu-purple focus:border-cu-purple outline-none transition tracking-widest text-center font-mono text-lg">
                     </div>
                 </div>
+
+                {% if mode == 'reset' %}
+                <!-- Username (read-only for password reset) -->
+                <div>
+                    <label class="otp-label block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" for="otp_username">Username</label>
+                    <div class="relative">
+                        <svg class="otp-input-icon absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <input id="otp_username" name="username" type="text" readonly
+                               value="{{ prefill_username }}"
+                               class="otp-input w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-800 outline-none cursor-not-allowed opacity-60">
+                    </div>
+                </div>
+                {% else %}
+                <!-- Username (editable for account setup) -->
                 <div>
                     <label class="otp-label block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" for="otp_username">Choose a username</label>
                     <div class="relative">
@@ -112,12 +151,17 @@
                                class="otp-input w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-800 focus:ring-2 focus:ring-cu-purple focus:border-cu-purple outline-none transition">
                     </div>
                 </div>
+                {% endif %}
+
+                <!-- New password -->
                 <div>
                     <label class="otp-label block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" for="otp_pw1">New password</label>
                     <input id="otp_pw1" name="password" type="password" required
                            placeholder="At least 6 characters"
                            class="otp-input w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-800 focus:ring-2 focus:ring-cu-purple focus:border-cu-purple outline-none transition">
                 </div>
+
+                <!-- Confirm password -->
                 <div>
                     <label class="otp-label block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5" for="otp_pw2">Confirm password</label>
                     <input id="otp_pw2" name="password_confirm" type="password" required
@@ -126,9 +170,10 @@
                            oninput="checkOtpPwds()">
                     <p id="otpPwMismatch" class="hidden text-xs text-red-500 mt-1">Passwords do not match.</p>
                 </div>
+
                 <button type="submit"
                         class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-gradient-to-r from-cu-pink via-cu-purple to-cu-blue text-white font-semibold shadow-md hover:shadow-lg hover:opacity-95 transition mt-2">
-                    Set up account
+                    {% if mode == 'reset' %}Reset password{% else %}Set up account{% endif %}
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
             </form>

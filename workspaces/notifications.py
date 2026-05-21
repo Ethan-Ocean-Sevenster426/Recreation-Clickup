@@ -219,14 +219,16 @@ def notify_task_completed(task, completed_by):
 
 def _otp_email_html(user, otp_code, is_new_user=True):
     """Build styled HTML email for OTP delivery."""
+    from urllib.parse import quote
     base = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000')
-    verify_url = f'{base}/workspaces/otp/verify/'
     display_name = user.get_full_name() or user.email
     if is_new_user:
+        verify_url = f'{base}/workspaces/otp/verify/?mode=setup'
         heading = 'Welcome to Luma!'
         intro = f'An account has been created for you, <strong>{display_name}</strong>.'
         action_text = 'Set up your account'
     else:
+        verify_url = f'{base}/workspaces/otp/verify/?mode=reset&u={quote(user.username)}'
         heading = 'Password Reset'
         intro = f'A password reset was requested for <strong>{display_name}</strong>.'
         action_text = 'Reset your password'
