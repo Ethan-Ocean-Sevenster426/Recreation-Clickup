@@ -159,7 +159,7 @@ def _filter_tasks_for_user(tasks_qs, user):
 def _columns(task_list, user=None):
     cols = []
     for s in task_list.statuses.all():
-        tasks_qs = task_list.tasks.filter(status=s.key).prefetch_related('assignees')
+        tasks_qs = task_list.tasks.filter(status=s.key, deleted_at__isnull=True).prefetch_related('assignees')
         if user:
             tasks_qs = _filter_tasks_for_user(tasks_qs, user)
         cols.append({
@@ -183,7 +183,7 @@ def workspace_list(request):
     workspaces = list(_accessible_workspaces(request.user, organization=active_org).prefetch_related('lists'))
     today = date.today()
 
-    all_tasks = _filter_tasks_for_user(Task.objects.filter(workspace__in=workspaces), request.user)
+    all_tasks = _filter_tasks_for_user(Task.objects.filter(workspace__in=workspaces, deleted_at__isnull=True), request.user)
     open_tasks = all_tasks.exclude(status='done')
     my_open = open_tasks.filter(assignees=request.user)
     due_this_week = open_tasks.filter(due_date__gte=today, due_date__lte=today + timedelta(days=7))
@@ -599,17 +599,37 @@ def _view_pref(user, task_list, view):
     return ViewPreference(user=user, task_list=task_list, view=view)
 
 
-def _columns_filtered(task_list, pref, user=None):
-    """Build columns honoring `show_closed_tasks` and `show_empty_statuses` toggles."""
+def _columns_filtered(task_list, pref, user=None, status_filter='active'):
+    """Build columns honoring preferences and the status filter.
+
+    status_filter values:
+        'all'     — all non-deleted statuses
+        'active'  — only non-done statuses (default)
+        'done'    — only done statuses
+        'deleted' — only soft-deleted tasks (shown in a single column)
+    """
+    if status_filter == 'deleted':
+        deleted_qs = task_list.tasks.filter(deleted_at__isnull=False).prefetch_related('assignees')
+        if user:
+            deleted_qs = _filter_tasks_for_user(deleted_qs, user)
+        return [{
+            'status': type('S', (), {'key': '_deleted', 'name': 'Deleted', 'color': 'red', 'is_done': False})(),
+            'key': '_deleted', 'label': 'Deleted',
+            'color': 'red', 'tasks': list(deleted_qs),
+        }]
+
     cols = []
     for s in task_list.statuses.all():
-        if not pref.show_closed_tasks and s.is_done:
-            tasks = []
-        else:
-            tasks_qs = task_list.tasks.filter(status=s.key).prefetch_related('assignees')
-            if user:
-                tasks_qs = _filter_tasks_for_user(tasks_qs, user)
-            tasks = list(tasks_qs)
+        # Filter by status category
+        if status_filter == 'done' and not s.is_done:
+            continue
+        if status_filter == 'active' and s.is_done:
+            if not pref.show_closed_tasks:
+                continue
+        tasks_qs = task_list.tasks.filter(status=s.key, deleted_at__isnull=True).prefetch_related('assignees')
+        if user:
+            tasks_qs = _filter_tasks_for_user(tasks_qs, user)
+        tasks = list(tasks_qs)
         if not pref.show_empty_statuses and not tasks:
             continue
         cols.append({
@@ -623,12 +643,16 @@ def _columns_filtered(task_list, pref, user=None):
 def list_detail(request, list_id):
     tl = get_object_or_404(TaskList, pk=list_id, workspace__in=_accessible_workspaces(request.user))
     pref = _view_pref(request.user, tl, 'list')
+    status_filter = request.GET.get('filter', 'active')
+    if status_filter not in ('all', 'active', 'done', 'deleted'):
+        status_filter = 'active'
     ctx = _task_list_context(tl, user=request.user)
-    ctx['columns'] = _columns_filtered(tl, pref, user=request.user)
+    ctx['columns'] = _columns_filtered(tl, pref, user=request.user, status_filter=status_filter)
     return render(request, 'workspaces/detail.html', {
         **ctx,
         'view': 'list',
         'view_pref': pref,
+        'status_filter': status_filter,
         **_nav_context(request.user, active_workspace=tl.workspace, active_list=tl, request=request),
     })
 
@@ -679,7 +703,7 @@ def list_calendar(request, list_id):
         else:
             focal = today
 
-    tasks = list(_filter_tasks_for_user(tl.tasks.all(), request.user))
+    tasks = list(_filter_tasks_for_user(tl.tasks.filter(deleted_at__isnull=True), request.user))
 
     def _bars_in_window(wk_start, wk_end):
         bars = []
@@ -784,7 +808,7 @@ def list_calendar(request, list_id):
 def list_gantt(request, list_id):
     tl = get_object_or_404(TaskList, pk=list_id, workspace__in=_accessible_workspaces(request.user))
     today = date.today()
-    tasks = list(_filter_tasks_for_user(tl.tasks.all(), request.user))
+    tasks = list(_filter_tasks_for_user(tl.tasks.filter(deleted_at__isnull=True), request.user))
 
     zoom = request.GET.get('zoom', 'daily')
     if zoom not in {'daily', 'weekly', 'monthly'}:
@@ -1170,9 +1194,21 @@ def task_delete(request, task_id):
     if not (is_manager or is_creator or is_space_owner):
         messages.error(request, "You don't have permission to delete this task.")
         return redirect('workspaces:task_detail', task_id=task_id)
-    task.delete()
-    messages.success(request, "Task deleted.")
+    from django.utils import timezone
+    task.deleted_at = timezone.now()
+    task.save(update_fields=['deleted_at'])
+    messages.success(request, "Task moved to trash.")
     return redirect('workspaces:list_detail', list_id=list_id)
+
+
+@login_required
+@require_POST
+def task_restore(request, task_id):
+    task = get_object_or_404(Task, pk=task_id, workspace__in=_accessible_workspaces(request.user))
+    task.deleted_at = None
+    task.save(update_fields=['deleted_at'])
+    messages.success(request, "Task restored.")
+    return redirect('workspaces:list_detail', list_id=task.task_list_id)
 
 
 @login_required
@@ -2162,11 +2198,11 @@ def _compute_dashboard_data(request):
     selected_list = selected_lists[0] if len(selected_lists) == 1 else None  # compat
 
     if selected_lists:
-        base_qs = Task.objects.filter(task_list__in=selected_lists)
+        base_qs = Task.objects.filter(task_list__in=selected_lists, deleted_at__isnull=True)
     elif selected_workspaces:
-        base_qs = Task.objects.filter(workspace__in=selected_workspaces)
+        base_qs = Task.objects.filter(workspace__in=selected_workspaces, deleted_at__isnull=True)
     else:
-        base_qs = Task.objects.filter(workspace__in=workspaces)
+        base_qs = Task.objects.filter(workspace__in=workspaces, deleted_at__isnull=True)
 
     selected_ws_ids = set(ws_ids)
     selected_list_ids = set(list_ids)

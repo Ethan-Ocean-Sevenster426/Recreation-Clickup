@@ -35,6 +35,7 @@ urlpatterns = [
     path('tasks/<int:task_id>/update/', views.task_update, name='task_update'),
     path('tasks/<int:task_id>/status/', views.task_update_status, name='task_update_status'),
     path('tasks/<int:task_id>/delete/', views.task_delete, name='task_delete'),
+    path('tasks/<int:task_id>/restore/', views.task_restore, name='task_restore'),
     path('tasks/<int:task_id>/subtasks/create/', views.subtask_create, name='subtask_create'),
     path('subtasks/<int:subtask_id>/toggle/', views.subtask_toggle, name='subtask_toggle'),
     path('subtasks/<int:subtask_id>/update/', views.subtask_update, name='subtask_update'),

@@ -9,11 +9,36 @@
 
     <!-- Toolbar -->
     <div class="px-6 py-3 flex items-center justify-between border-b border-white/10">
-        <div class="flex items-center gap-2 text-xs">
+        <div class="flex items-center gap-3 text-xs">
             <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-cu-panel text-white/85 font-medium">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
                 Grouped by Status
             </span>
+
+            <!-- Status filter chips -->
+            <div class="flex items-center gap-1 border-l border-white/10 pl-3">
+                <a href="?filter=active"
+                   class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors
+                          {% if status_filter == 'active' %}bg-cu-accent text-white{% else %}text-white/50 hover:text-white hover:bg-white/10{% endif %}">
+                    Active
+                </a>
+                <a href="?filter=all"
+                   class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors
+                          {% if status_filter == 'all' %}bg-cu-accent text-white{% else %}text-white/50 hover:text-white hover:bg-white/10{% endif %}">
+                    All
+                </a>
+                <a href="?filter=done"
+                   class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors
+                          {% if status_filter == 'done' %}bg-emerald-600 text-white{% else %}text-white/50 hover:text-white hover:bg-white/10{% endif %}">
+                    Done
+                </a>
+                <a href="?filter=deleted"
+                   class="px-2.5 py-1 rounded-full text-xs font-medium transition-colors
+                          {% if status_filter == 'deleted' %}bg-red-600 text-white{% else %}text-white/50 hover:text-white hover:bg-white/10{% endif %}">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="inline -mt-px mr-0.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+                    Deleted
+                </a>
+            </div>
         </div>
         <div class="flex items-center gap-2">
             <button type="button" onclick="document.getElementById('newTaskModal').classList.remove('hidden')"
@@ -125,6 +150,14 @@
                         </form>
                     </div>
                     <div class="col-span-1 flex items-center justify-end">
+                        {% if status_filter == 'deleted' %}
+                        <form method="post" action="{% url 'workspaces:task_restore' task.id %}">
+                            {% csrf_token %}
+                            <button class="text-xs text-white/40 hover:text-emerald-400" title="Restore task">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                            </button>
+                        </form>
+                        {% else %}
                         <form method="post" action="{% url 'workspaces:task_delete' task.id %}"
                               onsubmit="return confirm('Delete task?');">
                             {% csrf_token %}
@@ -132,11 +165,13 @@
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
                             </button>
                         </form>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
                 </div>
 
+                {% if status_filter != 'deleted' %}
                 <!-- Inline add-task row (hidden by default) -->
                 <form method="post" action="{% url 'workspaces:task_create' task_list.id %}"
                       id="inlineTaskForm_{{ col.key }}" class="hidden border-t border-white/10">
@@ -215,6 +250,7 @@
                         id="addTaskBtn_{{ col.key }}"
                         class="w-full text-left px-4 py-2 text-xs text-white/40 hover:text-cu-accent hover:bg-cu-panel-2"
                         data-add-task-row>+ Add Task</button>
+                {% endif %}
             </div>
             {% if not col.tasks %}
             <div class="hidden" data-empty-hint="{{ col.key }}">

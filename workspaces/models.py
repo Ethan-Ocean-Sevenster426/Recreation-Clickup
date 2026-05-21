@@ -208,6 +208,9 @@ class Task(models.Model):
     estimated_minutes = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Soft-delete
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
     # Recurring task fields
     is_recurring = models.BooleanField(default=False)
     recurrence_frequency = models.CharField(max_length=20, choices=RECURRENCE_FREQ_CHOICES, blank=True, default='')
