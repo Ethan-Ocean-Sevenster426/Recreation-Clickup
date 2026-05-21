@@ -31,6 +31,9 @@ AZURE_CLIENT_ID = os.getenv('AZURE_CLIENT_ID', '')          # Application (clien
 AZURE_CLIENT_SECRET = os.getenv('AZURE_CLIENT_SECRET', '')  # Client secret value
 AZURE_MAIL_FROM = os.getenv('AZURE_MAIL_FROM', '')          # e.g. notifications@magnumopusconsultants.co.za
 
+# Site URL for email links
+SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000')
+
 # Google Cloud API Configuration - DISABLED
 # GOOGLE_CLOUD_API_KEY = 'AIzaSyBAHeuA83Rl--GvorBIZlY8UOratOu-X2U'
 
