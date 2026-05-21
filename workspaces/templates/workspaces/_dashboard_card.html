@@ -21,17 +21,32 @@
 
       {# ─── KPI: Progress ─────────────────────────────────────────── #}
       {% if card.card_type == 'progress' %}
+      {% if total_tasks %}
       <div class="text-3xl font-bold text-cu-accent leading-none">{{ completion_rate }}<span class="text-lg font-semibold">%</span></div>
       <div class="mt-2 h-1.5 rounded-full dash-bar-track bg-cu-sidebar overflow-hidden">
         <div class="h-full bg-cu-accent rounded-full" style="width:{{ completion_rate }}%"></div>
       </div>
       <div class="dash-kpi-sub mt-2 text-[11px] text-white/50 tabular-nums">{{ closed_tasks }} done · {{ open_tasks }} open</div>
+      {% else %}
+      <div class="text-center py-4">
+        <div class="text-3xl font-bold text-white/15 leading-none">0%</div>
+        <div class="mt-2 h-1.5 rounded-full bg-cu-sidebar"></div>
+        <div class="mt-2 text-[11px] text-white/30">No tasks yet</div>
+      </div>
+      {% endif %}
 
       {# ─── KPI: Velocity ─────────────────────────────────────────── #}
       {% elif card.card_type == 'velocity' %}
+      {% if total_tasks %}
       <div class="text-3xl font-bold text-cu-blue leading-none">{{ velocity }}</div>
       <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">tasks / week</div>
       <div class="dash-kpi-sub mt-1 text-[11px] text-white/40">{{ period_label }}</div>
+      {% else %}
+      <div class="text-center py-4">
+        <div class="text-3xl font-bold text-white/15 leading-none">—</div>
+        <div class="mt-1.5 text-[11px] text-white/30">No tasks yet</div>
+      </div>
+      {% endif %}
 
       {# ─── KPI: Cycle Time ───────────────────────────────────────── #}
       {% elif card.card_type == 'cycle_time' %}
@@ -45,13 +60,27 @@
 
       {# ─── KPI: Tasks In Progress ────────────────────────────────── #}
       {% elif card.card_type == 'tasks_in_progress' %}
+      {% if total_tasks %}
       <div class="text-3xl font-bold text-cu-purple leading-none">{{ in_progress_count }}</div>
       <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">tasks currently in progress</div>
+      {% else %}
+      <div class="text-center py-4">
+        <div class="text-3xl font-bold text-white/15 leading-none">—</div>
+        <div class="mt-1.5 text-[11px] text-white/30">No tasks yet</div>
+      </div>
+      {% endif %}
 
       {# ─── KPI: Tasks Completed ──────────────────────────────────── #}
       {% elif card.card_type == 'tasks_completed' %}
+      {% if total_tasks %}
       <div class="text-3xl font-bold text-emerald-400 leading-none">{{ closed_tasks }}</div>
       <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">of {{ total_tasks }} total tasks</div>
+      {% else %}
+      <div class="text-center py-4">
+        <div class="text-3xl font-bold text-white/15 leading-none">—</div>
+        <div class="mt-1.5 text-[11px] text-white/30">No tasks yet</div>
+      </div>
+      {% endif %}
 
       {# ─── KPI: Unassigned Tasks ─────────────────────────────────── #}
       {% elif card.card_type == 'unassigned_tasks' %}
@@ -76,7 +105,7 @@
 
       {# ─── Chart: Status Pie ─────────────────────────────────────── #}
       {% elif card.card_type == 'status_breakdown_pie' %}
-      {% if statuses_list %}
+      {% if total_tasks %}
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for s in statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
@@ -84,12 +113,15 @@
         </canvas>
       </div>
       {% else %}
-      <div class="text-sm text-white/30 text-center py-6">No status data yet</div>
+      <div class="flex flex-col items-center justify-center py-8 text-white/25">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        <span class="mt-2 text-xs">No tasks yet</span>
+      </div>
       {% endif %}
 
       {# ─── Chart: Status Bar ─────────────────────────────────────── #}
       {% elif card.card_type == 'status_breakdown_bar' %}
-      {% if statuses_list %}
+      {% if total_tasks %}
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for s in statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
@@ -97,7 +129,10 @@
         </canvas>
       </div>
       {% else %}
-      <div class="text-sm text-white/30 text-center py-6">No status data yet</div>
+      <div class="flex flex-col items-center justify-center py-8 text-white/25">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg>
+        <span class="mt-2 text-xs">No tasks yet</span>
+      </div>
       {% endif %}
 
       {# ─── Chart: Assignee Pie ───────────────────────────────────── #}
@@ -128,7 +163,7 @@
 
       {# ─── Chart: Priority Pie ───────────────────────────────────── #}
       {% elif card.card_type == 'priority_breakdown_pie' %}
-      {% if priority_list %}
+      {% if total_tasks %}
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for p in priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
@@ -136,12 +171,15 @@
         </canvas>
       </div>
       {% else %}
-      <div class="text-sm text-white/30 text-center py-6">No priority data yet</div>
+      <div class="flex flex-col items-center justify-center py-8 text-white/25">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        <span class="mt-2 text-xs">No tasks yet</span>
+      </div>
       {% endif %}
 
       {# ─── Chart: Priority Bar ───────────────────────────────────── #}
       {% elif card.card_type == 'priority_breakdown_bar' %}
-      {% if priority_list %}
+      {% if total_tasks %}
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for p in priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
@@ -149,7 +187,10 @@
         </canvas>
       </div>
       {% else %}
-      <div class="text-sm text-white/30 text-center py-6">No priority data yet</div>
+      <div class="flex flex-col items-center justify-center py-8 text-white/25">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg>
+        <span class="mt-2 text-xs">No tasks yet</span>
+      </div>
       {% endif %}
 
       {# ─── Chart: Time by Category ───────────────────────────────── #}
@@ -294,16 +335,31 @@
 
       {# ─── KPI: Subtask Progress ──────────────────────────────────── #}
       {% elif card.card_type == 'subtask_progress' %}
+      {% if total_subtasks %}
       <div class="text-3xl font-bold text-cu-accent leading-none">{{ subtask_completion }}<span class="text-lg font-semibold">%</span></div>
       <div class="mt-2 h-1.5 rounded-full dash-bar-track bg-cu-sidebar overflow-hidden">
         <div class="h-full bg-cu-accent rounded-full" style="width:{{ subtask_completion }}%"></div>
       </div>
       <div class="dash-kpi-sub mt-2 text-[11px] text-white/50 tabular-nums">{{ done_subtasks }} done · {{ open_subtasks }} open</div>
+      {% else %}
+      <div class="text-center py-4">
+        <div class="text-3xl font-bold text-white/15 leading-none">0%</div>
+        <div class="mt-2 h-1.5 rounded-full bg-cu-sidebar"></div>
+        <div class="mt-2 text-[11px] text-white/30">No subtasks yet</div>
+      </div>
+      {% endif %}
 
       {# ─── KPI: Total Subtasks ──────────────────────────────────── #}
       {% elif card.card_type == 'subtask_total' %}
+      {% if total_subtasks %}
       <div class="text-3xl font-bold text-cu-blue leading-none">{{ total_subtasks }}</div>
       <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">total subtasks</div>
+      {% else %}
+      <div class="text-center py-4">
+        <div class="text-3xl font-bold text-white/15 leading-none">—</div>
+        <div class="mt-1.5 text-[11px] text-white/30">No subtasks yet</div>
+      </div>
+      {% endif %}
 
       {# ─── KPI: Overdue Subtasks ────────────────────────────────── #}
       {% elif card.card_type == 'subtask_overdue' %}
@@ -314,7 +370,7 @@
 
       {# ─── Chart: Subtask Status Pie ────────────────────────────── #}
       {% elif card.card_type == 'subtask_status_pie' %}
-      {% if subtask_statuses_list %}
+      {% if total_subtasks %}
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for s in subtask_statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
@@ -327,7 +383,7 @@
 
       {# ─── Chart: Subtask Status Bar ────────────────────────────── #}
       {% elif card.card_type == 'subtask_status_bar' %}
-      {% if subtask_statuses_list %}
+      {% if total_subtasks %}
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for s in subtask_statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
@@ -340,7 +396,7 @@
 
       {# ─── Chart: Subtask Priority Pie ──────────────────────────── #}
       {% elif card.card_type == 'subtask_priority_pie' %}
-      {% if subtask_priority_list %}
+      {% if total_subtasks %}
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for p in subtask_priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
@@ -366,15 +422,30 @@
 
       {# ─── NEW: Task Breakdown KPIs ────────────────────────────── #}
       {% elif card.card_type == 'total_tasks_kpi' %}
+      {% if total_tasks %}
       <div class="text-3xl font-bold text-cu-blue leading-none">{{ total_tasks }}</div>
       <div class="dash-kpi-sub mt-1.5 text-[11px] text-white/50">total tasks · {{ open_tasks }} open · {{ closed_tasks }} done</div>
+      {% else %}
+      <div class="text-center py-4">
+        <div class="text-3xl font-bold text-white/15 leading-none">—</div>
+        <div class="mt-1.5 text-[11px] text-white/30">No tasks yet</div>
+      </div>
+      {% endif %}
 
       {% elif card.card_type == 'completion_rate_kpi' %}
+      {% if total_tasks %}
       <div class="text-3xl font-bold text-emerald-400 leading-none">{{ completion_rate }}<span class="text-lg font-semibold">%</span></div>
       <div class="mt-2 h-1.5 rounded-full dash-bar-track bg-cu-sidebar overflow-hidden">
         <div class="h-full bg-emerald-500 rounded-full" style="width:{{ completion_rate }}%"></div>
       </div>
       <div class="dash-kpi-sub mt-2 text-[11px] text-white/50">{{ closed_tasks }} of {{ total_tasks }} tasks completed</div>
+      {% else %}
+      <div class="text-center py-4">
+        <div class="text-3xl font-bold text-white/15 leading-none">0%</div>
+        <div class="mt-2 h-1.5 rounded-full bg-cu-sidebar"></div>
+        <div class="mt-2 text-[11px] text-white/30">No tasks yet</div>
+      </div>
+      {% endif %}
 
       {% elif card.card_type == 'overdue_pct_kpi' %}
       <div class="text-3xl font-bold {% if overdue_pct > 20 %}text-red-400{% elif overdue_pct > 0 %}text-amber-400{% else %}text-emerald-400{% endif %} leading-none">{{ overdue_pct }}<span class="text-lg font-semibold">%</span></div>
@@ -447,7 +518,7 @@
 
       {# ─── NEW: Subtask Charts ─────────────────────────────────── #}
       {% elif card.card_type == 'subtask_priority_bar' %}
-      {% if subtask_priority_list %}
+      {% if total_subtasks %}
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for p in subtask_priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
@@ -507,12 +578,19 @@
       {% else %}<div class="text-sm text-white/30 text-center py-6">No category data yet</div>{% endif %}
 
       {% elif card.card_type == 'subtask_done_vs_open' %}
+      {% if total_subtasks %}
       <div style="height:200px; position:relative;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["Done","Open"]'
                 data-datasets='[{"data":[{{ done_subtasks }},{{ open_subtasks }}],"backgroundColor":["#10B981","#054B70"],"borderWidth":0}]'>
         </canvas>
       </div>
+      {% else %}
+      <div class="flex flex-col items-center justify-center py-8 text-white/25">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        <span class="mt-2 text-xs">No subtasks yet</span>
+      </div>
+      {% endif %}
 
       {# ─── NEW: Subtask Tables ─────────────────────────────────── #}
       {% elif card.card_type == 'subtask_overdue_table' %}
