@@ -503,7 +503,17 @@ LISTS = [
 class Command(BaseCommand):
     help = 'Import all ClickUp MOC data into Luma'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--flush', action='store_true',
+                            help='Delete all existing tasks/subtasks before importing')
+
     def handle(self, *args, **options):
+        if options['flush']:
+            from workspaces.models import Subtask
+            deleted_sub = Subtask.objects.all().delete()[0]
+            deleted_task = Task.objects.all().delete()[0]
+            self.stdout.write(f'  Flushed {deleted_task} tasks and {deleted_sub} subtasks')
+
         # ── 1. Create / fetch users ──────────────────────────────────────
         user_map = {}
         for u in USERS:
@@ -603,8 +613,8 @@ class Command(BaseCommand):
                 self.stdout.write(f'  Created list: {list_name}')
 
             for title, status_raw, priority_raw, assignee_names, due_str, subtasks_data in tasks_data:
-                status_key = STATUS_MAP.get(status_raw, 'todo')
-                priority_key = PRIORITY_MAP.get(priority_raw, 'normal')
+                status_key = STATUS_MAP.get(status_raw, status_raw)
+                priority_key = PRIORITY_MAP.get(priority_raw, priority_raw)
                 due = d(due_str)
 
                 task = Task.objects.create(
@@ -623,8 +633,8 @@ class Command(BaseCommand):
                 total_tasks += 1
 
                 for st_title, st_status_raw, st_priority_raw, st_assignees, st_due_str in subtasks_data:
-                    st_status = STATUS_MAP.get(st_status_raw, 'todo')
-                    st_priority = PRIORITY_MAP.get(st_priority_raw, '')
+                    st_status = STATUS_MAP.get(st_status_raw, st_status_raw)
+                    st_priority = PRIORITY_MAP.get(st_priority_raw, st_priority_raw)
                     if st_priority == 'normal':
                         st_priority = ''
                     st = Subtask.objects.create(
