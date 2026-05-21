@@ -113,6 +113,7 @@
         body.theme-light .hover\:text-white\/70:hover { color: rgba(26,22,57,0.70) !important; }
         body.theme-light .hover\:text-white\/60:hover { color: rgba(26,22,57,0.60) !important; }
         body.theme-light .hover\:bg-cu-sidebar-hover:hover { background-color: #F0EFF5 !important; }
+        body.theme-light .group:hover .group-hover\:bg-cu-sidebar-hover { background-color: #F0EFF5 !important; }
         body.theme-light .hover\:bg-cu-panel:hover { background-color: #F0EFF5 !important; }
         body.theme-light .hover\:bg-cu-panel-2:hover { background-color: #E8E6F0 !important; }
         body.theme-light .hover\:bg-cu-panel\/40:hover { background-color: rgba(245,244,250,0.4) !important; }
@@ -244,10 +245,12 @@
         body.theme-light #editListImageZone,
         body.theme-light #editSpaceImageZone {
             border-color: rgba(26,22,57,0.18) !important;
+            background: transparent !important;
         }
-        body.theme-light #editListImageZone:hover,
-        body.theme-light #editSpaceImageZone:hover {
+        body.theme-light .group:hover #editListImageZone,
+        body.theme-light .group:hover #editSpaceImageZone {
             background: #F5F4FA !important;
+            border-color: rgba(99,71,234,0.5) !important;
         }
         body.theme-light #editListImagePreview,
         body.theme-light #editSpaceImagePreview {
