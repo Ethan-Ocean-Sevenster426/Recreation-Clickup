@@ -508,9 +508,9 @@ class Command(BaseCommand):
         user_map = {}
         for u in USERS:
             obj, created = User.objects.get_or_create(
-                email=u['email'],
+                username=u['username'],
                 defaults={
-                    'username': u['username'],
+                    'email': u['email'],
                     'first_name': u['first_name'],
                     'last_name': u['last_name'],
                     'role': u['role'],
@@ -520,6 +520,8 @@ class Command(BaseCommand):
                 obj.set_unusable_password()
                 obj.save()
                 self.stdout.write(f'  Created user {obj.username}')
+            else:
+                self.stdout.write(f'  Found existing user {obj.username}')
             user_map[u['username']] = obj
 
         owner = user_map.get('jane') or user_map.get('ethan')
