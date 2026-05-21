@@ -114,12 +114,15 @@
             <h2 class="login-heading text-3xl font-bold text-ms-neutral-80 mb-2">Welcome back</h2>
             <p class="login-subtext text-sm text-ms-neutral-60 mb-8">Sign in to your workspace.</p>
 
+            {# Only show error-level messages on login — suppress success/info toasts #}
             {% if messages %}
             {% for message in messages %}
-            <div class="mb-5 px-3 py-2 {% if message.tags == 'success' %}bg-emerald-50 border border-emerald-200 text-emerald-700{% else %}bg-blue-50 border border-blue-200 text-blue-700{% endif %} rounded text-sm flex items-start gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"/></svg>
+            {% if message.tags == 'error' %}
+            <div class="login-error mb-5 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded text-sm flex items-start gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <span>{{ message }}</span>
             </div>
+            {% endif %}
             {% endfor %}
             {% endif %}
 
