@@ -624,7 +624,7 @@
                     {% for ws in org_data.workspaces %}
                     <li>
                         <details {% if active_workspace and active_workspace.id == ws.id %}open{% endif %}>
-                            <summary data-workspace-id="{{ ws.id }}" data-workspace-name="{{ ws.name }}"
+                            <summary data-workspace-id="{{ ws.id }}" data-workspace-name="{{ ws.name }}" data-workspace-color="{{ ws.color }}" data-workspace-icon="{{ ws.icon }}"
                                      class="flex items-center justify-between px-2 py-1.5 rounded cursor-pointer list-none
                                           {% if active_workspace and active_workspace.id == ws.id and not active_list %}bg-cu-accent text-white font-semibold{% else %}text-white/85 hover:bg-cu-sidebar-hover{% endif %}">
                                 <span class="flex items-center gap-2 truncate">
@@ -632,7 +632,7 @@
                                     {% if ws.image %}
                                     <img src="{{ ws.image.url }}" alt="" class="w-5 h-5 rounded object-cover flex-shrink-0">
                                     {% else %}
-                                    <span class="w-5 h-5 rounded bg-cu-accent text-white text-[10px] flex items-center justify-center flex-shrink-0 font-semibold">{% if ws.icon %}{{ ws.icon }}{% else %}{{ ws.name|slice:":1"|upper }}{% endif %}</span>
+                                    <span class="status-c-{{ ws.color }} w-5 h-5 rounded text-white text-[10px] flex items-center justify-center flex-shrink-0 font-semibold">{% if ws.icon %}{{ ws.icon }}{% else %}{{ ws.name|slice:":1"|upper }}{% endif %}</span>
                                     {% endif %}
                                     <a href="{% url 'workspaces:detail' ws.id %}" class="truncate">{{ ws.name }}</a>
                                 </span>
@@ -668,7 +668,7 @@
                     {% for ws in nav_workspaces %}
                     <li>
                         <details {% if active_workspace and active_workspace.id == ws.id %}open{% endif %}>
-                            <summary data-workspace-id="{{ ws.id }}" data-workspace-name="{{ ws.name }}"
+                            <summary data-workspace-id="{{ ws.id }}" data-workspace-name="{{ ws.name }}" data-workspace-color="{{ ws.color }}" data-workspace-icon="{{ ws.icon }}"
                                      class="flex items-center justify-between px-2 py-1.5 rounded cursor-pointer list-none
                                           {% if active_workspace and active_workspace.id == ws.id and not active_list %}bg-cu-accent text-white font-semibold{% else %}text-white/85 hover:bg-cu-sidebar-hover{% endif %}">
                                 <span class="flex items-center gap-2 truncate">
@@ -676,7 +676,7 @@
                                     {% if ws.image %}
                                     <img src="{{ ws.image.url }}" alt="" class="w-5 h-5 rounded object-cover flex-shrink-0">
                                     {% else %}
-                                    <span class="w-5 h-5 rounded bg-cu-accent text-white text-[10px] flex items-center justify-center flex-shrink-0 font-semibold">{% if ws.icon %}{{ ws.icon }}{% else %}{{ ws.name|slice:":1"|upper }}{% endif %}</span>
+                                    <span class="status-c-{{ ws.color }} w-5 h-5 rounded text-white text-[10px] flex items-center justify-center flex-shrink-0 font-semibold">{% if ws.icon %}{{ ws.icon }}{% else %}{{ ws.name|slice:":1"|upper }}{% endif %}</span>
                                     {% endif %}
                                     <a href="{% url 'workspaces:detail' ws.id %}" class="truncate">{{ ws.name }}</a>
                                 </span>
@@ -1087,7 +1087,7 @@
 
 <!-- Edit Space modal -->
 <div id="editSpaceModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-    <div class="bg-cu-panel rounded-xl w-full max-w-md shadow-2xl border border-white/10 overflow-hidden">
+    <div class="bg-cu-panel rounded-xl w-full max-w-lg shadow-2xl border border-white/10 overflow-hidden">
         <div class="flex items-center justify-between px-6 pt-5 pb-4">
             <h2 class="text-lg font-semibold text-white">Edit space</h2>
             <button type="button" onclick="document.getElementById('editSpaceModal').classList.add('hidden')"
@@ -1095,11 +1095,11 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
         </div>
-        <!-- Preview -->
+        <!-- Live preview strip -->
         <div class="px-6 pb-5">
             <div class="flex items-center gap-3 px-4 py-3 bg-white/10 border border-white/10 rounded-lg">
                 <span id="editSpacePreviewChip"
-                      class="w-10 h-10 rounded-lg bg-cu-accent flex items-center justify-center text-base font-semibold text-white flex-shrink-0">
+                      class="w-10 h-10 rounded-lg flex items-center justify-center text-base font-semibold text-white bg-cu-accent flex-shrink-0 overflow-hidden">
                     <span id="editSpacePreviewLetter">S</span>
                 </span>
                 <div class="min-w-0">
@@ -1108,13 +1108,13 @@
                 </div>
             </div>
         </div>
-        <form id="editSpaceForm" method="post" class="px-6 pb-5 space-y-5">
+        <form id="editSpaceForm" method="post" enctype="multipart/form-data" class="px-6 pb-5 space-y-5">
             {% csrf_token %}
-            <input type="hidden" name="field" value="name">
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
             <!-- Name -->
             <div>
                 <label class="block text-xs font-semibold text-white/50 uppercase tracking-wide mb-1.5" for="editSpaceName">Name</label>
-                <input id="editSpaceName" name="value" required autocomplete="off"
+                <input id="editSpaceName" name="name" required autocomplete="off"
                        class="w-full px-3 py-2 border border-white/15 rounded-md text-sm text-white bg-cu-sidebar focus:ring-2 focus:ring-cu-purple focus:border-cu-purple outline-none">
             </div>
             <!-- Icon -->
@@ -1137,6 +1137,42 @@
                     </div>
                 </div>
             </div>
+            <!-- Color -->
+            <div>
+                <label class="block text-xs font-semibold text-white/50 uppercase tracking-wide mb-2">Color</label>
+                <div class="flex items-center gap-3 flex-wrap">
+                    {% for key, label in status_colors %}
+                    <label class="cursor-pointer" title="{{ label }}">
+                        <input type="radio" name="color" value="{{ key }}" class="sr-only peer">
+                        <span class="status-c-{{ key }} w-8 h-8 rounded-full inline-flex items-center justify-center text-transparent peer-checked:text-white transition-all peer-checked:ring-2 peer-checked:ring-offset-2 peer-checked:ring-offset-cu-panel peer-checked:ring-cu-purple hover:scale-110">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <!-- Image -->
+            <div>
+                <label class="block text-xs font-semibold text-white/50 uppercase tracking-wide mb-1.5">Image (optional)</label>
+                <div class="relative group">
+                    <input id="editSpaceImageInput" type="file" name="image" accept="image/*"
+                           class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                    <div id="editSpaceImageZone"
+                         class="flex items-center gap-3 border-2 border-dashed border-white/15 rounded-lg px-4 py-3 group-hover:border-cu-purple group-hover:bg-cu-sidebar-hover transition">
+                        <div id="editSpaceImagePreview" class="w-12 h-12 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden text-white/35">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-white">Click or drop an image here</div>
+                            <div id="editSpaceImageHint" class="text-xs text-white/50">PNG, JPG, up to ~5MB</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="editSpaceImageActions" class="hidden flex items-center gap-2 mt-2">
+                    <button type="button" onclick="removeSpaceImage()" class="text-xs text-red-400 hover:text-red-300">Remove image</button>
+                </div>
+                <input type="hidden" id="editSpaceRemoveImage" name="remove_image" value="0">
+            </div>
             <div class="flex justify-end gap-2 pt-2 border-t border-white/10 -mx-6 px-6 pb-0">
                 <div class="flex justify-end gap-2 pt-4 w-full">
                     <button type="button" onclick="document.getElementById('editSpaceModal').classList.add('hidden')"
@@ -1150,29 +1186,74 @@
 </div>
 <script>
 (function() {
+    var SPACE_COLOR_HEX = {
+        gray: '#87909e', purple: '#5f55ee', pink: '#ab4aba', orange: '#f76808',
+        red: '#e5484d', green: '#008844', blue: '#0078D4', yellow: '#F59E0B',
+        navy: '#064b70', teal: '#1e8197', indigo: '#4e6fb6',
+    };
     function updateSpacePreview() {
         var nameEl = document.getElementById('editSpaceName');
         var iconEl = document.getElementById('editSpaceIcon');
+        var chip = document.getElementById('editSpacePreviewChip');
         var letter = document.getElementById('editSpacePreviewLetter');
         var nameDisplay = document.getElementById('editSpacePreviewName');
-        if (!nameEl) return;
+        if (!nameEl || !chip) return;
         var name = nameEl.value.trim() || 'Space';
         var icon = (iconEl && iconEl.value || '').trim();
         letter.textContent = icon || name.slice(0, 1).toUpperCase();
         nameDisplay.textContent = name;
+        var sel = document.querySelector('#editSpaceForm input[name="color"]:checked');
+        var colorKey = sel ? sel.value : 'blue';
+        chip.style.background = SPACE_COLOR_HEX[colorKey] || '#0078D4';
     }
     window.pickSpaceIcon = function(emoji) {
         var el = document.getElementById('editSpaceIcon');
         if (el) { el.value = emoji; updateSpacePreview(); }
     };
+    window.removeSpaceImage = function() {
+        document.getElementById('editSpaceRemoveImage').value = '1';
+        document.getElementById('editSpaceImageInput').value = '';
+        document.getElementById('editSpaceImagePreview').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
+        document.getElementById('editSpaceImageActions').classList.add('hidden');
+        document.getElementById('editSpaceImageHint').textContent = 'PNG, JPG, up to ~5MB';
+    };
+    // Listen for color radio changes
+    document.addEventListener('change', function(e) {
+        if (e.target.matches('#editSpaceForm input[name="color"]')) updateSpacePreview();
+    });
     document.addEventListener('input', function(e) {
         if (e.target.matches('#editSpaceName') || e.target.matches('#editSpaceIcon')) updateSpacePreview();
     });
-    window.openEditSpaceModal = function(wsId, wsName) {
+    // Image preview
+    var imgInput = document.getElementById('editSpaceImageInput');
+    if (imgInput) {
+        imgInput.addEventListener('change', function() {
+            var file = this.files[0];
+            if (!file) return;
+            document.getElementById('editSpaceRemoveImage').value = '0';
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('editSpaceImagePreview').innerHTML = '<img src="' + e.target.result + '" class="w-full h-full object-cover">';
+                document.getElementById('editSpaceImageHint').textContent = file.name;
+                document.getElementById('editSpaceImageActions').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+    window.openEditSpaceModal = function(wsId, wsName, wsColor, wsIcon) {
         var form = document.getElementById('editSpaceForm');
         form.action = '/workspaces/' + wsId + '/update/';
         document.getElementById('editSpaceName').value = wsName;
-        document.getElementById('editSpaceIcon').value = '';
+        document.getElementById('editSpaceIcon').value = wsIcon || '';
+        // Set color radio
+        var col = wsColor || 'blue';
+        form.querySelectorAll('input[name="color"]').forEach(function(r) { r.checked = (r.value === col); });
+        // Reset image
+        document.getElementById('editSpaceImageInput').value = '';
+        document.getElementById('editSpaceRemoveImage').value = '0';
+        document.getElementById('editSpaceImagePreview').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
+        document.getElementById('editSpaceImageHint').textContent = 'PNG, JPG, up to ~5MB';
+        document.getElementById('editSpaceImageActions').classList.add('hidden');
         updateSpacePreview();
         document.getElementById('editSpaceModal').classList.remove('hidden');
         setTimeout(function() { document.getElementById('editSpaceName').focus(); }, 60);
@@ -1833,14 +1914,13 @@
                     type: 'workspace',
                     id: null,
                     name: wsEl.dataset.workspaceName,
-                    color: 'blue',
-                    icon: '',
+                    color: wsEl.dataset.workspaceColor || 'blue',
+                    icon: wsEl.dataset.workspaceIcon || '',
                     workspaceId: wsEl.dataset.workspaceId,
                 };
             }
-            // Show/hide list-only actions (color is list-only; rename works for both)
-            const isWs = targetList.type === 'workspace';
-            menu.querySelector('[data-action="color"]').classList.toggle('hidden', isWs);
+            // Color & image works for both lists and workspaces now
+            menu.querySelector('[data-action="color"]').classList.remove('hidden');
             menu.style.left = e.clientX + 'px';
             menu.style.top = e.clientY + 'px';
             menu.classList.remove('hidden');
@@ -1854,7 +1934,7 @@
             closeMenu();
             if (!targetList) return;
             if (targetList.type === 'workspace' && window.openEditSpaceModal) {
-                window.openEditSpaceModal(targetList.workspaceId, targetList.name);
+                window.openEditSpaceModal(targetList.workspaceId, targetList.name, targetList.color, targetList.icon);
             } else if (window.openEditListModal) {
                 window.openEditListModal(targetList.id, targetList.name, targetList.color, targetList.icon);
                 setTimeout(() => document.getElementById('editListName')?.focus(), 60);
@@ -1862,7 +1942,10 @@
         });
         menu.querySelector('[data-action="color"]').addEventListener('click', function() {
             closeMenu();
-            if (targetList && window.openEditListModal) {
+            if (!targetList) return;
+            if (targetList.type === 'workspace' && window.openEditSpaceModal) {
+                window.openEditSpaceModal(targetList.workspaceId, targetList.name, targetList.color, targetList.icon);
+            } else if (window.openEditListModal) {
                 window.openEditListModal(targetList.id, targetList.name, targetList.color, targetList.icon);
             }
         });

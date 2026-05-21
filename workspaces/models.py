@@ -24,6 +24,7 @@ class Workspace(models.Model):
     ]
     name = models.CharField(max_length=120)
     icon = models.CharField(max_length=8, blank=True, default='')
+    color = models.CharField(max_length=20, default='blue')
     image = models.ImageField(upload_to='workspace_images/', null=True, blank=True)
     purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES, blank=True, default='')
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='workspaces')

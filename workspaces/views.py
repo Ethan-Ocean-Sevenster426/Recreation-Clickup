@@ -416,21 +416,42 @@ def workspace_update(request, workspace_id):
     ws = get_object_or_404(_accessible_workspaces(request.user), pk=workspace_id)
     field = request.POST.get('field', '')
     value = request.POST.get('value', '').strip()
-    if field == 'name' and value:
-        ws.name = value[:120]
-        icon = request.POST.get('icon', '').strip()[:8]
-        ws.icon = icon
-    elif field == 'purpose':
-        ws.purpose = value if value in dict(Workspace.PURPOSE_CHOICES) else ''
-    elif field == 'start_date':
-        ws.start_date = value or None
-    elif field == 'end_date':
-        ws.end_date = value or None
-    elif field == 'image':
-        if 'image' in request.FILES:
+
+    if field:
+        # Inline single-field updates (detail page)
+        if field == 'name' and value:
+            ws.name = value[:120]
+            icon = request.POST.get('icon', '').strip()[:8]
+            ws.icon = icon
+        elif field == 'purpose':
+            ws.purpose = value if value in dict(Workspace.PURPOSE_CHOICES) else ''
+        elif field == 'start_date':
+            ws.start_date = value or None
+        elif field == 'end_date':
+            ws.end_date = value or None
+        elif field == 'image':
+            if 'image' in request.FILES:
+                ws.image = request.FILES['image']
+            elif request.POST.get('clear_image') == '1':
+                ws.image = None
+    else:
+        # Combined edit modal (name + icon + color + image)
+        name = (request.POST.get('name') or '').strip()
+        color = request.POST.get('color', ws.color)
+        icon = (request.POST.get('icon') or '').strip()
+        if color not in dict(STATUS_COLORS):
+            color = ws.color
+        if name:
+            ws.name = name[:120]
+        ws.color = color
+        ws.icon = icon[:8] if icon else ws.icon
+        if request.FILES.get('image'):
             ws.image = request.FILES['image']
-        elif request.POST.get('clear_image') == '1':
+        if request.POST.get('remove_image') == '1':
+            if ws.image:
+                ws.image.delete(save=False)
             ws.image = None
+
     ws.save()
     next_url = request.POST.get('next') or request.META.get('HTTP_REFERER')
     if next_url:
