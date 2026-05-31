@@ -2243,7 +2243,7 @@
                 e.preventDefault(); e.stopPropagation();
                 var val = item.dataset.value;
                 // Update button
-                btn.className = btn.className.replace(/priority-\w+/g,'') + ' ' + CLS[val];
+                btn.className = btn.className.replace(/priority-(urgent|high|normal|low)/g,'') + ' ' + CLS[val];
                 var lbl = btn.querySelector('.pri-dd-label');
                 if(lbl) lbl.textContent = LABELS[val];
                 // Update hidden input
