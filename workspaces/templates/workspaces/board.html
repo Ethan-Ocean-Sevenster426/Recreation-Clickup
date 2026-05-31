@@ -82,7 +82,7 @@
                         {% endwith %}
                         <div class="flex items-center gap-2 flex-wrap text-xs mb-2">
                             <span class="priority-flag priority-{{ task.priority }}">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="22" x2="4" y2="15"/><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/></svg>
+                                {% if task.priority == 'urgent' %}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="8" y1="4" x2="8" y2="14"/><line x1="8" y1="18" x2="8" y2="18"/><line x1="16" y1="4" x2="16" y2="14"/><line x1="16" y1="18" x2="16" y2="18"/></svg>{% elif task.priority == 'high' %}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="14"/><line x1="12" y1="18" x2="12" y2="18"/></svg>{% elif task.priority == 'normal' %}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="6" y1="12" x2="18" y2="12"/></svg>{% else %}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>{% endif %}
                                 {{ task.get_priority_display }}
                             </span>
                             {% if task.due_date %}

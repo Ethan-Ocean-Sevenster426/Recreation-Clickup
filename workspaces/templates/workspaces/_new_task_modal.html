@@ -134,12 +134,10 @@
                             Priority
                         </span>
                         <select name="priority" id="modalPrioritySelect"
-                                class="appearance-none status-pill status-c-blue border-0 cursor-pointer pr-5 bg-no-repeat"
-                                onchange="updatePriorityColor(this)"
-                                style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22white%22 viewBox=%220 0 20 20%22><path d=%22M5.25 7.5L10 12.25 14.75 7.5z%22/></svg>'); background-position: right 0.25rem center; background-size: 12px;">
+                                class="priority-flag priority-normal"
+                                onchange="updatePriorityColor(this)">
                             {% for key, label in priority_choices %}
                             <option value="{{ key }}"
-                                    data-color="{% if key == 'urgent' %}red{% elif key == 'high' %}orange{% elif key == 'low' %}gray{% else %}blue{% endif %}"
                                     {% if key == 'normal' %}selected{% endif %} class="opt-priority-{{ key }}">{{ label }}</option>
                             {% endfor %}
                         </select>
@@ -414,9 +412,8 @@
 
     // Priority color
     function updatePriorityColor(sel) {
-        var opt = sel.options[sel.selectedIndex];
-        var color = opt ? opt.dataset.color : 'blue';
-        sel.className = sel.className.replace(/status-c-\w+/g, '') + ' status-c-' + color;
+        var val = sel.value || 'normal';
+        sel.className = sel.className.replace(/priority-\w+/g, 'priority-' + val);
     }
     // Category color
     function updateCategoryColor(sel) {

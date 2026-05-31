@@ -161,9 +161,8 @@
                         <form method="post" action="{% url 'workspaces:task_update' task.id %}">
                             {% csrf_token %}
                             <input type="hidden" name="field" value="priority">
-                            <select name="value" onchange="this.form.submit()"
-                                    class="priority-flag priority-{{ task.priority }} bg-transparent border-0 cursor-pointer text-xs appearance-none pr-4 bg-no-repeat focus:outline-none"
-                                    style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22%23ffffff%22 viewBox=%220 0 20 20%22><path d=%22M5.25 7.5L10 12.25 14.75 7.5z%22/></svg>'); background-position: right 0 center; background-size: 10px;">
+                            <select name="value" onchange="this.className=this.className.replace(/priority-\w+/g,'priority-'+this.value);this.form.submit()"
+                                    class="priority-flag priority-{{ task.priority }}">
                                 {% for key, label in priority_choices %}
                                 <option value="{{ key }}" {% if key == task.priority %}selected{% endif %} class="opt-priority-{{ key }}">{{ label }}</option>
                                 {% endfor %}

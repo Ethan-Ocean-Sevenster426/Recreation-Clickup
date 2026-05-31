@@ -162,8 +162,8 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="22" x2="4" y2="15"/><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/></svg>
                         Priority
                     </span>
-                    <select id="taskPrioritySelect" onchange="ajaxField('priority', this.value); this.className=this.className.replace(/priority-\w+/g,'')+'priority-'+this.value;"
-                            class="bg-transparent border-0 text-sm cursor-pointer hover:bg-cu-panel px-2 py-0.5 rounded outline-none priority-flag priority-{{ task.priority }}">
+                    <select id="taskPrioritySelect" onchange="ajaxField('priority', this.value); this.className=this.className.replace(/priority-\w+/g,'priority-'+this.value);"
+                            class="priority-flag priority-{{ task.priority }}">
                         {% for key, label in priority_choices %}
                         <option value="{{ key }}" {% if key == task.priority %}selected{% endif %} class="opt-priority-{{ key }}">{{ label }}</option>
                         {% endfor %}
