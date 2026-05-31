@@ -11,23 +11,25 @@
     <link rel="alternate icon" href="{% static 'images/favicon.ico' %}">
     <link rel="apple-touch-icon" sizes="192x192" href="{% static 'images/favicon-192x192.png' %}">
     
+    <!-- Google Fonts - Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- Critical CSS for immediate rendering -->
     <style>
         * { box-sizing: border-box; }
-        body { 
-            margin: 0; 
-            padding: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            font-size: 9pt;
             line-height: 1.6;
             color: #333;
             background-color: #fff;
         }
 
     </style>
-    
-    <!-- Preload critical resources -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"></noscript>
     
     <!-- Lazy load Tailwind CSS -->
     {% if debug %}

@@ -6,6 +6,9 @@
     <title>{% block title %}Luma — Magnum Opus Consultants{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
     <link rel="alternate icon" href="{% static 'images/favicon.svg' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -34,14 +37,14 @@
                         'cu-panel-2': '#221D44',
                     },
                     fontFamily: {
-                        sans: ['"Segoe UI"', '-apple-system', 'BlinkMacSystemFont', 'Roboto', 'sans-serif'],
+                        sans: ['Poppins', 'sans-serif'],
                     },
                 },
             },
         }
     </script>
     <style>
-        body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif; color: rgba(255,255,255,0.85); background: #0D0B1A; color-scheme: dark; }
+        body { font-family: 'Poppins', sans-serif; font-size: 9pt; color: rgba(255,255,255,0.85); background: #0D0B1A; color-scheme: dark; }
         select option { background: #1A1639; color: #fff; }
         select.status-pill option { background: #1A1639; color: #fff; }
         /* Light theme override — flips dark-mode tokens to light surfaces */

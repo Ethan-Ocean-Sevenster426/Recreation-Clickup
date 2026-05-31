@@ -1971,12 +1971,6 @@ def custom_field_create(request, workspace_id):
         workspace=ws, name=name, field_type=field_type,
         position=pos, creator=request.user,
     )
-    if field_type in ('dropdown', 'labels'):
-        for i, label in enumerate(['Option 1', 'Option 2', 'Option 3']):
-            CustomFieldOption.objects.create(
-                field=f, name=label, color=DEFAULT_OPTION_COLORS[i % len(DEFAULT_OPTION_COLORS)],
-                position=i,
-            )
     return redirect('workspaces:custom_field_manager_with_field', workspace_id=ws.pk, field_id=f.pk)
 
 
@@ -2000,13 +1994,6 @@ def custom_field_quick_create(request, workspace_id):
         workspace=ws, name=name, field_type=field_type,
         position=pos, creator=request.user,
     )
-    if field_type in ('dropdown', 'labels'):
-        for i, label in enumerate(['Option 1', 'Option 2', 'Option 3']):
-            CustomFieldOption.objects.create(
-                field=f, name=label,
-                color=DEFAULT_OPTION_COLORS[i % len(DEFAULT_OPTION_COLORS)],
-                position=i,
-            )
     next_url = request.POST.get('next') or ''
     if next_url:
         # Append a small confirmation flag so the next page can show a toast + reopen drawer

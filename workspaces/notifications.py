@@ -100,7 +100,7 @@ def _email_html(title, lines, task):
     url = _task_url(task)
     body_lines = ''.join(f'<p style="margin:4px 0;color:#333;">{l}</p>' for l in lines)
     return f'''
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;">
+    <div style="font-family:'Poppins',sans-serif;max-width:560px;margin:0 auto;">
         <div style="background:#054B70;padding:16px 24px;border-radius:8px 8px 0 0;">
             <span style="color:#fff;font-size:18px;font-weight:600;">Luma</span>
         </div>
@@ -234,7 +234,7 @@ def _otp_email_html(user, otp_code, is_new_user=True):
         action_text = 'Reset your password'
 
     return f'''
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:560px;margin:0 auto;">
+    <div style="font-family:'Poppins',sans-serif;max-width:560px;margin:0 auto;">
         <div style="background:#054B70;padding:16px 24px;border-radius:8px 8px 0 0;">
             <span style="color:#fff;font-size:18px;font-weight:600;">Luma</span>
         </div>

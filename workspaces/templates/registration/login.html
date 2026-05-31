@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <title>Sign in — Luma</title>
     <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { theme: { extend: { colors: {
@@ -20,7 +23,7 @@
         }}}}
     </script>
     <style>
-        body { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif; }
+        body { font-family: 'Poppins', sans-serif; font-size: 9pt; }
         @keyframes float {
             0%, 100% { transform: translate(0, 0); }
             50% { transform: translate(20px, -20px); }
