@@ -281,17 +281,6 @@
                     </div>
                 </div>
 
-                {% if workspace.purpose == 'retainer' %}
-                <!-- Days taken (retainer workspaces) -->
-                <div class="flex items-center gap-3 py-1.5">
-                    <span class="w-28 flex-shrink-0 text-white/60 flex items-center gap-2">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        Days taken
-                    </span>
-                    <span class="text-sm font-semibold text-white">{{ task|days_taken }}</span>
-                    <span class="text-xs text-white/40">day{{ task|days_taken|pluralize }}</span>
-                </div>
-                {% endif %}
             </div>
 
             <script>
