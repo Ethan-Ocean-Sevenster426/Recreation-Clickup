@@ -104,7 +104,7 @@
                 <div class="grid grid-cols-12 gap-2 px-4 py-2 bg-cu-sidebar text-xs font-medium text-white/60 border-b border-white/10">
                     <div class="col-span-4">Name</div>
                     <div class="col-span-2">Assignee</div>
-                    <div class="col-span-2">{% if workspace.purpose == 'retainer' %}Days taken{% else %}Due date{% endif %}</div>
+                    <div class="col-span-2">Due date</div>
                     <div class="col-span-1">Priority</div>
                     <div class="col-span-2">Status</div>
                     <div class="col-span-1"></div>
@@ -150,19 +150,12 @@
                         {% endfor %}
                     </div>
                     <div class="col-span-2">
-                        {% if workspace.purpose == 'retainer' %}
-                        <span class="text-xs text-white/85 px-1.5 py-1 inline-flex items-center gap-1">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-white/40"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                            {{ task|days_taken }} day{{ task|days_taken|pluralize }}
-                        </span>
-                        {% else %}
                         <form method="post" action="{% url 'workspaces:task_update' task.id %}" class="inline">
                             {% csrf_token %}
                             <input type="hidden" name="field" value="due_date">
                             <input type="date" name="value" value="{% if task.due_date %}{{ task.due_date|date:'Y-m-d' }}{% endif %}" onchange="this.form.submit()"
                                    class="bg-transparent border-0 text-xs text-white/85 hover:bg-cu-panel rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-cu-accent w-full">
                         </form>
-                        {% endif %}
                     </div>
                     <div class="col-span-1">
                         <form method="post" action="{% url 'workspaces:task_update' task.id %}">
