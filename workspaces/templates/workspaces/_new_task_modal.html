@@ -133,14 +133,31 @@
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="22" x2="4" y2="15"/><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/></svg>
                             Priority
                         </span>
-                        <select name="priority" id="modalPrioritySelect"
-                                class="priority-flag priority-normal"
-                                onchange="updatePriorityColor(this)">
-                            {% for key, label in priority_choices %}
-                            <option value="{{ key }}"
-                                    {% if key == 'normal' %}selected{% endif %} class="opt-priority-{{ key }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
+                        <div class="pri-dd" id="modalPriorityDD">
+                            <button type="button" class="pri-dd-btn priority-flag priority-normal">
+                                <span class="pri-dd-label">Normal</span>
+                                <svg class="dd-arrow" width="8" height="8" viewBox="0 0 20 20" fill="currentColor"><path d="M5.25 7.5L10 12.25 14.75 7.5z"/></svg>
+                            </button>
+                            <div class="pri-dd-menu">
+                                <div class="pri-dd-item" data-value="urgent">
+                                    <span class="pri-dot" style="background:#DC2626"></span>
+                                    <span class="pri-check"></span> Urgent
+                                </div>
+                                <div class="pri-dd-item" data-value="high">
+                                    <span class="pri-dot" style="background:#EA580C"></span>
+                                    <span class="pri-check"></span> High
+                                </div>
+                                <div class="pri-dd-item active" data-value="normal">
+                                    <span class="pri-dot" style="background:#2563EB"></span>
+                                    <span class="pri-check">&#10003;</span> Normal
+                                </div>
+                                <div class="pri-dd-item" data-value="low">
+                                    <span class="pri-dot" style="background:#6B7280"></span>
+                                    <span class="pri-check"></span> Low
+                                </div>
+                            </div>
+                            <input type="hidden" name="priority" value="normal">
+                        </div>
                     </div>
 
                     <!-- Category -->
@@ -410,11 +427,9 @@
         });
     })();
 
-    // Priority color
-    function updatePriorityColor(sel) {
-        var val = sel.value || 'normal';
-        sel.className = sel.className.replace(/priority-\w+/g, 'priority-' + val);
-    }
+    // Re-init priority dropdown when modal opens (for dynamic content)
+    var priDD = document.getElementById('modalPriorityDD');
+    if(priDD && window.initPriorityDropdown) window.initPriorityDropdown(priDD);
     // Category color
     function updateCategoryColor(sel) {
         var opt = sel.options[sel.selectedIndex];

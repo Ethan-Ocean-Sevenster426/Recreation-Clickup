@@ -78,17 +78,11 @@
         body.theme-light select.select-inline { background: transparent !important; border: none !important; color: rgba(26,22,57,0.70) !important; color-scheme: light; }
         body.theme-light select.priority-flag { border: none !important; color-scheme: light; color: #fff !important; }
         body.theme-light select option { background-color: #FFFFFF; color: #032D45; }
-        /* Priority option colors in dropdown */
-        select.priority-flag option { background: #1A1639; color: #fff; padding: 4px 8px; font-weight: 500; }
-        option.opt-priority-urgent { color: #FCA5A5 !important; background: #1A1639 !important; }
-        option.opt-priority-high { color: #FDBA74 !important; background: #1A1639 !important; }
-        option.opt-priority-normal { color: #93C5FD !important; background: #1A1639 !important; }
-        option.opt-priority-low { color: #D1D5DB !important; background: #1A1639 !important; }
-        body.theme-light select.priority-flag option { background: #fff; }
-        body.theme-light option.opt-priority-urgent { color: #DC2626 !important; background: #fff !important; }
-        body.theme-light option.opt-priority-high { color: #EA580C !important; background: #fff !important; }
-        body.theme-light option.opt-priority-normal { color: #2563EB !important; background: #fff !important; }
-        body.theme-light option.opt-priority-low { color: #6B7280 !important; background: #fff !important; }
+        /* Legacy priority option colors (kept for any remaining native selects) */
+        option.opt-priority-urgent { color: #DC2626 !important; }
+        option.opt-priority-high { color: #EA580C !important; }
+        option.opt-priority-normal { color: #2563EB !important; }
+        option.opt-priority-low { color: #6B7280 !important; }
         body.theme-light .text-white\/60 { color: rgba(26,22,57,0.60) !important; }
         body.theme-light .text-white\/55 { color: rgba(26,22,57,0.55) !important; }
         body.theme-light .text-white\/50 { color: rgba(26,22,57,0.50) !important; }
@@ -330,9 +324,20 @@
         .priority-high { background: #EA580C; color: #fff; }
         .priority-normal { background: #2563EB; color: #fff; }
         .priority-low { background: #6B7280; color: #fff; }
-        /* Priority select overrides — keep pill look on <select> */
-        select.priority-flag { appearance: none; border: 0; cursor: pointer; padding-right: 1.25rem; background-repeat: no-repeat; background-position: right 0.25rem center; background-size: 10px; background-image: url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22white%22 viewBox=%220 0 20 20%22><path d=%22M5.25 7.5L10 12.25 14.75 7.5z%22/></svg>'); outline: none; }
-        select.priority-flag:focus { box-shadow: 0 0 0 2px rgba(255,255,255,0.25); }
+        /* Custom priority dropdown */
+        .pri-dd { position: relative; display: inline-block; }
+        .pri-dd-btn { cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; border: none; }
+        .pri-dd-btn svg.dd-arrow { margin-left: 0.125rem; opacity: 0.8; }
+        .pri-dd-menu { display: none; position: absolute; top: 100%; left: 0; z-index: 50; min-width: 140px; margin-top: 4px; background: #1A1639; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 4px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .pri-dd.open .pri-dd-menu { display: block; }
+        .pri-dd-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.75rem; font-weight: 500; color: rgba(255,255,255,0.85); transition: background 0.1s; }
+        .pri-dd-item:hover { background: rgba(255,255,255,0.08); }
+        .pri-dd-item.active { background: rgba(255,255,255,0.05); }
+        .pri-dd-item .pri-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .pri-dd-item .pri-check { width: 14px; text-align: center; flex-shrink: 0; font-size: 0.625rem; }
+        body.theme-light .pri-dd-menu { background: #fff; border-color: rgba(0,0,0,0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+        body.theme-light .pri-dd-item { color: #333; }
+        body.theme-light .pri-dd-item:hover { background: rgba(0,0,0,0.05); }
         .avatar { width: 1.75rem; height: 1.75rem; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff; }
         /* Rail buttons — white icon chip over purple rail */
         .rail-btn { width: 4rem; padding: 0.5rem 0; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; color: rgba(255,255,255,0.9); font-size: 0.6875rem; cursor: pointer; transition: all 0.15s; position: relative; text-decoration: none; border: none; background: transparent; }
@@ -2212,5 +2217,65 @@
     [data-task-id] { cursor: grab; }
     [data-task-id]:active { cursor: grabbing; }
 </style>
+<script>
+/* ── Priority custom dropdown ─────────────────────────── */
+(function(){
+    var COLORS = {urgent:'#DC2626',high:'#EA580C',normal:'#2563EB',low:'#6B7280'};
+    var LABELS = {urgent:'Urgent',high:'High',normal:'Normal',low:'Low'};
+    var CLS    = {urgent:'priority-urgent',high:'priority-high',normal:'priority-normal',low:'priority-low'};
+
+    window.initPriorityDropdown = function(el){
+        // el = .pri-dd element
+        var btn = el.querySelector('.pri-dd-btn');
+        var menu = el.querySelector('.pri-dd-menu');
+        var input = el.querySelector('input[type=hidden]');
+        if(!btn||!menu) return;
+
+        btn.addEventListener('click', function(e){
+            e.preventDefault(); e.stopPropagation();
+            // Close other open dropdowns
+            document.querySelectorAll('.pri-dd.open').forEach(function(d){ if(d!==el) d.classList.remove('open'); });
+            el.classList.toggle('open');
+        });
+
+        menu.querySelectorAll('.pri-dd-item').forEach(function(item){
+            item.addEventListener('click', function(e){
+                e.preventDefault(); e.stopPropagation();
+                var val = item.dataset.value;
+                // Update button
+                btn.className = btn.className.replace(/priority-\w+/g,'') + ' ' + CLS[val];
+                var lbl = btn.querySelector('.pri-dd-label');
+                if(lbl) lbl.textContent = LABELS[val];
+                // Update hidden input
+                if(input) input.value = val;
+                // Update active state
+                menu.querySelectorAll('.pri-dd-item').forEach(function(i){ i.classList.remove('active'); });
+                item.classList.add('active');
+                // Update checkmarks
+                menu.querySelectorAll('.pri-check').forEach(function(c){ c.textContent = ''; });
+                var chk = item.querySelector('.pri-check');
+                if(chk) chk.textContent = '\u2713';
+                el.classList.remove('open');
+                // Fire callback
+                var cb = el.dataset.onchange;
+                if(cb && window[cb]) window[cb](val, el);
+                // Auto-submit form if flagged
+                if(el.dataset.autosubmit){
+                    var form = el.closest('form');
+                    if(form) form.submit();
+                }
+            });
+        });
+    };
+
+    // Close on outside click
+    document.addEventListener('click', function(){ document.querySelectorAll('.pri-dd.open').forEach(function(d){ d.classList.remove('open'); }); });
+
+    // Auto-init all on page load
+    document.addEventListener('DOMContentLoaded', function(){
+        document.querySelectorAll('.pri-dd').forEach(window.initPriorityDropdown);
+    });
+})();
+</script>
 </body>
 </html>

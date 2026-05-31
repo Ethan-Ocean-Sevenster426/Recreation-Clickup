@@ -162,12 +162,30 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="22" x2="4" y2="15"/><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/></svg>
                         Priority
                     </span>
-                    <select id="taskPrioritySelect" onchange="ajaxField('priority', this.value); this.className=this.className.replace(/priority-\w+/g,'priority-'+this.value);"
-                            class="priority-flag priority-{{ task.priority }}">
-                        {% for key, label in priority_choices %}
-                        <option value="{{ key }}" {% if key == task.priority %}selected{% endif %} class="opt-priority-{{ key }}">{{ label }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="pri-dd" data-onchange="onPriorityChange">
+                        <button type="button" class="pri-dd-btn priority-flag priority-{{ task.priority }}">
+                            <span class="pri-dd-label">{{ task.get_priority_display }}</span>
+                            <svg class="dd-arrow" width="8" height="8" viewBox="0 0 20 20" fill="currentColor"><path d="M5.25 7.5L10 12.25 14.75 7.5z"/></svg>
+                        </button>
+                        <div class="pri-dd-menu">
+                            <div class="pri-dd-item{% if task.priority == 'urgent' %} active{% endif %}" data-value="urgent">
+                                <span class="pri-dot" style="background:#DC2626"></span>
+                                <span class="pri-check">{% if task.priority == 'urgent' %}&#10003;{% endif %}</span> Urgent
+                            </div>
+                            <div class="pri-dd-item{% if task.priority == 'high' %} active{% endif %}" data-value="high">
+                                <span class="pri-dot" style="background:#EA580C"></span>
+                                <span class="pri-check">{% if task.priority == 'high' %}&#10003;{% endif %}</span> High
+                            </div>
+                            <div class="pri-dd-item{% if task.priority == 'normal' %} active{% endif %}" data-value="normal">
+                                <span class="pri-dot" style="background:#2563EB"></span>
+                                <span class="pri-check">{% if task.priority == 'normal' %}&#10003;{% endif %}</span> Normal
+                            </div>
+                            <div class="pri-dd-item{% if task.priority == 'low' %} active{% endif %}" data-value="low">
+                                <span class="pri-dot" style="background:#6B7280"></span>
+                                <span class="pri-check">{% if task.priority == 'low' %}&#10003;{% endif %}</span> Low
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Category -->
@@ -785,6 +803,9 @@
 </style>
 
 <script>
+// ─── Priority dropdown callback ─────────────────────────────
+function onPriorityChange(val) { ajaxField('priority', val); }
+
 // ─── Generic AJAX field update ───────────────────────────────
 function ajaxField(field, value) {
     var csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;

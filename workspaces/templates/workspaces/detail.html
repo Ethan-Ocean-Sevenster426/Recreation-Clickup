@@ -161,12 +161,31 @@
                         <form method="post" action="{% url 'workspaces:task_update' task.id %}">
                             {% csrf_token %}
                             <input type="hidden" name="field" value="priority">
-                            <select name="value" onchange="this.className=this.className.replace(/priority-\w+/g,'priority-'+this.value);this.form.submit()"
-                                    class="priority-flag priority-{{ task.priority }}">
-                                {% for key, label in priority_choices %}
-                                <option value="{{ key }}" {% if key == task.priority %}selected{% endif %} class="opt-priority-{{ key }}">{{ label }}</option>
-                                {% endfor %}
-                            </select>
+                            <div class="pri-dd" data-autosubmit="1">
+                                <button type="button" class="pri-dd-btn priority-flag priority-{{ task.priority }}">
+                                    <span class="pri-dd-label">{{ task.get_priority_display }}</span>
+                                    <svg class="dd-arrow" width="8" height="8" viewBox="0 0 20 20" fill="currentColor"><path d="M5.25 7.5L10 12.25 14.75 7.5z"/></svg>
+                                </button>
+                                <div class="pri-dd-menu">
+                                    <div class="pri-dd-item{% if task.priority == 'urgent' %} active{% endif %}" data-value="urgent">
+                                        <span class="pri-dot" style="background:#DC2626"></span>
+                                        <span class="pri-check">{% if task.priority == 'urgent' %}&#10003;{% endif %}</span> Urgent
+                                    </div>
+                                    <div class="pri-dd-item{% if task.priority == 'high' %} active{% endif %}" data-value="high">
+                                        <span class="pri-dot" style="background:#EA580C"></span>
+                                        <span class="pri-check">{% if task.priority == 'high' %}&#10003;{% endif %}</span> High
+                                    </div>
+                                    <div class="pri-dd-item{% if task.priority == 'normal' %} active{% endif %}" data-value="normal">
+                                        <span class="pri-dot" style="background:#2563EB"></span>
+                                        <span class="pri-check">{% if task.priority == 'normal' %}&#10003;{% endif %}</span> Normal
+                                    </div>
+                                    <div class="pri-dd-item{% if task.priority == 'low' %} active{% endif %}" data-value="low">
+                                        <span class="pri-dot" style="background:#6B7280"></span>
+                                        <span class="pri-check">{% if task.priority == 'low' %}&#10003;{% endif %}</span> Low
+                                    </div>
+                                </div>
+                                <input type="hidden" name="value" value="{{ task.priority }}">
+                            </div>
                         </form>
                     </div>
                     <div class="col-span-2">
