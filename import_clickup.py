@@ -1,18 +1,6 @@
 #!/usr/bin/env python
 """
-One-time ClickUp → Luma import script.
-
-Usage (on the server):
-    cd /var/www/Magnum\ Opus\ Consultants/Luma
-    venv/bin/python import_clickup.py
-
-What it imports:
-  - ClickUp members  → User  (created if missing, matched by email)
-  - ClickUp spaces   → Organization + Workspace
-  - ClickUp lists    → TaskList  (with statuses → TaskStatus)
-  - ClickUp tasks    → Task  (with assignees, priority, dates, custom fields)
-  - ClickUp subtasks → Subtask
-  - ClickUp comments → TaskComment
+One-time ClickUp to Luma import script.
 """
 
 import os
@@ -50,10 +38,12 @@ def api(path, params=None):
         r = requests.get(url, headers=HEADERS, params=params or {})
         if r.status_code == 429:
             wait = int(r.headers.get("Retry-After", 2))
-            print(f"  rate-limited, waiting {wait}s …")
+            print(f"  rate-limited, waiting {wait}s ...")
             time.sleep(wait)
             continue
-        r.raise_for_status()
+        if r.status_code != 200:
+            print(f"  API error {r.status_code}: {r.text[:200]}")
+            r.raise_for_status()
         return r.json()
     raise RuntimeError(f"Too many retries for {url}")
 
@@ -107,10 +97,21 @@ print("=" * 60)
 print("STEP 1: Importing users")
 print("=" * 60)
 
-team_data = api(f"team/{TEAM_ID}")
+team_data = api("team")
+print(f"  API response keys: {list(team_data.keys())}")
+
+# Handle both {"teams": [...]} and {"team": {...}} response formats
+if "teams" in team_data:
+    team_info = team_info
+elif "team" in team_data:
+    team_info = team_data["team"]
+else:
+    print(f"  Unexpected response: {json.dumps(team_data)[:300]}")
+    sys.exit(1)
+
 email_to_user = {}
 
-for member in team_data["teams"][0]["members"]:
+for member in team_info["members"]:
     cu = member["user"]
     email = cu["email"]
     username = cu.get("username") or email.split("@")[0]
@@ -136,7 +137,7 @@ for member in team_data["teams"][0]["members"]:
 
 # Also index by ClickUp user id for fast lookup
 cuid_to_user = {}
-for member in team_data["teams"][0]["members"]:
+for member in team_info["members"]:
     cu = member["user"]
     u = email_to_user.get(cu["email"])
     if u:
@@ -144,7 +145,7 @@ for member in team_data["teams"][0]["members"]:
 
 # Pick an owner (the ClickUp workspace owner, i.e. Jané)
 owner_email = None
-for member in team_data["teams"][0]["members"]:
+for member in team_info["members"]:
     if member["user"].get("role_key") == "owner":
         owner_email = member["user"]["email"]
         break
@@ -157,7 +158,7 @@ print("=" * 60)
 print("STEP 2: Importing spaces → Organization + Workspaces")
 print("=" * 60)
 
-team_name = team_data["teams"][0]["name"]
+team_name = team_info["name"]
 org, created = Organization.objects.get_or_create(
     name=team_name,
     defaults={"owner": owner},
