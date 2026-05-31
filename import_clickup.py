@@ -7,8 +7,14 @@ import os
 import sys
 import json
 import time
+import io
 import requests
 from datetime import datetime, date
+
+# Fix Windows console encoding
+if sys.stdout.encoding != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 # ── Django bootstrap ────────────────────────────────────────────────
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eclick.settings")
@@ -49,14 +55,14 @@ def api(path, params=None):
 
 
 def ts_to_date(ms):
-    """ClickUp millisecond timestamp → Python date, or None."""
+    """ClickUp millisecond timestamp -> Python date, or None."""
     if not ms:
         return None
     return datetime.utcfromtimestamp(int(ms) / 1000).date()
 
 
 def ts_to_datetime(ms):
-    """ClickUp millisecond timestamp → Python datetime, or None."""
+    """ClickUp millisecond timestamp -> Python datetime, or None."""
     if not ms:
         return None
     return datetime.utcfromtimestamp(int(ms) / 1000)
@@ -102,7 +108,7 @@ print(f"  API response keys: {list(team_data.keys())}")
 
 # Handle both {"teams": [...]} and {"team": {...}} response formats
 if "teams" in team_data:
-    team_info = team_info
+    team_info = team_data["teams"][0]
 elif "team" in team_data:
     team_info = team_data["team"]
 else:
@@ -152,10 +158,10 @@ for member in team_info["members"]:
 owner = email_to_user.get(owner_email) or list(email_to_user.values())[0]
 print(f"  Owner for new objects: {owner.email}")
 
-# ── 2. Import spaces → Organization + Workspaces ──────────────────
+# ── 2. Import spaces -> Organization + Workspaces ──────────────────
 print()
 print("=" * 60)
-print("STEP 2: Importing spaces → Organization + Workspaces")
+print("STEP 2: Importing spaces -> Organization + Workspaces")
 print("=" * 60)
 
 team_name = team_info["name"]
@@ -188,10 +194,10 @@ for sp in spaces_data["spaces"]:
             defaults={"role": "editor"},
         )
 
-# ── 3. Import lists → TaskList + TaskStatus ───────────────────────
+# ── 3. Import lists -> TaskList + TaskStatus ───────────────────────
 print()
 print("=" * 60)
-print("STEP 3: Importing lists → TaskList + TaskStatus")
+print("STEP 3: Importing lists -> TaskList + TaskStatus")
 print("=" * 60)
 
 list_id_to_tasklist = {}
