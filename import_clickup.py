@@ -26,6 +26,8 @@ from django.contrib.auth import get_user_model
 from workspaces.models import (
     Organization, Workspace, TaskList, TaskStatus,
     Task, Subtask, TaskComment, WorkspaceMember, Category,
+    CustomField, CustomFieldOption, TaskCustomFieldValue,
+    DashboardCard, ReportTemplate,
 )
 
 User = get_user_model()
@@ -120,6 +122,37 @@ def get_marketing_category(task_data):
                 return MARKETING_CAT_MAP.get(name.lower(), "")
     return ""
 
+
+# ── 0. Wipe existing workspace data ──────────────────────────────
+print("=" * 60)
+print("STEP 0: Wiping existing workspace data")
+print("=" * 60)
+
+# Delete in dependency order (children first)
+for model, label in [
+    (TaskCustomFieldValue, "TaskCustomFieldValues"),
+    (CustomFieldOption, "CustomFieldOptions"),
+    (CustomField, "CustomFields"),
+    (DashboardCard, "DashboardCards"),
+    (ReportTemplate, "ReportTemplates"),
+    (TaskComment, "TaskComments"),
+    (Subtask, "Subtasks"),
+    (Task, "Tasks"),
+    (TaskStatus, "TaskStatuses"),
+    (TaskList, "TaskLists"),
+    (Category, "Categories"),
+    (WorkspaceMember, "WorkspaceMembers"),
+    (Workspace, "Workspaces"),
+    (Organization, "Organizations"),
+]:
+    count = model.objects.count()
+    if count:
+        model.objects.all().delete()
+        print(f"  - Deleted {count} {label}")
+    else:
+        print(f"  . {label}: nothing to delete")
+
+print()
 
 # ── 1. Import users ────────────────────────────────────────────────
 print("=" * 60)
@@ -416,14 +449,106 @@ for cu_id, task in cu_task_id_to_task.items():
         if created:
             print(f"  + Comment on '{task.title[:40]}' by {author.email}")
 
+# ── 7. Create Categories + CustomField (Marketing Category) ──────
+print()
+print("=" * 60)
+print("STEP 7: Creating Categories + CustomField for Marketing Category")
+print("=" * 60)
+
+# The marketing category options with display names and colors
+CATEGORY_DEFS = [
+    ("social_media",      "Social Media Management",    "pink",   0),
+    ("meetings",          "Meetings",                   "orange", 1),
+    ("ad_hoc_marketing",  "Ad Hoc Marketing Requests",  "cyan",   2),
+    ("seo",               "SEO",                        "teal",   3),
+    ("strategy",          "Strategy",                   "red",    4),
+    ("value_added",       "Value-Added Service",        "indigo", 5),
+]
+
+for ws in space_to_workspace.values():
+    # Create Category records (used by task list views)
+    for key, name, color, pos in CATEGORY_DEFS:
+        cat, created = Category.objects.get_or_create(
+            workspace=ws,
+            key=key,
+            defaults={"name": name, "color": color, "position": pos},
+        )
+        if created:
+            print(f"  + Category: {name} (in {ws.name})")
+
+    # Create the CustomField (dropdown) + options (used by Categories UI page)
+    cf, created = CustomField.objects.get_or_create(
+        workspace=ws,
+        name="Marketing Category",
+        defaults={
+            "field_type": "dropdown",
+            "creator": owner,
+            "is_global": True,
+            "position": 0,
+        },
+    )
+    if created:
+        print(f"  + CustomField: Marketing Category (in {ws.name})")
+    else:
+        print(f"  ~ CustomField exists: Marketing Category (in {ws.name})")
+
+    # Create CustomFieldOption for each category
+    for key, name, color, pos in CATEGORY_DEFS:
+        opt, created = CustomFieldOption.objects.get_or_create(
+            field=cf,
+            name=name,
+            defaults={"color": color, "position": pos},
+        )
+        if created:
+            print(f"    + Option: {name}")
+
+# ── 8. Link tasks to CustomFieldValues ───────────────────────────
+print()
+print("=" * 60)
+print("STEP 8: Linking tasks to CustomField values")
+print("=" * 60)
+
+# Build a lookup: (workspace_id, category_key) -> CustomFieldOption
+cat_key_to_option = {}
+for ws in space_to_workspace.values():
+    cf = CustomField.objects.filter(workspace=ws, name="Marketing Category").first()
+    if not cf:
+        continue
+    for opt in cf.options.all():
+        # Reverse-map option name back to category key
+        for key, name, color, pos in CATEGORY_DEFS:
+            if name == opt.name:
+                cat_key_to_option[(ws.id, key)] = (cf, opt)
+                break
+
+linked = 0
+for task in Task.objects.exclude(category="").exclude(category__isnull=True):
+    lookup = (task.workspace_id, task.category)
+    if lookup not in cat_key_to_option:
+        continue
+    cf, opt = cat_key_to_option[lookup]
+    _, created = TaskCustomFieldValue.objects.get_or_create(
+        task=task,
+        field=cf,
+        defaults={"option": opt},
+    )
+    if created:
+        linked += 1
+
+print(f"  Linked {linked} tasks to their Marketing Category custom field value")
+
 # ── Done ─────────────────────────────────────────────────────────
 print()
 print("=" * 60)
 print("IMPORT COMPLETE")
 print("=" * 60)
-print(f"  Users:      {User.objects.count()}")
-print(f"  Workspaces: {Workspace.objects.count()}")
-print(f"  Lists:      {TaskList.objects.count()}")
-print(f"  Tasks:      {Task.objects.count()}")
-print(f"  Subtasks:   {Subtask.objects.count()}")
-print(f"  Comments:   {TaskComment.objects.count()}")
+print(f"  Users:             {User.objects.count()}")
+print(f"  Workspaces:        {Workspace.objects.count()}")
+print(f"  Lists:             {TaskList.objects.count()}")
+print(f"  Tasks:             {Task.objects.count()}")
+print(f"  Subtasks:          {Subtask.objects.count()}")
+print(f"  Comments:          {TaskComment.objects.count()}")
+print(f"  Categories:        {Category.objects.count()}")
+print(f"  Custom Fields:     {CustomField.objects.count()}")
+print(f"  Field Options:     {CustomFieldOption.objects.count()}")
+print(f"  Field Values:      {TaskCustomFieldValue.objects.count()}")
