@@ -21,9 +21,8 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/workspaces/'
 LOGOUT_REDIRECT_URL = '/login/'
 
-# Email (console backend for dev; swap in an SMTP/Graph backend and secrets via env vars for production)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'no-reply@example.com'
+# Email – all notifications go via Microsoft Graph API (see notifications.py)
+DEFAULT_FROM_EMAIL = os.getenv('AZURE_MAIL_FROM', 'luma@moc-pty.com')
 
 # Azure AD / Microsoft Graph – used to send email notifications
 AZURE_TENANT_ID = os.getenv('AZURE_TENANT_ID', '')          # Directory (tenant) ID

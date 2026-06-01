@@ -1,23 +1,59 @@
-<div class="dash-card break-inside-avoid mb-4 {% if card.width == 'full' %}[column-span:all]{% endif %}"
-     data-card-id="{{ card.id }}" id="card-{{ card.id }}">
-  <div class="bg-cu-panel border border-white/10 rounded-lg overflow-hidden">
+<div class="dash-card absolute group/card"
+     data-card-id="{{ card.id }}" id="card-{{ card.id }}"
+     data-w="{{ card.col_span|default:50 }}"
+     data-h="{{ card.row_span|default:280 }}"
+     data-x="{{ card.x_pos|default:-1 }}"
+     data-y="{{ card.y_pos|default:-1 }}"
+     data-config='{{ card.config_json }}'
+     data-image="{% if card.image %}{{ card.image.url }}{% endif %}"
+     style="width: calc({{ card.col_span|default:50 }}% - 16px); height: {{ card.row_span|default:280 }}px;">
+  <div class="card-inner bg-cu-panel border border-white/10 overflow-hidden h-full flex flex-col relative"
+       style="border-radius: {{ card.config.border_radius|default:8 }}px;{% if card.config.border_color %} border-color: {{ card.config.border_color }} !important;{% endif %}{% if card.config.bg_color %} background-color: {{ card.config.bg_color }} !important;{% endif %}{% if card.image and card.config.image_mode != 'full' %} background-image: url('{{ card.image.url }}'); background-size: cover; background-position: center;{% endif %}">
+
+    <!-- ── Dark overlay for background-image mode ─────────────────── -->
+    {% if card.image and card.config.image_mode != 'full' %}
+    <div class="card-bg-overlay absolute inset-0 bg-black/40 pointer-events-none z-0"></div>
+    {% endif %}
 
     <!-- ── Card header ──────────────────────────────────────────────── -->
-    <div class="flex items-center justify-between px-4 py-2 border-b border-white/5">
+    <div class="flex items-center justify-between px-4 py-2 border-b border-white/5 relative z-[1]">
       <div class="flex items-center gap-2 min-w-0">
-        <span class="drag-handle cursor-grab text-white/25 hover:text-white/50 flex-shrink-0 select-none" title="Drag to reorder">
+        <span class="drag-handle cursor-grab text-white/25 hover:text-white/50 flex-shrink-0 select-none" title="Drag to move">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="4" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="19" cy="4" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="20" r="2"/><circle cx="12" cy="20" r="2"/><circle cx="19" cy="20" r="2"/></svg>
         </span>
-        <span class="text-xs font-semibold text-white/70 truncate">{{ card.meta.label }}</span>
+        {% if card.config.show_label != False %}
+        <span class="card-label text-xs font-semibold text-white/70 truncate">{{ card.meta.label }}</span>
+        {% endif %}
       </div>
-      <button type="button" onclick="removeCard({{ card.id }})"
-              class="text-white/25 hover:text-red-400 p-0.5 transition-colors flex-shrink-0" title="Remove card">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      <div class="flex items-center gap-0.5">
+        <button type="button" onclick="openCardSettings({{ card.id }})"
+                class="card-settings-btn text-white/25 hover:text-white/60 p-0.5 transition-colors flex-shrink-0 opacity-0 group-hover/card:opacity-100" title="Card settings">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button type="button" onclick="removeCard({{ card.id }})"
+                class="text-white/25 hover:text-red-400 p-0.5 transition-colors flex-shrink-0" title="Remove card">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
     </div>
 
+    <!-- ── Custom text (user-defined) ─────────────────────────────── -->
+    {% if card.config.custom_text %}
+    <div class="card-custom-text px-4 py-2 text-xs border-b border-white/5 relative z-[1]"
+         style="text-align: {{ card.config.text_align|default:'left' }};{% if card.config.font_color %} color: {{ card.config.font_color }};{% endif %}">
+      {{ card.config.custom_text }}
+    </div>
+    {% endif %}
+
+    <!-- ── Full-size image (inline mode) ──────────────────────────── -->
+    {% if card.image and card.config.image_mode == 'full' %}
+    <div class="card-image-wrap flex-1 min-h-0 overflow-hidden relative z-[1]">
+      <img src="{{ card.image.url }}" alt="" style="width:100%;height:100%;object-fit:contain;display:block;">
+    </div>
+    {% endif %}
+
     <!-- ── Card body ────────────────────────────────────────────────── -->
-    <div class="p-4">
+    <div class="card-body p-4 flex-1 min-h-0 overflow-auto relative z-[1]"{% if card.config.text_align %} style="text-align:{{ card.config.text_align }};"{% endif %}>
 
       {# ─── KPI: Progress ─────────────────────────────────────────── #}
       {% if card.card_type == 'progress' %}
@@ -106,7 +142,7 @@
       {# ─── Chart: Status Pie ─────────────────────────────────────── #}
       {% elif card.card_type == 'status_breakdown_pie' %}
       {% if total_tasks %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for s in statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"data":[{% for s in statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#87909e","#5f55ee","#ab4aba","#f76808","#e5484d","#008844"],"borderWidth":0}]'>
@@ -122,7 +158,7 @@
       {# ─── Chart: Status Bar ─────────────────────────────────────── #}
       {% elif card.card_type == 'status_breakdown_bar' %}
       {% if total_tasks %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for s in statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Tasks","data":[{% for s in statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#87909e","#5f55ee","#ab4aba","#f76808","#e5484d","#008844"],"borderWidth":0,"borderRadius":3}]'>
@@ -138,7 +174,7 @@
       {# ─── Chart: Assignee Pie ───────────────────────────────────── #}
       {% elif card.card_type == 'tasks_by_assignee_pie' %}
       {% if assignee_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for a in assignee_rows %}{{ a.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"data":[{% for a in assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#064b70","#1e8197","#5f55ee","#008844","#f76808","#ab4aba","#e5484d","#4e6fb6","#0a63aa","#F59E0B"],"borderWidth":0}]'>
@@ -151,7 +187,7 @@
       {# ─── Chart: Assignee Bar ───────────────────────────────────── #}
       {% elif card.card_type == 'tasks_by_assignee_bar' %}
       {% if assignee_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for a in assignee_rows %}{{ a.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Tasks","data":[{% for a in assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(5,75,112,0.65)","borderColor":"rgba(5,75,112,0.90)","borderWidth":1,"borderRadius":3}]'>
@@ -164,7 +200,7 @@
       {# ─── Chart: Priority Pie ───────────────────────────────────── #}
       {% elif card.card_type == 'priority_breakdown_pie' %}
       {% if total_tasks %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for p in priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"data":[{% for p in priority_list %}{{ p.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#94A3B8","#8BB7C4","#FB923C","#EF4444"],"borderWidth":0}]'>
@@ -180,7 +216,7 @@
       {# ─── Chart: Priority Bar ───────────────────────────────────── #}
       {% elif card.card_type == 'priority_breakdown_bar' %}
       {% if total_tasks %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for p in priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Tasks","data":[{% for p in priority_list %}{{ p.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#94A3B8","#8BB7C4","#FB923C","#EF4444"],"borderWidth":0,"borderRadius":3}]'>
@@ -196,7 +232,7 @@
       {# ─── Chart: Time by Category ───────────────────────────────── #}
       {% elif card.card_type == 'time_by_category' %}
       {% if category_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for c in category_rows %}{{ c.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Hours","data":[{% for c in category_rows %}{{ c.hours }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(118,18,250,0.55)","borderColor":"rgba(118,18,250,0.90)","borderWidth":1,"borderRadius":3}]'>
@@ -209,7 +245,7 @@
       {# ─── Chart: Time by Workspace ──────────────────────────────── #}
       {% elif card.card_type == 'time_by_workspace' %}
       {% if workspace_hour_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for r in workspace_hour_rows %}{{ r.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Hours","data":[{% for r in workspace_hour_rows %}{{ r.hours }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(255,0,128,0.50)","borderColor":"rgba(255,0,128,0.90)","borderWidth":1,"borderRadius":3}]'>
@@ -222,7 +258,7 @@
       {# ─── Chart: Activity Trend ─────────────────────────────────── #}
       {% elif card.card_type == 'activity_trend' %}
       {% if total_tasks %}
-      <div style="height:180px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='{{ chart_labels_json|safe }}'
                 data-datasets='[{"label":"Created","data":{{ chart_created_json|safe }},"backgroundColor":"rgba(5,75,112,0.55)","borderColor":"rgba(5,75,112,0.90)","borderWidth":1,"borderRadius":3},{"label":"Completed","data":{{ chart_done_json|safe }},"backgroundColor":"rgba(16,185,129,0.50)","borderColor":"rgba(16,185,129,0.90)","borderWidth":1,"borderRadius":3}]'>
@@ -371,7 +407,7 @@
       {# ─── Chart: Subtask Status Pie ────────────────────────────── #}
       {% elif card.card_type == 'subtask_status_pie' %}
       {% if total_subtasks %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for s in subtask_statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"data":[{% for s in subtask_statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#87909e","#5f55ee","#ab4aba","#f76808","#e5484d","#008844"],"borderWidth":0}]'>
@@ -384,7 +420,7 @@
       {# ─── Chart: Subtask Status Bar ────────────────────────────── #}
       {% elif card.card_type == 'subtask_status_bar' %}
       {% if total_subtasks %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for s in subtask_statuses_list %}{{ s.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Subtasks","data":[{% for s in subtask_statuses_list %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#87909e","#5f55ee","#ab4aba","#f76808","#e5484d","#008844"],"borderWidth":0,"borderRadius":3}]'>
@@ -397,7 +433,7 @@
       {# ─── Chart: Subtask Priority Pie ──────────────────────────── #}
       {% elif card.card_type == 'subtask_priority_pie' %}
       {% if total_subtasks %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for p in subtask_priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"data":[{% for p in subtask_priority_list %}{{ p.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#94A3B8","#8BB7C4","#FB923C","#EF4444"],"borderWidth":0}]'>
@@ -410,7 +446,7 @@
       {# ─── Chart: Subtasks by Assignee Bar ────────────────────────── #}
       {% elif card.card_type == 'subtask_by_assignee' %}
       {% if subtask_assignee_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for a in subtask_assignee_rows %}{{ a.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Subtasks","data":[{% for a in subtask_assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(5,75,112,0.65)","borderColor":"rgba(5,75,112,0.90)","borderWidth":1,"borderRadius":3}]'>
@@ -462,7 +498,7 @@
       {# ─── NEW: Tasks by Workspace Pie ─────────────────────────── #}
       {% elif card.card_type == 'tasks_by_workspace_pie' %}
       {% if tasks_by_workspace_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for r in tasks_by_workspace_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"data":[{% for r in tasks_by_workspace_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#064b70","#1e8197","#5f55ee","#008844","#f76808","#ab4aba","#e5484d","#4e6fb6","#0a63aa","#F59E0B"],"borderWidth":0}]'>
@@ -473,7 +509,7 @@
       {# ─── NEW: Tasks by Workspace Bar ─────────────────────────── #}
       {% elif card.card_type == 'tasks_by_workspace_bar' %}
       {% if tasks_by_workspace_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for r in tasks_by_workspace_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Tasks","data":[{% for r in tasks_by_workspace_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(5,75,112,0.65)","borderColor":"rgba(5,75,112,0.90)","borderWidth":1,"borderRadius":3}]'>
@@ -484,7 +520,7 @@
       {# ─── NEW: Tasks by List Bar ──────────────────────────────── #}
       {% elif card.card_type == 'tasks_by_list_bar' %}
       {% if tasks_by_list_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for r in tasks_by_list_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Tasks","data":[{% for r in tasks_by_list_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(10,109,158,0.65)","borderColor":"rgba(10,109,158,0.90)","borderWidth":1,"borderRadius":3}]'>
@@ -495,7 +531,7 @@
       {# ─── NEW: Tasks by Category Pie ──────────────────────────── #}
       {% elif card.card_type == 'tasks_by_category_pie' %}
       {% if tasks_by_category_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for r in tasks_by_category_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"data":[{% for r in tasks_by_category_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#064b70","#1e8197","#008844","#f76808","#ab4aba","#e5484d","#4e6fb6","#0a63aa"],"borderWidth":0}]'>
@@ -519,7 +555,7 @@
       {# ─── NEW: Subtask Charts ─────────────────────────────────── #}
       {% elif card.card_type == 'subtask_priority_bar' %}
       {% if total_subtasks %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for p in subtask_priority_list %}{{ p.label }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Subtasks","data":[{% for p in subtask_priority_list %}{{ p.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#94A3B8","#8BB7C4","#FB923C","#EF4444"],"borderWidth":0,"borderRadius":3}]'>
@@ -529,7 +565,7 @@
 
       {% elif card.card_type == 'subtask_assignee_pie' %}
       {% if subtask_assignee_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["{% for a in subtask_assignee_rows %}{{ a.name }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"data":[{% for a in subtask_assignee_rows %}{{ a.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#064b70","#1e8197","#008844","#f76808","#ab4aba","#e5484d","#4e6fb6","#0a63aa","#F59E0B","#87909e"],"borderWidth":0}]'>
@@ -539,7 +575,7 @@
 
       {% elif card.card_type == 'subtask_by_workspace' %}
       {% if subtask_by_workspace_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for r in subtask_by_workspace_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Subtasks","data":[{% for r in subtask_by_workspace_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(5,75,112,0.65)","borderColor":"rgba(5,75,112,0.90)","borderWidth":1,"borderRadius":3}]'>
@@ -549,7 +585,7 @@
 
       {% elif card.card_type == 'subtask_by_list' %}
       {% if subtask_by_list_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for r in subtask_by_list_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Subtasks","data":[{% for r in subtask_by_list_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(10,109,158,0.65)","borderColor":"rgba(10,109,158,0.90)","borderWidth":1,"borderRadius":3}]'>
@@ -559,7 +595,7 @@
 
       {% elif card.card_type == 'subtask_by_parent' %}
       {% if subtask_by_parent_status_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for r in subtask_by_parent_status_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Subtasks","data":[{% for r in subtask_by_parent_status_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":["#87909e","#5f55ee","#ab4aba","#f76808","#e5484d","#008844"],"borderWidth":0,"borderRadius":3}]'>
@@ -569,7 +605,7 @@
 
       {% elif card.card_type == 'subtask_by_category' %}
       {% if subtask_by_category_rows %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="bar"
                 data-labels='["{% for r in subtask_by_category_rows %}{{ r.name|escapejs }}{% if not forloop.last %}","{% endif %}{% endfor %}"]'
                 data-datasets='[{"label":"Subtasks","data":[{% for r in subtask_by_category_rows %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}],"backgroundColor":"rgba(118,18,250,0.55)","borderColor":"rgba(118,18,250,0.90)","borderWidth":1,"borderRadius":3}]'>
@@ -579,7 +615,7 @@
 
       {% elif card.card_type == 'subtask_done_vs_open' %}
       {% if total_subtasks %}
-      <div style="height:200px; position:relative;">
+      <div class="relative h-full" style="min-height:120px;">
         <canvas data-dash-chart="doughnut"
                 data-labels='["Done","Open"]'
                 data-datasets='[{"data":[{{ done_subtasks }},{{ open_subtasks }}],"backgroundColor":["#008844","#87909e"],"borderWidth":0}]'>
@@ -652,6 +688,13 @@
       <div class="text-sm text-white/30 text-center py-6">Unknown card type</div>
       {% endif %}
 
+    </div>
+
+    <!-- Resize handles (visible on card hover) -->
+    <div class="resize-handle resize-e absolute top-2 right-0 bottom-2 w-1.5 cursor-e-resize opacity-0 group-hover/card:opacity-100 hover:bg-cu-accent/40 rounded transition-opacity z-10"></div>
+    <div class="resize-handle resize-s absolute left-2 right-2 bottom-0 h-1.5 cursor-s-resize opacity-0 group-hover/card:opacity-100 hover:bg-cu-accent/40 rounded transition-opacity z-10"></div>
+    <div class="resize-handle resize-se absolute bottom-0 right-0 w-4 h-4 cursor-se-resize opacity-0 group-hover/card:opacity-100 z-10 flex items-end justify-end pr-1 pb-1">
+      <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M7 1v6H1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" class="text-white/30"/></svg>
     </div>
   </div>
 </div>

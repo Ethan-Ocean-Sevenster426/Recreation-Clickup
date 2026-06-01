@@ -112,13 +112,16 @@
                         </div>
                     </div>
                     {% else %}
-                    <div class="flex items-center gap-1 text-sm text-white px-2 py-0.5">
-                        {% for u in task.assignees.all %}
-                        <span class="avatar bg-cu-accent text-white" style="width:1.5rem;height:1.5rem;font-size:0.6rem">{{ u.username|slice:":1"|upper }}</span>
-                        <span>{{ u.get_full_name|default:u.username }}</span>
-                        {% empty %}
-                        <span class="text-white/40">Unassigned</span>
-                        {% endfor %}
+                    <div class="flex flex-col gap-1 px-2 py-0.5">
+                        <div class="flex items-center gap-1 text-sm text-white">
+                            {% for u in task.assignees.all %}
+                            <span class="avatar bg-cu-accent text-white" style="width:1.5rem;height:1.5rem;font-size:0.6rem">{{ u.username|slice:":1"|upper }}</span>
+                            <span>{{ u.get_full_name|default:u.username }}</span>
+                            {% empty %}
+                            <span class="text-white/40">Unassigned</span>
+                            {% endfor %}
+                        </div>
+                        <span class="text-[10px] text-white/30 italic">Only managers can assign people</span>
                     </div>
                     {% endif %}
                 </div>
@@ -234,10 +237,16 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         Time estimate
                     </span>
-                    <input value="{{ task.estimated_minutes|default_if_none:'' }}"
-                           placeholder="minutes" onblur="ajaxField('estimated_minutes', this.value)"
-                           onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
-                           class="w-32 bg-transparent border-0 text-sm hover:bg-cu-panel px-2 py-0.5 rounded outline-none">
+                    <div class="flex items-center gap-1">
+                        <input id="estHours" type="number" min="0" value=""
+                               placeholder="0" onblur="submitTimeEstimate()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                               class="w-14 bg-transparent border-0 text-sm hover:bg-cu-panel px-2 py-0.5 rounded outline-none text-center">
+                        <span class="text-xs text-white/40">h</span>
+                        <input id="estMinutes" type="number" min="0" max="59" value=""
+                               placeholder="0" onblur="submitTimeEstimate()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                               class="w-14 bg-transparent border-0 text-sm hover:bg-cu-panel px-2 py-0.5 rounded outline-none text-center">
+                        <span class="text-xs text-white/40">m</span>
+                    </div>
                 </div>
 
                 <!-- Track time -->
@@ -818,6 +827,22 @@ function ajaxField(field, value) {
         body: formData
     }).catch(function() {});
 }
+
+function submitTimeEstimate() {
+    var h = parseInt(document.getElementById('estHours').value) || 0;
+    var m = parseInt(document.getElementById('estMinutes').value) || 0;
+    var total = h * 60 + m;
+    ajaxField('estimated_minutes', total || '');
+}
+
+// Init: split stored minutes into hours + minutes fields
+(function() {
+    var total = {{ task.estimated_minutes|default_if_none:"0" }};
+    if (total > 0) {
+        document.getElementById('estHours').value = Math.floor(total / 60);
+        document.getElementById('estMinutes').value = total % 60;
+    }
+})();
 
 function ajaxCF(taskId, fieldId, paramName, value) {
     var csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;

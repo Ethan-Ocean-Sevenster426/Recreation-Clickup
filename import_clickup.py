@@ -87,6 +87,16 @@ STATUS_MAP = {
 }
 
 
+MARKETING_CAT_MAP = {
+    "social media management": "social_media",
+    "meetings":                "meetings",
+    "ad hoc marketing requests": "ad_hoc_marketing",
+    "seo":                     "seo",
+    "strategy":                "strategy",
+    "value-added service":     "value_added",
+}
+
+
 def map_priority(cu_priority):
     if not cu_priority:
         return "normal"
@@ -96,6 +106,19 @@ def map_priority(cu_priority):
 
 def map_status(cu_status_str):
     return STATUS_MAP.get(cu_status_str.lower().strip(), "todo")
+
+
+def get_marketing_category(task_data):
+    """Extract Marketing Category custom field value from a ClickUp task."""
+    for cf in task_data.get("custom_fields", []):
+        if cf.get("name") == "Marketing Category" and cf.get("value") is not None:
+            opts = cf.get("type_config", {}).get("options", [])
+            val = cf["value"]
+            idx = int(val) if isinstance(val, str) else val
+            if isinstance(idx, int) and idx < len(opts):
+                name = opts[idx].get("name", "")
+                return MARKETING_CAT_MAP.get(name.lower(), "")
+    return ""
 
 
 # ── 1. Import users ────────────────────────────────────────────────
@@ -261,6 +284,9 @@ for cu_list_id, tl in list_id_to_tasklist.items():
             # Tags
             tags = ",".join(tag["name"] for tag in t.get("tags", []))
 
+            # Marketing Category (custom field)
+            category = get_marketing_category(t)
+
             # Time estimate (ClickUp stores in ms)
             est_minutes = None
             if t.get("time_estimate"):
@@ -277,6 +303,7 @@ for cu_list_id, tl in list_id_to_tasklist.items():
                     "start_date": ts_to_date(t.get("start_date")),
                     "due_date": ts_to_date(t.get("due_date")),
                     "tags": tags,
+                    "category": category,
                     "estimated_minutes": est_minutes,
                     "created_at": ts_to_datetime(t.get("date_created")) or datetime.utcnow(),
                 },
@@ -298,7 +325,13 @@ for cu_list_id, tl in list_id_to_tasklist.items():
 
                 print(f"  + Task: {t['name'][:60]}")
             else:
-                print(f"  ~ Exists: {t['name'][:60]}")
+                # Update category on existing tasks if we got one from ClickUp
+                if category and task.category != category:
+                    task.category = category
+                    task.save(update_fields=["category"])
+                    print(f"  ~ Updated category: {t['name'][:50]} -> {category}")
+                else:
+                    print(f"  ~ Exists: {t['name'][:60]}")
 
             cu_task_id_to_task[t["id"]] = task
 

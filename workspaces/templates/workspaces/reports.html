@@ -3,20 +3,72 @@
 
 {% block content %}
 <style>
-  body.theme-light .dash-card { background: #FAFAFC !important; border-color: rgba(26,22,57,0.10) !important; }
+  /* ── Dashboard card base ──────────────────────────────────── */
+  .dash-card { transition: box-shadow 0.15s ease, opacity 0.15s ease; }
+  .cat-nav-active { background: rgba(5,75,112,0.15); color: #fff; font-weight: 600; }
+
+  /* ── Light mode overrides ──────────────────────────────────── */
+  body.theme-light .dash-card > div { background-color: #FFFFFF !important; border-color: rgba(26,22,57,0.12) !important; box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important; }
+  body.theme-light .dash-card .text-white\/70 { color: #1a1639 !important; }
+  body.theme-light .dash-card .text-white\/50,
+  body.theme-light .dash-card .text-white\/45,
+  body.theme-light .dash-card .text-white\/40,
+  body.theme-light .dash-card .text-white\/30 { color: rgba(26,22,57,0.50) !important; }
+  body.theme-light .dash-card .text-white\/25 { color: rgba(26,22,57,0.30) !important; }
+  body.theme-light .dash-card .text-white\/15 { color: rgba(26,22,57,0.18) !important; }
+  body.theme-light .dash-card .text-white { color: #1a1639 !important; }
+  body.theme-light .dash-card .bg-cu-purple .text-white,
+  body.theme-light .dash-card .bg-cu-accent .text-white { color: #FFFFFF !important; }
+  body.theme-light .dash-card .border-white\/10,
+  body.theme-light .dash-card .border-white\/5 { border-color: rgba(26,22,57,0.08) !important; }
+  body.theme-light .dash-card .divide-white\/5 > * + * { border-color: rgba(26,22,57,0.08) !important; }
+  body.theme-light .dash-card .bg-cu-sidebar { background: rgba(26,22,57,0.06) !important; }
+  body.theme-light .dash-card .hover\:text-cu-accent { color: #054B70 !important; }
+  body.theme-light .dash-card .hover\:text-red-400:hover { color: #dc2626 !important; }
   body.theme-light .dash-bar-track { background: rgba(26,22,57,0.08) !important; }
   body.theme-light .dash-kpi-sub { color: rgba(26,22,57,0.50) !important; }
   body.theme-light .dash-catalog { background: #FFFFFF !important; border-color: rgba(26,22,57,0.10) !important; }
   body.theme-light .dash-catalog-item:hover { background: rgba(26,22,57,0.04) !important; }
   body.theme-light .dash-empty-icon { color: rgba(26,22,57,0.15) !important; }
   body.theme-light #catalogModal { background: #FFFFFF !important; border-color: rgba(26,22,57,0.12) !important; }
+  body.theme-light #catalogModal .border-white\/10 { border-color: rgba(26,22,57,0.10) !important; }
   body.theme-light .cat-nav-btn { color: rgba(26,22,57,0.55) !important; }
   body.theme-light .cat-nav-btn:hover { color: #032D45 !important; background: rgba(26,22,57,0.04) !important; }
   body.theme-light .cat-nav-active { background: rgba(5,75,112,0.10) !important; color: #054B70 !important; }
-  .cat-nav-active { background: rgba(5,75,112,0.15); color: #fff; font-weight: 600; }
-  .drag-ghost { opacity: 0.4; }
-  .drag-chosen { box-shadow: 0 0 0 2px rgba(5,75,112,0.5); border-radius: 0.5rem; }
-  .dash-card { transition: box-shadow 0.15s ease; }
+  /* Catalog tile info area (light bg) — dark text in light mode */
+  body.theme-light .catalog-tile-info { background: #F0EFF5 !important; }
+  body.theme-light .catalog-tile-info .text-white { color: #032D45 !important; }
+  body.theme-light .catalog-tile-info .text-white\/70 { color: rgba(26,22,57,0.55) !important; }
+  /* Catalog tile preview area (dark bg) — keep text white in light mode */
+  body.theme-light .catalog-item .h-32 .text-white\/50 { color: rgba(255,255,255,0.50) !important; }
+  body.theme-light .catalog-item .h-32 .text-white\/40 { color: rgba(255,255,255,0.40) !important; }
+  body.theme-light .catalog-item .h-32 .text-white\/30 { color: rgba(255,255,255,0.30) !important; }
+  body.theme-light .catalog-item .h-32 .text-white\/25 { color: rgba(255,255,255,0.25) !important; }
+  body.theme-light .catalog-item .h-32 .text-white\/20 { color: rgba(255,255,255,0.20) !important; }
+  /* Catalog section headers + search in light mode */
+  body.theme-light #catalogGrid .text-white\/70 { color: rgba(26,22,57,0.50) !important; }
+  body.theme-light #catalogSearch { background: #FFFFFF !important; color: #032D45 !important; border-color: rgba(26,22,57,0.15) !important; }
+  body.theme-light #catalogSearch::placeholder { color: rgba(26,22,57,0.40) !important; }
+  body.theme-light .catalog-item { border-color: rgba(26,22,57,0.10) !important; }
+  body.theme-light .catalog-item:hover { border-color: rgba(5,75,112,0.40) !important; }
+  body.theme-light .drag-handle { color: rgba(26,22,57,0.25) !important; }
+  body.theme-light .drag-handle:hover { color: rgba(26,22,57,0.50) !important; }
+
+  /* ── Snap guide lines (Canva-style alignment) ─────────────── */
+  .snap-guide { position: absolute; z-index: 40; pointer-events: none; }
+  .snap-guide-v { width: 1px; background: #e5484d; }
+  .snap-guide-h { height: 1px; background: #e5484d; }
+
+  /* ── Resize handles ─────────────────────────────────────────── */
+  .resize-handle { transition: opacity 0.15s ease, background 0.15s ease; }
+  body.theme-light .resize-handle:hover { background: rgba(5,75,112,0.25) !important; }
+  body.theme-light .resize-se svg path { stroke: rgba(26,22,57,0.25) !important; }
+
+  /* ── Mobile: stack cards vertically ─────────────────────────── */
+  @media (max-width: 640px) {
+    #dashGrid { display: flex !important; flex-direction: column !important; gap: 12px !important; }
+    #dashGrid > .dash-card { position: relative !important; left: 0 !important; top: auto !important; width: 100% !important; }
+  }
 
   /* ── Templates bar, dropdown & modal: light mode ─────────────── */
   body.theme-light .tpl-dropdown-btn { background: #F0F0F5 !important; border-color: rgba(26,22,57,0.15) !important; color: #032D45 !important; }
@@ -33,12 +85,40 @@
   body.theme-light .hover\:border-white\/30:hover { border-color: rgba(26,22,57,0.30) !important; }
   body.theme-light .hover\:border-white\/40:hover { border-color: rgba(26,22,57,0.40) !important; }
   body.theme-light .placeholder-white\/30::placeholder { color: rgba(26,22,57,0.30) !important; }
+
+  /* ── Card settings modal: light mode ────────────────────────── */
+  body.theme-light #cardSettingsModal > div { background: #FFFFFF !important; border-color: rgba(26,22,57,0.12) !important; }
+  body.theme-light .cs-label { color: rgba(26,22,57,0.55) !important; }
+  body.theme-light .cs-input { background: #F7F7FA !important; border-color: rgba(26,22,57,0.15) !important; color: #032D45 !important; }
+  body.theme-light .cs-input::placeholder { color: rgba(26,22,57,0.35) !important; }
+  body.theme-light .cs-section { border-color: rgba(26,22,57,0.06) !important; }
+  body.theme-light .cs-align-btn { background: rgba(26,22,57,0.04) !important; color: rgba(26,22,57,0.40) !important; }
+  body.theme-light .cs-align-btn.cs-active { background: #054B70 !important; color: #FFFFFF !important; }
+  body.theme-light .cs-imgmode-btn { background: rgba(26,22,57,0.04) !important; color: rgba(26,22,57,0.40) !important; }
+  body.theme-light .cs-imgmode-btn.bg-cu-accent { background: #054B70 !important; color: #FFFFFF !important; }
+  body.theme-light .cs-toggle-track { background: rgba(26,22,57,0.12) !important; }
+  body.theme-light .cs-toggle-track.cs-on { background: #054B70 !important; }
+  body.theme-light .card-settings-btn { color: rgba(26,22,57,0.25) !important; }
+  body.theme-light .card-settings-btn:hover { color: rgba(26,22,57,0.60) !important; }
+  body.theme-light .cs-header { border-color: rgba(26,22,57,0.08) !important; }
+  body.theme-light .cs-footer { border-color: rgba(26,22,57,0.08) !important; }
+  body.theme-light .card-custom-text { border-color: rgba(26,22,57,0.06) !important; color: #1a1639 !important; }
+
+  /* ── Dashboard bg picker: light mode ────────────────────────── */
+  body.theme-light .dash-bg-btn { background: #F0F0F5 !important; border-color: rgba(26,22,57,0.15) !important; color: #032D45 !important; }
+  body.theme-light #dashBgDropdown { background: #FFFFFF !important; border-color: rgba(26,22,57,0.12) !important; }
+
+  /* ── Right-click context menu: light mode ───────────────────── */
+  body.theme-light #cardContextMenu { background: #FFFFFF !important; border-color: rgba(26,22,57,0.12) !important; box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important; }
+  body.theme-light .ctx-item { color: rgba(26,22,57,0.70) !important; }
+  body.theme-light .ctx-item:hover { background: rgba(26,22,57,0.04) !important; }
+  body.theme-light #ctxRemove { color: rgba(220,38,38,0.70) !important; }
+  body.theme-light #ctxRemove:hover { color: #dc2626 !important; background: rgba(220,38,38,0.04) !important; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
 
-<div class="flex-1 min-h-0 overflow-auto" id="dashPage">
+<div class="flex-1 min-h-0 overflow-auto" id="dashPage" style="{% if dash_bg_color %}background-color: {{ dash_bg_color }};{% endif %}{% if dash_bg_image %} background-image: url('{{ dash_bg_image }}'); background-size: cover; background-position: center; background-attachment: fixed;{% endif %}">
   <div class="px-6 py-6 max-w-[1400px] mx-auto">
 
     <!-- ── Header ──────────────────────────────────────────────────────── -->
@@ -96,14 +176,27 @@
             {% else %}All lists{% endif %}
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-          <div id="listDD" class="hidden absolute z-40 top-full mt-1 right-0 w-56 bg-cu-sidebar border border-white/10 rounded-lg shadow-xl overflow-hidden">
-            <div class="p-1.5 max-h-64 overflow-y-auto">
-              {% for l in lists_in_ws %}
-              <label class="flex items-center gap-2 px-2.5 py-1.5 rounded text-xs text-white/85 hover:bg-cu-sidebar-hover cursor-pointer">
-                <input type="checkbox" value="{{ l.id }}" class="dash-list-cb rounded border-gray-300 text-cu-accent focus:ring-cu-accent"
-                       {% if l.id in selected_list_ids %}checked{% endif %}>
-                {{ l.name }}
-              </label>
+          <div id="listDD" class="hidden absolute z-40 top-full mt-1 right-0 w-64 bg-cu-sidebar border border-white/10 rounded-lg shadow-xl overflow-hidden">
+            <div class="p-1.5 max-h-72 overflow-y-auto">
+              {% for ws, ws_lists in lists_grouped_by_ws %}
+              <div class="list-ws-group" data-ws-id="{{ ws.id }}">
+                {# Space header with select-all toggle #}
+                <label class="flex items-center gap-2 px-2.5 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider text-white/50 hover:bg-cu-sidebar-hover cursor-pointer select-none mt-{% if not forloop.first %}2{% else %}0{% endif %}">
+                  <input type="checkbox" class="dash-ws-all-cb rounded border-gray-300 text-cu-accent focus:ring-cu-accent"
+                         data-ws="{{ ws.id }}" onchange="toggleSpaceLists(this)">
+                  <span class="w-4 h-4 rounded bg-cu-accent text-white text-[8px] flex items-center justify-center flex-shrink-0 font-semibold">{{ ws.name|slice:":1"|upper }}</span>
+                  {{ ws.name }}
+                </label>
+                {# Individual lists #}
+                {% for l in ws_lists %}
+                <label class="flex items-center gap-2 px-2.5 pl-7 py-1 rounded text-xs text-white/85 hover:bg-cu-sidebar-hover cursor-pointer">
+                  <input type="checkbox" value="{{ l.id }}" class="dash-list-cb rounded border-gray-300 text-cu-accent focus:ring-cu-accent"
+                         data-ws="{{ ws.id }}" {% if l.id in selected_list_ids %}checked{% endif %}
+                         onchange="updateSpaceAllCb(this)">
+                  {{ l.name }}
+                </label>
+                {% endfor %}
+              </div>
               {% endfor %}
             </div>
             <div class="flex items-center justify-between px-2.5 py-2 border-t border-white/10">
@@ -180,6 +273,48 @@
         </div>
       </div>
 
+      <!-- Dashboard background colour -->
+      <div class="relative" id="dashBgWrap">
+        <button type="button" onclick="toggleDashBgPicker()"
+                class="dash-bg-btn text-xs px-2.5 py-1.5 border border-white/15 rounded bg-cu-panel text-white/85 cursor-pointer inline-flex items-center gap-1.5 hover:border-white/30 transition" title="Dashboard background">
+          <span id="dashBgSwatch" class="w-3.5 h-3.5 rounded border border-white/20" style="background: {{ dash_bg_color|default:'transparent' }};"></span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        </button>
+        <div id="dashBgDropdown" class="hidden absolute right-0 top-full mt-1 z-50 bg-cu-sidebar border border-white/10 rounded-lg shadow-xl p-3 w-56">
+          <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">Background Colour</label>
+          <div class="flex items-center gap-2">
+            <input type="color" id="dashBgInput" value="{{ dash_bg_color|default:'#0f0d1a' }}" class="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent">
+            <input type="text" id="dashBgHex" value="{{ dash_bg_color }}" placeholder="transparent"
+                   class="cs-input flex-1 text-xs px-2 py-1.5 rounded bg-cu-panel border border-white/10 text-white placeholder-white/30 outline-none">
+          </div>
+          <div class="flex items-center gap-1.5 mt-2">
+            <button type="button" onclick="setDashBg('')" class="text-[10px] text-white/40 hover:text-white px-2 py-1 rounded hover:bg-white/5 transition">Reset</button>
+            <button type="button" onclick="applyDashBg()" class="text-[10px] ml-auto px-3 py-1 rounded bg-cu-accent text-white font-semibold hover:bg-cu-accent/90 transition">Apply</button>
+          </div>
+          <div class="border-t border-white/10 mt-3 pt-3">
+            <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">Background Image</label>
+            {% if dash_bg_image %}
+            <div id="dashBgImgPreview" class="relative mb-2 rounded overflow-hidden">
+              <img src="{{ dash_bg_image }}" alt="" class="w-full h-16 object-cover rounded">
+              <button type="button" onclick="removeDashBgImage()"
+                      class="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-black/60 text-white/80 hover:text-red-400 text-xs transition">&times;</button>
+            </div>
+            {% else %}
+            <div id="dashBgImgPreview" class="hidden relative mb-2 rounded overflow-hidden">
+              <img src="" alt="" class="w-full h-16 object-cover rounded">
+              <button type="button" onclick="removeDashBgImage()"
+                      class="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-black/60 text-white/80 hover:text-red-400 text-xs transition">&times;</button>
+            </div>
+            {% endif %}
+            <label class="flex items-center gap-2 px-3 py-2 rounded border border-dashed border-white/15 hover:border-white/30 cursor-pointer transition text-[11px] text-white/40 hover:text-white/70">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload image
+              <input type="file" accept="image/*" class="hidden" onchange="uploadDashBgImage(this)">
+            </label>
+          </div>
+        </div>
+      </div>
+
       <!-- Quick save button (always visible) -->
       <button type="button" onclick="openSaveTemplate()"
               class="tpl-save-btn text-xs px-2.5 py-1 rounded-full border border-dashed border-white/20 text-white/40 hover:text-white hover:border-white/40 transition-colors inline-flex items-center gap-1">
@@ -234,9 +369,9 @@
       </div>
     </div>
 
-    <!-- ── Card grid or empty state ────────────────────────────────────── -->
+    <!-- ── Card canvas (free positioning) ────────────────────────────────── -->
     {% if dashboard_cards %}
-    <div id="dashGrid" class="columns-1 sm:columns-2 gap-4">
+    <div id="dashGrid" class="relative w-full" style="min-height: 600px;">
       {% for card in dashboard_cards %}
       {% include 'workspaces/_dashboard_card.html' %}
       {% endfor %}
@@ -261,6 +396,200 @@
   </div>
 </div>
 
+<!-- ── Card Settings Modal ──────────────────────────────────────────────── -->
+<div id="cardSettingsModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+  <div class="bg-cu-sidebar border border-white/10 rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+    <div class="cs-header px-5 py-4 border-b border-white/10 flex items-center justify-between">
+      <div>
+        <h3 class="text-sm font-semibold text-white">Card Settings</h3>
+        <p id="csCardName" class="text-[11px] text-white/45 mt-0.5">—</p>
+      </div>
+      <button type="button" onclick="closeCardSettings()" class="text-white/30 hover:text-white p-1 transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="px-5 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+
+      <!-- Show label toggle -->
+      <div class="cs-section flex items-center justify-between">
+        <span class="cs-label text-[11px] font-semibold text-white/50 uppercase tracking-wide">Show Label</span>
+        <button type="button" id="csShowLabel" onclick="toggleCsSetting('show_label')"
+                class="cs-toggle-track relative w-9 h-5 rounded-full bg-white/10 transition-colors cursor-pointer">
+          <span class="cs-toggle-dot absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform"></span>
+        </button>
+      </div>
+
+      <!-- Border radius -->
+      <div class="cs-section">
+        <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">Border Radius</label>
+        <div class="flex items-center gap-2">
+          <input type="range" id="csBorderRadius" min="0" max="24" value="8"
+                 class="flex-1 h-1 accent-cu-accent cursor-pointer" oninput="csPreview()">
+          <span id="csBorderRadiusVal" class="text-[11px] text-white/50 w-6 text-right tabular-nums">8</span>
+        </div>
+      </div>
+
+      <!-- Border colour -->
+      <div class="cs-section">
+        <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">Border Colour</label>
+        <div class="flex items-center gap-2">
+          <input type="color" id="csBorderColor" value="#ffffff" class="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent">
+          <input type="text" id="csBorderColorHex" placeholder="default"
+                 class="cs-input flex-1 text-xs px-2 py-1.5 rounded bg-cu-panel border border-white/10 text-white placeholder-white/30 outline-none" oninput="csPreview()">
+          <button type="button" onclick="document.getElementById('csBorderColorHex').value=''; csPreview();"
+                  class="text-[10px] text-white/30 hover:text-white px-1.5 py-1 rounded hover:bg-white/5">&times;</button>
+        </div>
+      </div>
+
+      <!-- Background colour -->
+      <div class="cs-section">
+        <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">Background Colour</label>
+        <div class="flex items-center gap-2">
+          <input type="color" id="csBgColor" value="#1a1639" class="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent">
+          <input type="text" id="csBgColorHex" placeholder="default"
+                 class="cs-input flex-1 text-xs px-2 py-1.5 rounded bg-cu-panel border border-white/10 text-white placeholder-white/30 outline-none" oninput="csPreview()">
+          <button type="button" onclick="document.getElementById('csBgColorHex').value=''; csPreview();"
+                  class="text-[10px] text-white/30 hover:text-white px-1.5 py-1 rounded hover:bg-white/5">&times;</button>
+        </div>
+      </div>
+
+      <!-- Font colour -->
+      <div class="cs-section">
+        <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">Font Colour</label>
+        <div class="flex items-center gap-2">
+          <input type="color" id="csFontColor" value="#ffffff" class="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent">
+          <input type="text" id="csFontColorHex" placeholder="default"
+                 class="cs-input flex-1 text-xs px-2 py-1.5 rounded bg-cu-panel border border-white/10 text-white placeholder-white/30 outline-none" oninput="csPreview()">
+          <button type="button" onclick="document.getElementById('csFontColorHex').value=''; csPreview();"
+                  class="text-[10px] text-white/30 hover:text-white px-1.5 py-1 rounded hover:bg-white/5">&times;</button>
+        </div>
+      </div>
+
+      <!-- Show Subtitle toggle (only for KPI cards) -->
+      <div class="cs-section" id="csShowSubSection" style="display:none;">
+        <div class="flex items-center justify-between">
+          <span class="cs-label text-[11px] font-semibold text-white/50 uppercase tracking-wide">Show Subtitle</span>
+          <button type="button" id="csShowSubtitle" onclick="toggleCsSetting('show_subtitle')"
+                  class="cs-toggle-track relative w-9 h-5 rounded-full bg-white/10 transition-colors cursor-pointer">
+            <span class="cs-toggle-dot absolute left-0.5 top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI subtitle (only for KPI cards) -->
+      <div class="cs-section" id="csKpiSubSection" style="display:none;">
+        <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">Card Subtitle</label>
+        <input type="text" id="csKpiSubtitle" placeholder="e.g. tasks currently in progress"
+               class="cs-input w-full text-xs px-3 py-2 rounded bg-cu-panel border border-white/10 text-white placeholder-white/30 outline-none" maxlength="200">
+        <div class="text-[9px] text-white/25 mt-1">Override the description text below the value</div>
+      </div>
+
+      <!-- KPI font size (only for KPI cards) -->
+      <div class="cs-section" id="csKpiFontSizeSection" style="display:none;">
+        <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">KPI Font Size</label>
+        <div class="flex items-center gap-3">
+          <input type="range" id="csKpiFontSize" min="16" max="72" value="30" class="flex-1 accent-cu-accent h-1 cursor-pointer" oninput="document.getElementById('csKpiFontSizeVal').textContent=this.value;">
+          <span id="csKpiFontSizeVal" class="text-xs text-white/60 tabular-nums w-8 text-right">30</span>
+        </div>
+        <div class="text-[9px] text-white/25 mt-1">Size of the KPI value (default 30px)</div>
+      </div>
+
+      <!-- KPI font colour (only for KPI cards) -->
+      <div class="cs-section" id="csKpiFontColorSection" style="display:none;">
+        <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">KPI Font Colour</label>
+        <div class="flex items-center gap-2">
+          <input type="color" id="csKpiFontColor" value="#ffffff" class="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent"
+                 oninput="document.getElementById('csKpiFontColorHex').value=this.value;">
+          <input type="text" id="csKpiFontColorHex" placeholder="default"
+                 class="cs-input flex-1 text-xs px-2 py-1.5 rounded bg-cu-panel border border-white/10 text-white placeholder-white/30 outline-none">
+          <button type="button" onclick="document.getElementById('csKpiFontColorHex').value='';"
+                  class="text-[10px] text-white/30 hover:text-white px-1.5 py-1 rounded hover:bg-white/5">&times;</button>
+        </div>
+        <div class="text-[9px] text-white/25 mt-1">Override the default KPI value colour</div>
+      </div>
+
+      <!-- Custom text -->
+      <div class="cs-section">
+        <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">Custom Text</label>
+        <input type="text" id="csCustomText" placeholder="Add a note or title..."
+               class="cs-input w-full text-xs px-3 py-2 rounded bg-cu-panel border border-white/10 text-white placeholder-white/30 outline-none" maxlength="200">
+      </div>
+
+      <!-- Text alignment -->
+      <div class="cs-section">
+        <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">Text Alignment</label>
+        <div class="flex gap-1" id="csAlignGroup">
+          <button type="button" data-align="left" onclick="setCsAlign('left')"
+                  class="cs-align-btn flex-1 py-1.5 rounded text-center text-xs bg-white/5 text-white/40 hover:bg-white/10 transition" title="Left">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mx-auto"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>
+          </button>
+          <button type="button" data-align="center" onclick="setCsAlign('center')"
+                  class="cs-align-btn flex-1 py-1.5 rounded text-center text-xs bg-white/5 text-white/40 hover:bg-white/10 transition" title="Centre">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mx-auto"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+          </button>
+          <button type="button" data-align="right" onclick="setCsAlign('right')"
+                  class="cs-align-btn flex-1 py-1.5 rounded text-center text-xs bg-white/5 text-white/40 hover:bg-white/10 transition" title="Right">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mx-auto"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Card image -->
+      <div class="cs-section">
+        <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">Card Image</label>
+        <div id="csImagePreview" class="hidden relative mb-2 rounded overflow-hidden">
+          <img id="csImageImg" src="" alt="" class="w-full h-20 object-cover rounded">
+          <button type="button" onclick="removeCardImage()"
+                  class="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-black/60 text-white/80 hover:text-red-400 text-xs transition">&times;</button>
+        </div>
+        <label class="flex items-center gap-2 px-3 py-2 rounded border border-dashed border-white/15 hover:border-white/30 cursor-pointer transition text-[11px] text-white/40 hover:text-white/70">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Upload image
+          <input type="file" id="csImageInput" accept="image/*" class="hidden" onchange="uploadCardImage(this)">
+        </label>
+      </div>
+
+      <!-- Image display mode (only visible when card has an image) -->
+      <div class="cs-section" id="csImageModeSection" style="display:none;">
+        <label class="cs-label block text-[10px] font-semibold text-white/50 uppercase tracking-wide mb-1.5">Image Display</label>
+        <div class="flex gap-1" id="csImageModeGroup">
+          <button type="button" data-mode="background" onclick="setCsImageMode('background')"
+                  class="cs-imgmode-btn flex-1 py-1.5 rounded text-center text-[11px] bg-white/5 text-white/40 hover:bg-white/10 transition">
+            Background
+          </button>
+          <button type="button" data-mode="full" onclick="setCsImageMode('full')"
+                  class="cs-imgmode-btn flex-1 py-1.5 rounded text-center text-[11px] bg-white/5 text-white/40 hover:bg-white/10 transition">
+            Full Image
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="cs-footer flex items-center justify-end gap-2 px-5 py-3 border-t border-white/10">
+      <button type="button" onclick="closeCardSettings()" class="text-xs px-3 py-1.5 rounded text-white/60 hover:text-white transition-colors">Cancel</button>
+      <button type="button" onclick="saveCardSettings()" class="text-xs px-4 py-1.5 rounded-md bg-cu-accent text-white font-semibold hover:bg-cu-accent/90 transition-colors">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Right-click context menu ─────────────────────────────────────────── -->
+<div id="cardContextMenu" class="hidden fixed z-[70] bg-cu-sidebar border border-white/10 rounded-lg shadow-xl py-1 min-w-[160px]">
+  <button type="button" id="ctxCustomize" class="ctx-item w-full flex items-center gap-2.5 px-3 py-2 text-xs text-white/70 hover:bg-white/5 transition-colors text-left">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+    Customise
+  </button>
+  <button type="button" id="ctxUploadImage" class="ctx-item w-full flex items-center gap-2.5 px-3 py-2 text-xs text-white/70 hover:bg-white/5 transition-colors text-left">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    Upload Image
+    <input type="file" accept="image/*" class="hidden" id="ctxImageInput">
+  </button>
+  <div class="border-t border-white/5 my-1"></div>
+  <button type="button" id="ctxRemove" class="ctx-item w-full flex items-center gap-2.5 px-3 py-2 text-xs text-red-400/70 hover:bg-red-500/5 hover:text-red-400 transition-colors text-left">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    Remove Card
+  </button>
+</div>
+
 <!-- ── Add Card catalog modal ──────────────────────────────────────────── -->
 {% include 'workspaces/_dashboard_catalog.html' %}
 
@@ -268,7 +597,6 @@
 (function() {
     var csrf = '{{ csrf_token }}';
     var addUrl = '{% url "workspaces:dashboard_card_add" %}';
-    var reorderUrl = '{% url "workspaces:dashboard_card_reorder" %}';
     var dataUrl = '{% url "workspaces:dashboard_card_data" %}';
     var filterParams = '{% for wid in selected_ws_ids %}&workspace={{ wid }}{% endfor %}{% for lid in selected_list_ids %}&list={{ lid }}{% endfor %}&period={{ period }}';
 
@@ -316,8 +644,9 @@
                 btn.classList.add('text-white/55', 'hover:text-white', 'hover:bg-white/5');
             }
         });
-        // Show/hide sections
+        // Show/hide sections (clear inline display set by filterCatalog too)
         document.querySelectorAll('#catalogGrid .catalog-section').forEach(function(s) {
+            s.style.display = '';
             if (s.dataset.section === cat) {
                 s.classList.remove('hidden');
             } else {
@@ -333,6 +662,151 @@
         });
     };
 
+    // ── Auto-layout: place cards that don't have positions yet ──────
+    var CARD_GAP = 16;
+    function autoLayoutCards() {
+        var grid = document.getElementById('dashGrid');
+        if (!grid) return;
+        var gW = grid.getBoundingClientRect().width;
+        var cards = grid.querySelectorAll('.dash-card');
+        var needsSave = [];
+
+        // Pass 1: restore already-positioned cards, collect their bounding boxes
+        var boxes = [];
+        cards.forEach(function(card) {
+            var x = parseInt(card.dataset.x);
+            var y = parseInt(card.dataset.y);
+            if (x >= 0 && y >= 0) {
+                card.style.left = x + 'px';
+                card.style.top = y + 'px';
+                boxes.push({
+                    l: x, t: y,
+                    r: x + ((parseInt(card.dataset.w) || 50) / 100 * gW - CARD_GAP),
+                    b: y + (parseInt(card.dataset.h) || 280)
+                });
+            }
+        });
+
+        // Helper: check if a rect overlaps any existing box (with gap padding)
+        function hitsAny(l, t, r, b) {
+            for (var i = 0; i < boxes.length; i++) {
+                var o = boxes[i];
+                if (l < o.r + CARD_GAP && r > o.l - CARD_GAP &&
+                    t < o.b + CARD_GAP && b > o.t - CARD_GAP) return true;
+            }
+            return false;
+        }
+
+        // Pass 2: auto-place unpositioned cards using collision-avoidance scan
+        cards.forEach(function(card) {
+            if (parseInt(card.dataset.x) >= 0 && parseInt(card.dataset.y) >= 0) return;
+            var wPct = parseInt(card.dataset.w) || 50;
+            var cardW = (wPct / 100) * gW - CARD_GAP;
+            var cardH = parseInt(card.dataset.h) || 280;
+
+            var px = 0, py = 0, placed = false, safety = 0;
+            while (!placed && safety < 500) {
+                safety++;
+                if (px + cardW > gW + 1) {
+                    px = 0;
+                    py += cardH + CARD_GAP;
+                    continue;
+                }
+                if (!hitsAny(px, py, px + cardW, py + cardH)) {
+                    placed = true;
+                } else {
+                    // Jump past the blocking box to avoid slow scanning
+                    var jumped = false;
+                    for (var i = 0; i < boxes.length; i++) {
+                        var o = boxes[i];
+                        if (px < o.r + CARD_GAP && px + cardW > o.l - CARD_GAP &&
+                            py < o.b + CARD_GAP && py + cardH > o.t - CARD_GAP) {
+                            px = o.r + CARD_GAP;
+                            jumped = true;
+                            break;
+                        }
+                    }
+                    if (!jumped) px += CARD_GAP;
+                }
+            }
+            card.style.left = px + 'px';
+            card.style.top = py + 'px';
+            card.dataset.x = px;
+            card.dataset.y = py;
+            needsSave.push({ id: card.dataset.cardId, x: px, y: py, w: wPct, h: cardH });
+            boxes.push({ l: px, t: py, r: px + cardW, b: py + cardH });
+        });
+
+        updateCanvasHeight();
+        // Persist auto-computed positions to backend so they survive refresh
+        needsSave.forEach(function(s) {
+            fetch('{% url "workspaces:dashboard_card_resize" card_id=0 %}'.replace('/0/', '/' + s.id + '/'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                body: JSON.stringify({ col_span: s.w, row_span: s.h, x_pos: s.x, y_pos: s.y })
+            });
+        });
+    }
+
+    function updateCanvasHeight() {
+        var grid = document.getElementById('dashGrid');
+        if (!grid) return;
+        var maxBottom = 600;
+        grid.querySelectorAll('.dash-card').forEach(function(card) {
+            var top = parseInt(card.style.top) || 0;
+            var h = parseInt(card.dataset.h) || 280;
+            maxBottom = Math.max(maxBottom, top + h + 60);
+        });
+        grid.style.minHeight = maxBottom + 'px';
+    }
+
+    // Run auto-layout on page load
+    autoLayoutCards();
+
+    // ── Apply custom KPI subtitles from config ──────────────────────
+    function applyKpiSubtitle(card) {
+        var cfg = {};
+        try { cfg = JSON.parse(card.dataset.config || '{}'); } catch(e) {}
+        var sub = card.querySelector('.dash-kpi-sub');
+        if (!sub) return;
+        if (!sub.dataset.defaultText) sub.dataset.defaultText = sub.textContent;
+        sub.textContent = cfg.kpi_subtitle || sub.dataset.defaultText;
+    }
+    document.querySelectorAll('.dash-card').forEach(applyKpiSubtitle);
+
+    // ── Apply KPI font size, colour, alignment, subtitle visibility ─
+    function applyKpiStyles(card) {
+        var cfg = {};
+        try { cfg = JSON.parse(card.dataset.config || '{}'); } catch(e) {}
+        var kpiEls = card.querySelectorAll('.text-3xl');
+        kpiEls.forEach(function(el) {
+            // Font size
+            if (cfg.kpi_font_size && cfg.kpi_font_size !== 30) {
+                el.style.fontSize = cfg.kpi_font_size + 'px';
+            } else {
+                el.style.fontSize = '';
+            }
+            // KPI-specific colour takes priority, then general font_color
+            var color = cfg.kpi_font_color || cfg.font_color || '';
+            if (color) {
+                el.style.setProperty('color', color, 'important');
+            } else {
+                el.style.removeProperty('color');
+            }
+        });
+        // Text alignment on card body
+        var body = card.querySelector('.card-body');
+        if (body) {
+            body.style.textAlign = cfg.text_align || '';
+        }
+        // Subtitle visibility
+        var subs = card.querySelectorAll('.dash-kpi-sub');
+        subs.forEach(function(sub) {
+            sub.style.display = cfg.hide_subtitle ? 'none' : '';
+        });
+    }
+    document.querySelectorAll('.dash-card').forEach(applyKpiStyles);
+
     // ── Add card ─────────────────────────────────────────────────────
     window.addCard = function(cardType) {
         var fd = new FormData();
@@ -342,11 +816,9 @@
             .then(function(r) { return r.json(); })
             .then(function(resp) {
                 if (resp.error) return;
-                // Fetch rendered card HTML
                 fetch(dataUrl + '?card_id=' + resp.id + filterParams)
                     .then(function(r) { return r.text(); })
                     .then(function(html) {
-                        // Ensure grid exists (switch from empty state if needed)
                         var grid = document.getElementById('dashGrid');
                         if (!grid) {
                             var empty = document.getElementById('dashEmpty');
@@ -354,38 +826,17 @@
                             var container = document.querySelector('#dashPage .px-6');
                             grid = document.createElement('div');
                             grid.id = 'dashGrid';
-                            grid.className = 'columns-1 sm:columns-2 gap-4';
+                            grid.className = 'relative w-full';
+                            grid.style.minHeight = '600px';
                             container.appendChild(grid);
-                            // Init SortableJS on new grid
-                            if (window.Sortable) {
-                                Sortable.create(grid, {
-                                    animation: 150,
-                                    handle: '.drag-handle',
-                                    ghostClass: 'drag-ghost',
-                                    chosenClass: 'drag-chosen',
-                                    onEnd: function() {
-                                        var order = [];
-                                        grid.querySelectorAll('[data-card-id]').forEach(function(el) {
-                                            order.push(parseInt(el.dataset.cardId));
-                                        });
-                                        fetch(reorderUrl, {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-                                            body: JSON.stringify({ order: order })
-                                        });
-                                    }
-                                });
-                            }
                         }
-                        // Insert card
                         var tmp = document.createElement('div');
                         tmp.innerHTML = html.trim();
                         while (tmp.firstChild) {
                             grid.appendChild(tmp.firstChild);
                         }
-                        // Init any new charts
+                        autoLayoutCards();
                         if (window.initDashCharts) initDashCharts();
-                        // Close catalog
                         closeCatalog();
                     });
             });
@@ -409,27 +860,317 @@
           });
     };
 
-    // ── SortableJS ───────────────────────────────────────────────────
-    var grid = document.getElementById('dashGrid');
-    if (grid && window.Sortable) {
-        Sortable.create(grid, {
-            animation: 150,
-            handle: '.drag-handle',
-            ghostClass: 'drag-ghost',
-            chosenClass: 'drag-chosen',
-            onEnd: function() {
-                var order = [];
-                grid.querySelectorAll('[data-card-id]').forEach(function(el) {
-                    order.push(parseInt(el.dataset.cardId));
-                });
-                fetch(reorderUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-                    body: JSON.stringify({ order: order })
+    // ── Snap-align helpers ──────────────────────────────────────────
+    var SNAP_THRESHOLD = 8; // px distance to trigger snap
+    var _guides = [];
+
+    function clearGuides() {
+        _guides.forEach(function(el) { el.remove(); });
+        _guides = [];
+    }
+
+    function showGuide(grid, type, pos) {
+        var g = document.createElement('div');
+        g.className = 'snap-guide ' + (type === 'v' ? 'snap-guide-v' : 'snap-guide-h');
+        var gH = grid.scrollHeight || grid.offsetHeight;
+        var gW = grid.getBoundingClientRect().width;
+        if (type === 'v') {
+            g.style.left = pos + 'px';
+            g.style.top = '0';
+            g.style.height = gH + 'px';
+        } else {
+            g.style.top = pos + 'px';
+            g.style.left = '0';
+            g.style.width = gW + 'px';
+        }
+        grid.appendChild(g);
+        _guides.push(g);
+    }
+
+    function getCardEdges(card) {
+        var x = parseInt(card.style.left) || 0;
+        var y = parseInt(card.style.top) || 0;
+        var w = card.getBoundingClientRect().width;
+        var h = parseInt(card.dataset.h) || 280;
+        return {
+            left: x, right: x + w, centerX: x + w / 2,
+            top: y, bottom: y + h, centerY: y + h / 2
+        };
+    }
+
+    function snapPosition(grid, dragCard, rawX, rawY) {
+        clearGuides();
+        var others = grid.querySelectorAll('.dash-card');
+        var dragW = dragCard.getBoundingClientRect().width;
+        var dragH = parseInt(dragCard.dataset.h) || 280;
+        var gW = grid.getBoundingClientRect().width;
+
+        // Edges of the dragged card at its proposed position
+        var dl = rawX, dr = rawX + dragW, dcx = rawX + dragW / 2;
+        var dt = rawY, db = rawY + dragH, dcy = rawY + dragH / 2;
+
+        var snapX = null, snapY = null;
+        var guidesV = [], guidesH = [];
+
+        others.forEach(function(other) {
+            if (other === dragCard) return;
+            var e = getCardEdges(other);
+
+            // Vertical snaps (x-axis alignment)
+            // Left-to-left
+            if (Math.abs(dl - e.left) < SNAP_THRESHOLD) { snapX = e.left; guidesV.push(e.left); }
+            // Right-to-right
+            if (Math.abs(dr - e.right) < SNAP_THRESHOLD) { snapX = e.right - dragW; guidesV.push(e.right); }
+            // Left-to-right
+            if (Math.abs(dl - e.right) < SNAP_THRESHOLD) { snapX = e.right; guidesV.push(e.right); }
+            // Right-to-left
+            if (Math.abs(dr - e.left) < SNAP_THRESHOLD) { snapX = e.left - dragW; guidesV.push(e.left); }
+            // Center-to-center (x)
+            if (Math.abs(dcx - e.centerX) < SNAP_THRESHOLD) { snapX = e.centerX - dragW / 2; guidesV.push(e.centerX); }
+
+            // Horizontal snaps (y-axis alignment)
+            // Top-to-top
+            if (Math.abs(dt - e.top) < SNAP_THRESHOLD) { snapY = e.top; guidesH.push(e.top); }
+            // Bottom-to-bottom
+            if (Math.abs(db - e.bottom) < SNAP_THRESHOLD) { snapY = e.bottom - dragH; guidesH.push(e.bottom); }
+            // Top-to-bottom
+            if (Math.abs(dt - e.bottom) < SNAP_THRESHOLD) { snapY = e.bottom; guidesH.push(e.bottom); }
+            // Bottom-to-top
+            if (Math.abs(db - e.top) < SNAP_THRESHOLD) { snapY = e.top - dragH; guidesH.push(e.top); }
+            // Center-to-center (y)
+            if (Math.abs(dcy - e.centerY) < SNAP_THRESHOLD) { snapY = e.centerY - dragH / 2; guidesH.push(e.centerY); }
+        });
+
+        // Also snap to canvas center
+        var canvasCx = gW / 2;
+        if (Math.abs(dcx - canvasCx) < SNAP_THRESHOLD) { snapX = canvasCx - dragW / 2; guidesV.push(canvasCx); }
+        // Snap to canvas left edge
+        if (Math.abs(dl) < SNAP_THRESHOLD) { snapX = 0; guidesV.push(0); }
+        // Snap to canvas right edge
+        if (Math.abs(dr - gW) < SNAP_THRESHOLD) { snapX = gW - dragW; guidesV.push(gW); }
+        // Snap to top
+        if (Math.abs(dt) < SNAP_THRESHOLD) { snapY = 0; guidesH.push(0); }
+
+        var finalX = snapX !== null ? snapX : rawX;
+        var finalY = snapY !== null ? snapY : rawY;
+
+        // Draw guide lines (deduplicate)
+        var seenV = {};
+        guidesV.forEach(function(v) { var k = Math.round(v); if (!seenV[k]) { seenV[k] = true; showGuide(grid, 'v', k); } });
+        var seenH = {};
+        guidesH.forEach(function(v) { var k = Math.round(v); if (!seenH[k]) { seenH[k] = true; showGuide(grid, 'h', k); } });
+
+        return { x: Math.max(0, finalX), y: Math.max(0, finalY) };
+    }
+
+    // ── Drag-to-move cards (via drag handle) ────────────────────────
+    (function() {
+        var dragActive = null;
+
+        document.addEventListener('mousedown', function(e) {
+            var handle = e.target.closest('.drag-handle');
+            if (!handle) return;
+            e.preventDefault();
+            var card = handle.closest('.dash-card');
+            if (!card) return;
+            var rect = card.getBoundingClientRect();
+            dragActive = {
+                card: card,
+                id: card.dataset.cardId,
+                offsetX: e.clientX - rect.left,
+                offsetY: e.clientY - rect.top
+            };
+            card.style.zIndex = '30';
+            card.style.opacity = '0.85';
+            card.style.boxShadow = '0 12px 40px rgba(0,0,0,0.3)';
+            document.body.style.cursor = 'grabbing';
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!dragActive) return;
+            var grid = document.getElementById('dashGrid');
+            if (!grid) return;
+            var gRect = grid.getBoundingClientRect();
+            var rawX = e.clientX - gRect.left - dragActive.offsetX;
+            var rawY = e.clientY - gRect.top - dragActive.offsetY;
+            rawX = Math.max(0, rawX);
+            rawY = Math.max(0, rawY);
+            var snapped = snapPosition(grid, dragActive.card, rawX, rawY);
+            dragActive.card.style.left = snapped.x + 'px';
+            dragActive.card.style.top = snapped.y + 'px';
+        });
+
+        document.addEventListener('mouseup', function(e) {
+            if (!dragActive) return;
+            var a = dragActive;
+            dragActive = null;
+            clearGuides();
+            a.card.style.zIndex = '';
+            a.card.style.opacity = '';
+            a.card.style.boxShadow = '';
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            var x = parseInt(a.card.style.left) || 0;
+            var y = parseInt(a.card.style.top) || 0;
+            a.card.dataset.x = x;
+            a.card.dataset.y = y;
+            updateCanvasHeight();
+            // Save position to backend
+            fetch('{% url "workspaces:dashboard_card_resize" card_id=0 %}'.replace('/0/', '/' + a.id + '/'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                body: JSON.stringify({
+                    col_span: parseInt(a.card.dataset.w) || 50,
+                    row_span: parseInt(a.card.dataset.h) || 280,
+                    x_pos: x, y_pos: y
+                })
+            });
+        });
+    })();
+
+    // ── Card Resize (free-form pixel-based with snap guides) ──────────
+    (function() {
+        var MIN_W = 25, MAX_W = 100;     // width percentage bounds
+        var MIN_H = 150, MAX_H = 1200;   // height pixel bounds
+        var active = null;
+        var _throttle = 0;
+
+        function snapResize(grid, card, rawRightPx, rawBottomPx, isR, isB) {
+            clearGuides();
+            var others = grid.querySelectorAll('.dash-card');
+            var gW = grid.getBoundingClientRect().width;
+            var cardLeft = parseInt(card.style.left) || 0;
+            var cardTop = parseInt(card.style.top) || 0;
+            var snappedRight = rawRightPx;
+            var snappedBottom = rawBottomPx;
+            var guidesV = [], guidesH = [];
+
+            others.forEach(function(other) {
+                if (other === card) return;
+                var e = getCardEdges(other);
+
+                if (isR) {
+                    // Right edge snaps to other edges
+                    if (Math.abs(rawRightPx - e.left) < SNAP_THRESHOLD) { snappedRight = e.left; guidesV.push(e.left); }
+                    if (Math.abs(rawRightPx - e.right) < SNAP_THRESHOLD) { snappedRight = e.right; guidesV.push(e.right); }
+                    if (Math.abs(rawRightPx - e.centerX) < SNAP_THRESHOLD) { snappedRight = e.centerX; guidesV.push(e.centerX); }
+                }
+                if (isB) {
+                    // Bottom edge snaps to other edges
+                    if (Math.abs(rawBottomPx - e.top) < SNAP_THRESHOLD) { snappedBottom = e.top; guidesH.push(e.top); }
+                    if (Math.abs(rawBottomPx - e.bottom) < SNAP_THRESHOLD) { snappedBottom = e.bottom; guidesH.push(e.bottom); }
+                    if (Math.abs(rawBottomPx - e.centerY) < SNAP_THRESHOLD) { snappedBottom = e.centerY; guidesH.push(e.centerY); }
+                }
+            });
+
+            // Canvas edge snaps
+            if (isR) {
+                if (Math.abs(rawRightPx - gW) < SNAP_THRESHOLD) { snappedRight = gW; guidesV.push(gW); }
+                var canvasCx = gW / 2;
+                if (Math.abs(rawRightPx - canvasCx) < SNAP_THRESHOLD) { snappedRight = canvasCx; guidesV.push(canvasCx); }
+            }
+
+            // Draw guides
+            var seenV = {};
+            guidesV.forEach(function(v) { var k = Math.round(v); if (!seenV[k]) { seenV[k] = true; showGuide(grid, 'v', k); } });
+            var seenH = {};
+            guidesH.forEach(function(v) { var k = Math.round(v); if (!seenH[k]) { seenH[k] = true; showGuide(grid, 'h', k); } });
+
+            return { right: snappedRight, bottom: snappedBottom };
+        }
+
+        document.addEventListener('mousedown', function(e) {
+            var h = e.target.closest('.resize-handle');
+            if (!h) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var card = h.closest('.dash-card');
+            var g = document.getElementById('dashGrid');
+            if (!card || !g) return;
+            var gW = g.getBoundingClientRect().width;
+            active = {
+                card: card, id: card.dataset.cardId,
+                sx: e.clientX, sy: e.clientY,
+                sw: card.getBoundingClientRect().width,
+                sh: card.getBoundingClientRect().height,
+                gW: gW,
+                cardLeft: parseInt(card.style.left) || 0,
+                cardTop: parseInt(card.style.top) || 0,
+                isR: h.classList.contains('resize-e') || h.classList.contains('resize-se'),
+                isB: h.classList.contains('resize-s') || h.classList.contains('resize-se')
+            };
+            card.style.zIndex = '20';
+            card.style.outline = '2px solid rgba(5,75,112,0.4)';
+            card.style.outlineOffset = '-1px';
+            document.body.style.cursor = getComputedStyle(h).cursor;
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!active) return;
+            var a = active;
+            var grid = document.getElementById('dashGrid');
+            if (!grid) return;
+
+            var rawRight = a.cardLeft + a.sw + (e.clientX - a.sx);
+            var rawBottom = a.cardTop + a.sh + (e.clientY - a.sy);
+            var snapped = snapResize(grid, a.card, rawRight, rawBottom, a.isR, a.isB);
+
+            if (a.isR) {
+                var newW = snapped.right - a.cardLeft;
+                var pct = Math.round(newW / a.gW * 100);
+                pct = Math.max(MIN_W, Math.min(MAX_W, pct));
+                a.card.style.width = 'calc(' + pct + '% - 16px)';
+                a.card.dataset.w = pct;
+            }
+            if (a.isB) {
+                var newH = Math.round(snapped.bottom - a.cardTop);
+                newH = Math.max(MIN_H, Math.min(MAX_H, newH));
+                a.card.style.height = newH + 'px';
+                a.card.dataset.h = newH;
+            }
+            // Throttled chart resize
+            var now = Date.now();
+            if (now - _throttle > 100) {
+                _throttle = now;
+                a.card.querySelectorAll('canvas').forEach(function(c) {
+                    try { var ch = Chart.getChart(c); if (ch) ch.resize(); } catch(ex) {}
                 });
             }
         });
-    }
+
+        document.addEventListener('mouseup', function(e) {
+            if (!active) return;
+            var a = active;
+            active = null;
+            clearGuides();
+            a.card.style.zIndex = '';
+            a.card.style.outline = '';
+            a.card.style.outlineOffset = '';
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            var wPct = parseInt(a.card.dataset.w) || 50;
+            var hPx = parseInt(a.card.dataset.h) || 280;
+            updateCanvasHeight();
+            // Save to backend
+            fetch('{% url "workspaces:dashboard_card_resize" card_id=0 %}'.replace('/0/', '/' + a.id + '/'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                body: JSON.stringify({
+                    col_span: wPct, row_span: hPx,
+                    x_pos: parseInt(a.card.dataset.x) || 0,
+                    y_pos: parseInt(a.card.dataset.y) || 0
+                })
+            });
+            // Final chart re-render
+            setTimeout(function() {
+                a.card.querySelectorAll('canvas').forEach(function(c) {
+                    try { var ch = Chart.getChart(c); if (ch) ch.resize(); } catch(ex) {}
+                });
+            }, 50);
+        });
+    })();
 
     // ── Init charts inside cards ─────────────────────────────────────
     window.initDashCharts = function() {
@@ -482,7 +1223,36 @@
     window.clearDashFilter = function(type) {
         var cls = type === 'ws' ? '.dash-ws-cb' : '.dash-list-cb';
         document.querySelectorAll(cls).forEach(function(cb) { cb.checked = false; });
+        if (type === 'list') {
+            document.querySelectorAll('.dash-ws-all-cb').forEach(function(cb) { cb.checked = false; });
+        }
     };
+    // Select/deselect all lists within a space
+    window.toggleSpaceLists = function(allCb) {
+        var wsId = allCb.dataset.ws;
+        document.querySelectorAll('.dash-list-cb[data-ws="' + wsId + '"]').forEach(function(cb) {
+            cb.checked = allCb.checked;
+        });
+    };
+    // Update the space-all checkbox when individual list checkboxes change
+    window.updateSpaceAllCb = function(listCb) {
+        var wsId = listCb.dataset.ws;
+        var allInSpace = document.querySelectorAll('.dash-list-cb[data-ws="' + wsId + '"]');
+        var checkedInSpace = document.querySelectorAll('.dash-list-cb[data-ws="' + wsId + '"]:checked');
+        var allCb = document.querySelector('.dash-ws-all-cb[data-ws="' + wsId + '"]');
+        if (allCb) {
+            allCb.checked = allInSpace.length === checkedInSpace.length;
+            allCb.indeterminate = checkedInSpace.length > 0 && checkedInSpace.length < allInSpace.length;
+        }
+    };
+    // On page load, sync space-all checkboxes with pre-checked lists
+    document.querySelectorAll('.dash-ws-all-cb').forEach(function(allCb) {
+        var wsId = allCb.dataset.ws;
+        var allInSpace = document.querySelectorAll('.dash-list-cb[data-ws="' + wsId + '"]');
+        var checkedInSpace = document.querySelectorAll('.dash-list-cb[data-ws="' + wsId + '"]:checked');
+        allCb.checked = allInSpace.length > 0 && allInSpace.length === checkedInSpace.length;
+        allCb.indeterminate = checkedInSpace.length > 0 && checkedInSpace.length < allInSpace.length;
+    });
     window.applyDashFilter = function() {
         var params = new URLSearchParams();
         params.set('period', '{{ period }}');
@@ -593,16 +1363,528 @@
             headers: { 'X-CSRFToken': '{{ csrf_token }}' }
         }).then(function() { window.location.href = '{% url "workspaces:reports" %}'; });
     };
+    // ── Dashboard Background Picker ──────────────────────────────
+    var _dashBgOpen = false;
+    window.toggleDashBgPicker = function() {
+        _dashBgOpen = !_dashBgOpen;
+        document.getElementById('dashBgDropdown').classList.toggle('hidden', !_dashBgOpen);
+    };
+    window.closeDashBgPicker = function() {
+        _dashBgOpen = false;
+        document.getElementById('dashBgDropdown').classList.add('hidden');
+    };
+    document.addEventListener('click', function(e) {
+        if (_dashBgOpen && !document.getElementById('dashBgWrap').contains(e.target)) {
+            closeDashBgPicker();
+        }
+    });
+    // Sync color picker → hex input
+    document.getElementById('dashBgInput').addEventListener('input', function() {
+        document.getElementById('dashBgHex').value = this.value;
+    });
+    window.setDashBg = function(color) {
+        document.getElementById('dashBgHex').value = color;
+        if (color) document.getElementById('dashBgInput').value = color;
+        applyDashBg();
+    };
+    window.applyDashBg = function() {
+        var color = document.getElementById('dashBgHex').value.trim();
+        var page = document.getElementById('dashPage');
+        page.style.backgroundColor = color || '';
+        document.getElementById('dashBgSwatch').style.background = color || 'transparent';
+        closeDashBgPicker();
+        fetch('{% url "workspaces:dashboard_pref_update" %}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+            body: JSON.stringify({ bg_color: color })
+        });
+    };
+
+    // ── Dashboard Background Image ──────────────────────────────
+    var dashBgImageUrl = '{% url "workspaces:dashboard_bg_image" %}';
+    window.uploadDashBgImage = function(input) {
+        if (!input.files || !input.files[0]) return;
+        var fd = new FormData();
+        fd.append('image', input.files[0]);
+        fd.append('csrfmiddlewaretoken', csrf);
+        fetch(dashBgImageUrl, { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.image_url) {
+                    var page = document.getElementById('dashPage');
+                    page.style.backgroundImage = "url('" + data.image_url + "')";
+                    page.style.backgroundSize = 'cover';
+                    page.style.backgroundPosition = 'center';
+                    page.style.backgroundAttachment = 'fixed';
+                    var preview = document.getElementById('dashBgImgPreview');
+                    preview.classList.remove('hidden');
+                    preview.querySelector('img').src = data.image_url;
+                }
+            });
+        input.value = '';
+    };
+    window.removeDashBgImage = function() {
+        var fd = new FormData();
+        fd.append('remove', '1');
+        fd.append('csrfmiddlewaretoken', csrf);
+        fetch(dashBgImageUrl, { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function() {
+                document.getElementById('dashPage').style.backgroundImage = '';
+                var preview = document.getElementById('dashBgImgPreview');
+                preview.classList.add('hidden');
+                preview.querySelector('img').src = '';
+            });
+    };
+
+    // ── Card Image Upload ───────────────────────────────────────
+    var cardImageUrl = '{% url "workspaces:dashboard_card_image" card_id=0 %}';
+    window.uploadCardImage = function(input) {
+        if (!input.files || !input.files[0] || !_csCardId) return;
+        var fd = new FormData();
+        fd.append('image', input.files[0]);
+        fd.append('csrfmiddlewaretoken', csrf);
+        fetch(cardImageUrl.replace('/0/', '/' + _csCardId + '/'), { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.image_url) {
+                    // Update preview in modal
+                    var preview = document.getElementById('csImagePreview');
+                    preview.classList.remove('hidden');
+                    document.getElementById('csImageImg').src = data.image_url;
+                    // Show image mode selector
+                    document.getElementById('csImageModeSection').style.display = '';
+                    // Update card DOM with correct display mode
+                    var card = document.getElementById('card-' + _csCardId);
+                    if (card) {
+                        card.dataset.image = data.image_url;
+                        applyImageMode(card, _csImageMode);
+                    }
+                }
+            });
+        input.value = '';
+    };
+    window.removeCardImage = function() {
+        if (!_csCardId) return;
+        var fd = new FormData();
+        fd.append('remove', '1');
+        fd.append('csrfmiddlewaretoken', csrf);
+        fetch(cardImageUrl.replace('/0/', '/' + _csCardId + '/'), { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function() {
+                document.getElementById('csImagePreview').classList.add('hidden');
+                document.getElementById('csImageImg').src = '';
+                // Hide image mode selector
+                document.getElementById('csImageModeSection').style.display = 'none';
+                var card = document.getElementById('card-' + _csCardId);
+                if (card) {
+                    card.dataset.image = '';
+                    applyImageMode(card, _csImageMode);
+                }
+            });
+    };
+
+    // ── Card Settings Modal ──────────────────────────────────────
+    var _csCardId = null;
+    var _csConfig = {};
+    var _csShowLabel = true;
+    var _csShowSubtitle = true;
+    var _csAlign = 'left';
+    var _csImageMode = 'background';
+    var styleUrl = '{% url "workspaces:dashboard_card_style" card_id=0 %}';
+
+    window.openCardSettings = function(cardId) {
+        _csCardId = cardId;
+        var card = document.getElementById('card-' + cardId);
+        if (!card) return;
+        try { _csConfig = JSON.parse(card.dataset.config || '{}'); } catch(e) { _csConfig = {}; }
+
+        // Populate fields
+        var label = card.querySelector('.card-label');
+        document.getElementById('csCardName').textContent = label ? label.textContent : 'Card #' + cardId;
+
+        // Show label toggle
+        _csShowLabel = _csConfig.show_label !== false;
+        updateToggle('csShowLabel', _csShowLabel);
+
+        // Border radius
+        var br = _csConfig.border_radius !== undefined ? _csConfig.border_radius : 8;
+        document.getElementById('csBorderRadius').value = br;
+        document.getElementById('csBorderRadiusVal').textContent = br;
+
+        // Border colour
+        document.getElementById('csBorderColorHex').value = _csConfig.border_color || '';
+        if (_csConfig.border_color) document.getElementById('csBorderColor').value = _csConfig.border_color;
+
+        // Background colour
+        document.getElementById('csBgColorHex').value = _csConfig.bg_color || '';
+        if (_csConfig.bg_color) document.getElementById('csBgColor').value = _csConfig.bg_color;
+
+        // Font colour
+        document.getElementById('csFontColorHex').value = _csConfig.font_color || '';
+        if (_csConfig.font_color) document.getElementById('csFontColor').value = _csConfig.font_color;
+
+        // Custom text
+        document.getElementById('csCustomText').value = _csConfig.custom_text || '';
+
+        // KPI subtitle (only show for cards that have a .dash-kpi-sub element)
+        var hasKpiSub = card.querySelector('.dash-kpi-sub');
+        var hasKpiValue = card.querySelector('.text-3xl');
+
+        // Show subtitle toggle
+        document.getElementById('csShowSubSection').style.display = hasKpiSub ? '' : 'none';
+        _csShowSubtitle = _csConfig.hide_subtitle ? false : true;
+        updateToggle('csShowSubtitle', _csShowSubtitle);
+
+        document.getElementById('csKpiSubSection').style.display = hasKpiSub ? '' : 'none';
+        document.getElementById('csKpiSubtitle').value = _csConfig.kpi_subtitle || '';
+
+        // KPI font size
+        document.getElementById('csKpiFontSizeSection').style.display = hasKpiValue ? '' : 'none';
+        var kfs = _csConfig.kpi_font_size || 30;
+        document.getElementById('csKpiFontSize').value = kfs;
+        document.getElementById('csKpiFontSizeVal').textContent = kfs;
+
+        // KPI font colour
+        document.getElementById('csKpiFontColorSection').style.display = hasKpiValue ? '' : 'none';
+        document.getElementById('csKpiFontColorHex').value = _csConfig.kpi_font_color || '';
+        if (_csConfig.kpi_font_color) document.getElementById('csKpiFontColor').value = _csConfig.kpi_font_color;
+
+        // Text alignment
+        _csAlign = _csConfig.text_align || 'left';
+        updateAlignButtons(_csAlign);
+
+        // Card image
+        var imgUrl = card.dataset.image || '';
+        var imgPreview = document.getElementById('csImagePreview');
+        if (imgUrl) {
+            imgPreview.classList.remove('hidden');
+            document.getElementById('csImageImg').src = imgUrl;
+        } else {
+            imgPreview.classList.add('hidden');
+            document.getElementById('csImageImg').src = '';
+        }
+
+        // Image display mode
+        _csImageMode = _csConfig.image_mode || 'background';
+        updateImageModeButtons(_csImageMode);
+        document.getElementById('csImageModeSection').style.display = imgUrl ? '' : 'none';
+
+        document.getElementById('cardSettingsModal').classList.remove('hidden');
+    };
+
+    window.closeCardSettings = function() {
+        document.getElementById('cardSettingsModal').classList.add('hidden');
+        _csCardId = null;
+    };
+
+    function updateToggle(id, on) {
+        var track = document.getElementById(id);
+        var dot = track.querySelector('.cs-toggle-dot');
+        if (on) {
+            track.classList.add('cs-on');
+            track.style.background = '';
+            track.classList.add('bg-cu-accent');
+            dot.style.transform = 'translateX(16px)';
+        } else {
+            track.classList.remove('cs-on', 'bg-cu-accent');
+            dot.style.transform = 'translateX(0)';
+        }
+    }
+
+    window.toggleCsSetting = function(key) {
+        if (key === 'show_label') {
+            _csShowLabel = !_csShowLabel;
+            updateToggle('csShowLabel', _csShowLabel);
+        } else if (key === 'show_subtitle') {
+            _csShowSubtitle = !_csShowSubtitle;
+            updateToggle('csShowSubtitle', _csShowSubtitle);
+        }
+    };
+
+    function updateAlignButtons(align) {
+        document.querySelectorAll('#csAlignGroup .cs-align-btn').forEach(function(btn) {
+            if (btn.dataset.align === align) {
+                btn.classList.add('cs-active', 'bg-cu-accent', 'text-white');
+                btn.classList.remove('bg-white/5', 'text-white/40');
+            } else {
+                btn.classList.remove('cs-active', 'bg-cu-accent', 'text-white');
+                btn.classList.add('bg-white/5', 'text-white/40');
+            }
+        });
+    }
+    window.setCsAlign = function(align) {
+        _csAlign = align;
+        updateAlignButtons(align);
+    };
+
+    function updateImageModeButtons(mode) {
+        document.querySelectorAll('#csImageModeGroup .cs-imgmode-btn').forEach(function(btn) {
+            if (btn.dataset.mode === mode) {
+                btn.classList.add('bg-cu-accent', 'text-white');
+                btn.classList.remove('bg-white/5', 'text-white/40');
+            } else {
+                btn.classList.remove('bg-cu-accent', 'text-white');
+                btn.classList.add('bg-white/5', 'text-white/40');
+            }
+        });
+    }
+    window.setCsImageMode = function(mode) {
+        _csImageMode = mode;
+        updateImageModeButtons(mode);
+    };
+
+    // Sync colour pickers → hex inputs
+    document.getElementById('csBorderColor').addEventListener('input', function() {
+        document.getElementById('csBorderColorHex').value = this.value;
+        csPreview();
+    });
+    document.getElementById('csBgColor').addEventListener('input', function() {
+        document.getElementById('csBgColorHex').value = this.value;
+        csPreview();
+    });
+    document.getElementById('csFontColor').addEventListener('input', function() {
+        document.getElementById('csFontColorHex').value = this.value;
+        csPreview();
+    });
+
+    // Live preview as user types
+    window.csPreview = function() {
+        if (!_csCardId) return;
+        var card = document.getElementById('card-' + _csCardId);
+        if (!card) return;
+        var inner = card.querySelector('.card-inner');
+        if (!inner) return;
+        var br = document.getElementById('csBorderRadius').value;
+        document.getElementById('csBorderRadiusVal').textContent = br;
+        inner.style.borderRadius = br + 'px';
+        var bc = document.getElementById('csBorderColorHex').value.trim();
+        if (bc) { inner.style.setProperty('border-color', bc, 'important'); }
+        else { inner.style.removeProperty('border-color'); }
+        var bg = document.getElementById('csBgColorHex').value.trim();
+        if (bg) { inner.style.setProperty('background-color', bg, 'important'); }
+        else { inner.style.removeProperty('background-color'); }
+    };
+
+    // Border radius slider → preview
+    document.getElementById('csBorderRadius').addEventListener('input', csPreview);
+
+    window.saveCardSettings = function() {
+        if (!_csCardId) return;
+        var config = {
+            show_label: _csShowLabel,
+            hide_subtitle: !_csShowSubtitle,
+            border_radius: parseInt(document.getElementById('csBorderRadius').value) || 8,
+            border_color: document.getElementById('csBorderColorHex').value.trim(),
+            bg_color: document.getElementById('csBgColorHex').value.trim(),
+            font_color: document.getElementById('csFontColorHex').value.trim(),
+            custom_text: document.getElementById('csCustomText').value.trim(),
+            kpi_subtitle: document.getElementById('csKpiSubtitle').value.trim(),
+            kpi_font_size: parseInt(document.getElementById('csKpiFontSize').value) || 30,
+            kpi_font_color: document.getElementById('csKpiFontColorHex').value.trim(),
+            text_align: _csAlign,
+            image_mode: _csImageMode
+        };
+
+        // Apply to card DOM immediately
+        var card = document.getElementById('card-' + _csCardId);
+        if (card) {
+            card.dataset.config = JSON.stringify(config);
+            var inner = card.querySelector('.card-inner');
+            if (inner) {
+                inner.style.borderRadius = config.border_radius + 'px';
+                if (config.border_color) {
+                    inner.style.setProperty('border-color', config.border_color, 'important');
+                } else {
+                    inner.style.removeProperty('border-color');
+                }
+                if (config.bg_color) {
+                    inner.style.setProperty('background-color', config.bg_color, 'important');
+                } else {
+                    inner.style.removeProperty('background-color');
+                }
+            }
+            // Label visibility
+            var label = card.querySelector('.card-label');
+            if (label) label.style.display = config.show_label ? '' : 'none';
+
+            // Custom text
+            var existingText = card.querySelector('.card-custom-text');
+            if (config.custom_text) {
+                if (existingText) {
+                    existingText.textContent = config.custom_text;
+                    existingText.style.textAlign = config.text_align;
+                    existingText.style.color = config.font_color || '';
+                } else {
+                    var textDiv = document.createElement('div');
+                    textDiv.className = 'card-custom-text px-4 py-2 text-xs border-b border-white/5 relative z-[1]';
+                    textDiv.style.textAlign = config.text_align;
+                    if (config.font_color) textDiv.style.color = config.font_color;
+                    textDiv.textContent = config.custom_text;
+                    var header = inner.querySelector('.flex.items-center.justify-between');
+                    if (header) header.after(textDiv);
+                }
+            } else if (existingText) {
+                existingText.remove();
+            }
+
+            // Image display mode
+            applyImageMode(card, config.image_mode);
+
+            // KPI subtitle
+            applyKpiSubtitle(card);
+
+            // KPI font size & colour
+            applyKpiStyles(card);
+        }
+
+        // Save to backend
+        fetch(styleUrl.replace('/0/', '/' + _csCardId + '/'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+            body: JSON.stringify(config)
+        });
+
+        closeCardSettings();
+    };
+
+    // Apply background vs full image mode to a card element
+    function applyImageMode(card, mode) {
+        var inner = card.querySelector('.card-inner');
+        if (!inner) return;
+        var imgUrl = card.dataset.image || '';
+        var overlay = inner.querySelector('.card-bg-overlay');
+        var imgWrap = inner.querySelector('.card-image-wrap');
+
+        if (!imgUrl) {
+            // No image — clear everything
+            inner.style.backgroundImage = '';
+            inner.style.backgroundSize = '';
+            inner.style.backgroundPosition = '';
+            if (overlay) overlay.remove();
+            if (imgWrap) imgWrap.remove();
+            return;
+        }
+
+        if (mode === 'full') {
+            // Remove background-image, add/update inline image (capped at 40% card height)
+            inner.style.backgroundImage = '';
+            inner.style.backgroundSize = '';
+            inner.style.backgroundPosition = '';
+            if (overlay) overlay.remove();
+            if (imgWrap) {
+                imgWrap.querySelector('img').src = imgUrl;
+            } else {
+                imgWrap = document.createElement('div');
+                imgWrap.className = 'card-image-wrap flex-1 min-h-0 overflow-hidden relative z-[1]';
+                var img = document.createElement('img');
+                img.src = imgUrl;
+                img.alt = '';
+                img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;';
+                imgWrap.appendChild(img);
+                var customText = inner.querySelector('.card-custom-text');
+                if (customText) { customText.after(imgWrap); }
+                else {
+                    var header = inner.querySelector('.flex.items-center.justify-between');
+                    if (header) header.after(imgWrap);
+                }
+            }
+        } else {
+            // Background mode — CSS background-image on card-inner + dark overlay
+            if (imgWrap) imgWrap.remove();
+            inner.style.backgroundImage = "url('" + imgUrl + "')";
+            inner.style.backgroundSize = 'cover';
+            inner.style.backgroundPosition = 'center';
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'card-bg-overlay absolute inset-0 bg-black/40 pointer-events-none z-0';
+                inner.insertBefore(overlay, inner.firstChild);
+            }
+        }
+    }
+
+    // ── Right-click context menu ──────────────────────────────────
+    var _ctxCardId = null;
+    var ctxMenu = document.getElementById('cardContextMenu');
+
+    function closeContextMenu() {
+        ctxMenu.classList.add('hidden');
+        _ctxCardId = null;
+    }
+
+    document.addEventListener('contextmenu', function(e) {
+        var card = e.target.closest('.dash-card');
+        if (!card) { closeContextMenu(); return; }
+        e.preventDefault();
+        _ctxCardId = card.dataset.cardId;
+
+        // Position the menu at cursor
+        var x = e.clientX, y = e.clientY;
+        ctxMenu.classList.remove('hidden');
+        // Adjust if near edges
+        var mW = ctxMenu.offsetWidth, mH = ctxMenu.offsetHeight;
+        if (x + mW > window.innerWidth) x = window.innerWidth - mW - 8;
+        if (y + mH > window.innerHeight) y = window.innerHeight - mH - 8;
+        ctxMenu.style.left = x + 'px';
+        ctxMenu.style.top = y + 'px';
+    });
+
+    // Hide on click outside or scroll
+    document.addEventListener('click', function() { closeContextMenu(); });
+    document.addEventListener('scroll', function() { closeContextMenu(); }, true);
+
+    // Context menu actions
+    document.getElementById('ctxCustomize').addEventListener('click', function() {
+        if (_ctxCardId) openCardSettings(parseInt(_ctxCardId));
+        closeContextMenu();
+    });
+    document.getElementById('ctxRemove').addEventListener('click', function() {
+        if (_ctxCardId) removeCard(parseInt(_ctxCardId));
+        closeContextMenu();
+    });
+    document.getElementById('ctxUploadImage').addEventListener('click', function() {
+        if (!_ctxCardId) return;
+        document.getElementById('ctxImageInput').click();
+    });
+    document.getElementById('ctxImageInput').addEventListener('change', function() {
+        if (!this.files || !this.files[0] || !_ctxCardId) return;
+        var cardId = _ctxCardId;
+        var fd = new FormData();
+        fd.append('image', this.files[0]);
+        fd.append('csrfmiddlewaretoken', csrf);
+        fetch(cardImageUrl.replace('/0/', '/' + cardId + '/'), { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.image_url) {
+                    var card = document.getElementById('card-' + cardId);
+                    if (card) {
+                        card.dataset.image = data.image_url;
+                        var cfg = {};
+                        try { cfg = JSON.parse(card.dataset.config || '{}'); } catch(e) {}
+                        applyImageMode(card, cfg.image_mode || 'background');
+                    }
+                }
+            });
+        this.value = '';
+        closeContextMenu();
+    });
+
     // Close modal on escape
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
+            closeContextMenu();
+            closeCardSettings();
             closeSaveTemplate();
             closeTplDropdown();
+            closeDashBgPicker();
         }
     });
-    // Close modal on backdrop click
+    // Close modals on backdrop click
     document.getElementById('saveTemplateModal').addEventListener('click', function(e) {
         if (e.target === this) closeSaveTemplate();
+    });
+    document.getElementById('cardSettingsModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCardSettings();
     });
 })();
 </script>

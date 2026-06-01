@@ -233,28 +233,91 @@ def _otp_email_html(user, otp_code, is_new_user=True):
         intro = f'A password reset was requested for <strong>{display_name}</strong>.'
         action_text = 'Reset your password'
 
-    return f'''
-    <div style="font-family:'Poppins',sans-serif;max-width:560px;margin:0 auto;">
-        <div style="background:#054B70;padding:16px 24px;border-radius:8px 8px 0 0;">
-            <span style="color:#fff;font-size:18px;font-weight:600;">Luma</span>
-        </div>
-        <div style="background:#ffffff;padding:24px;border:1px solid #e5e5e5;border-top:none;border-radius:0 0 8px 8px;">
-            <h2 style="margin:0 0 12px;font-size:16px;color:#1A1639;">{heading}</h2>
-            <p style="margin:4px 0;color:#333;">{intro}</p>
-            <p style="margin:4px 0;color:#333;">{action_text} using this one-time code:</p>
-            <div style="text-align:center;margin:20px 0;">
-                <span style="display:inline-block;font-size:32px;font-weight:700;letter-spacing:8px;color:#054B70;background:#F5F4FA;padding:14px 28px;border-radius:8px;border:2px dashed #054B70;">{otp_code}</span>
-            </div>
-            <p style="margin:4px 0;color:#888;font-size:13px;">This code expires in 24 hours.</p>
-            <a href="{verify_url}" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#054B70;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:500;">
-                {action_text}
-            </a>
-        </div>
-        <p style="text-align:center;margin-top:12px;font-size:11px;color:#999;">
-            If you did not request this, you can safely ignore this email.
-        </p>
-    </div>
-    '''
+    return f'''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{heading}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f7;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;">
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f4f4f7;">
+<tr><td align="center" style="padding:24px 16px;">
+
+<!-- Main card -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="560" style="max-width:560px;width:100%;">
+  <!-- Header -->
+  <tr>
+    <td bgcolor="#054B70" style="background-color:#054B70;padding:18px 28px;font-size:20px;font-weight:700;color:#ffffff;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;">
+      Luma
+    </td>
+  </tr>
+  <!-- Body -->
+  <tr>
+    <td bgcolor="#ffffff" style="background-color:#ffffff;padding:28px;border-left:1px solid #e5e5e5;border-right:1px solid #e5e5e5;border-bottom:1px solid #e5e5e5;">
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td style="font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:18px;font-weight:700;color:#1A1639;padding-bottom:12px;">
+            {heading}
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:14px;color:#333333;line-height:22px;padding-bottom:4px;">
+            {intro}
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:14px;color:#333333;line-height:22px;padding-bottom:20px;">
+            {action_text} using this one-time code:
+          </td>
+        </tr>
+        <!-- OTP code box -->
+        <tr>
+          <td align="center" style="padding-bottom:20px;">
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td bgcolor="#F5F4FA" style="background-color:#F5F4FA;padding:16px 32px;font-family:Arial,'Courier New',monospace;font-size:32px;font-weight:700;letter-spacing:8px;color:#054B70;border:2px dashed #054B70;">
+                  {otp_code}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:13px;color:#888888;padding-bottom:20px;">
+            This code expires in 24 hours.
+          </td>
+        </tr>
+        <!-- CTA button -->
+        <tr>
+          <td>
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              <tr>
+                <td bgcolor="#054B70" style="background-color:#054B70;padding:12px 24px;">
+                  <a href="{verify_url}" style="font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;display:inline-block;">{action_text}</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- Footer -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="560" style="max-width:560px;width:100%;">
+  <tr>
+    <td align="center" style="padding:14px 0;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;font-size:11px;color:#999999;">
+      If you did not request this, you can safely ignore this email.
+    </td>
+  </tr>
+</table>
+
+</td></tr>
+</table>
+</body>
+</html>'''
 
 
 def generate_otp():

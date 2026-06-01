@@ -48,6 +48,10 @@ DEFAULT_CATEGORIES = [
     ('research', 'Research', 'green'),
     ('support', 'Support', 'yellow'),
     ('strategy', 'Strategy', 'red'),
+    ('social_media', 'Social Media Management', 'pink'),
+    ('ad_hoc_marketing', 'Ad Hoc Marketing Requests', 'cyan'),
+    ('seo', 'SEO', 'teal'),
+    ('value_added', 'Value-Added Service', 'indigo'),
     ('other', 'Other', 'gray'),
 ]
 
@@ -177,6 +181,10 @@ class Task(models.Model):
         ('research', 'Research'),
         ('support', 'Support'),
         ('strategy', 'Strategy'),
+        ('social_media', 'Social Media Management'),
+        ('ad_hoc_marketing', 'Ad Hoc Marketing Requests'),
+        ('seo', 'SEO'),
+        ('value_added', 'Value-Added Service'),
         ('other', 'Other'),
     ]
 
@@ -459,6 +467,11 @@ class DashboardCard(models.Model):
     position = models.IntegerField(default=0)
     width = models.CharField(max_length=10, choices=WIDTH_CHOICES, default='half')
     config = models.JSONField(default=dict, blank=True)
+    col_span = models.IntegerField(default=50)   # width as percentage (50=half, 100=full)
+    row_span = models.IntegerField(default=280)  # height in pixels
+    x_pos = models.IntegerField(default=-1)      # x position in pixels (-1 = auto-layout)
+    y_pos = models.IntegerField(default=-1)       # y position in pixels (-1 = auto-layout)
+    image = models.ImageField(upload_to='dashboard/cards/', blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -466,6 +479,19 @@ class DashboardCard(models.Model):
 
     def __str__(self):
         return f'{self.user.username} – {self.card_type} @{self.position}'
+
+
+class DashboardPreference(models.Model):
+    """Per-user dashboard-level settings (background colour, etc.)."""
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='dashboard_prefs',
+    )
+    bg_color = models.CharField(max_length=20, default='', blank=True)
+    bg_image = models.ImageField(upload_to='dashboard/bg/', blank=True, default='')
+
+    def __str__(self):
+        return f'{self.user.username} dashboard prefs'
 
 
 class ReportTemplate(models.Model):

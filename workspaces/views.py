@@ -17,7 +17,7 @@ from django.db.models import Max
 
 from .models import (
     CUSTOM_FIELD_TYPES, Category, CustomField, CustomFieldOption,
-    CustomFieldPermission, DashboardCard, DEFAULT_CATEGORIES, ListMember,
+    CustomFieldPermission, DashboardCard, DashboardPreference, DEFAULT_CATEGORIES, ListMember,
     Notification, Organization, ReportTemplate, STATUS_COLORS, Subtask, Task,
     TaskComment, TaskCustomFieldValue, TaskList, TaskStatus, TimeEntry,
     ViewPreference, Workspace, WorkspaceMember,
@@ -2206,8 +2206,14 @@ def _compute_dashboard_data(request):
     selected_workspaces = [w for w in workspaces if w.id in ws_ids] if ws_ids else []
     selected_ws = selected_workspaces[0] if len(selected_workspaces) == 1 else None  # compat
     lists_in_ws = []
+    lists_grouped_by_ws = []  # [(ws, [list, ...]), ...]
     if selected_workspaces:
-        lists_in_ws = list(TaskList.objects.filter(workspace__in=selected_workspaces).order_by('name'))
+        lists_in_ws = list(TaskList.objects.filter(workspace__in=selected_workspaces).select_related('workspace').order_by('workspace__name', 'name'))
+        from collections import OrderedDict
+        ws_groups = OrderedDict()
+        for tl in lists_in_ws:
+            ws_groups.setdefault(tl.workspace, []).append(tl)
+        lists_grouped_by_ws = list(ws_groups.items())
     selected_lists = [l for l in lists_in_ws if l.id in list_ids] if list_ids else []
     selected_list = selected_lists[0] if len(selected_lists) == 1 else None  # compat
 
@@ -2545,6 +2551,7 @@ def _compute_dashboard_data(request):
         'selected_ws_ids': selected_ws_ids,
         'selected_list_ids': selected_list_ids,
         'lists_in_ws': lists_in_ws,
+        'lists_grouped_by_ws': lists_grouped_by_ws,
         # KPI numbers
         'total_tasks': total_tasks,
         'open_tasks': open_tasks,
@@ -2642,19 +2649,27 @@ def reports(request):
             DashboardCard.objects.filter(user=request.user).delete()
             for item in tpl.card_layout:
                 if item.get('card_type') in CARD_CATALOG:
+                    w = item.get('width', 'half')
                     DashboardCard.objects.create(
                         user=request.user,
                         card_type=item['card_type'],
                         position=item.get('position', 0),
-                        width=item.get('width', 'half'),
+                        width=w,
+                        col_span=item.get('col_span', 100 if w == 'full' else 50),
+                        row_span=item.get('row_span', 280),
+                        x_pos=item.get('x_pos', -1),
+                        y_pos=item.get('y_pos', -1),
+                        config=item.get('config', {}),
                     )
 
     cards = list(DashboardCard.objects.filter(user=request.user))
     data = _compute_dashboard_data(request)
 
-    # Annotate each card with catalog metadata
+    # Annotate each card with catalog metadata + config JSON
+    import json as _json
     for card in cards:
         card.meta = CARD_CATALOG.get(card.card_type, {'label': card.card_type, 'desc': ''})
+        card.config_json = _json.dumps(card.config or {})
 
     saved_templates = list(ReportTemplate.objects.filter(user=request.user))
     # Detect which template is currently active
@@ -2671,12 +2686,15 @@ def reports(request):
                 active_template_id = tpl.id
                 break
 
+    dash_pref = DashboardPreference.objects.filter(user=request.user).first()
     data.update({
         'active_nav': 'reports',
         'dashboard_cards': cards,
         'catalog_groups': _card_catalog_grouped(),
         'saved_templates': saved_templates,
         'active_template_id': active_template_id,
+        'dash_bg_color': dash_pref.bg_color if dash_pref else '',
+        'dash_bg_image': dash_pref.bg_image.url if dash_pref and dash_pref.bg_image else '',
     })
     data.update(_nav_context(request.user, request=request))
 
@@ -2693,11 +2711,15 @@ def dashboard_card_add(request):
     max_pos = DashboardCard.objects.filter(user=request.user).aggregate(Max('position'))['position__max']
     if max_pos is None:
         max_pos = -1
+    default_w = meta.get('default_width', 'half')
+    col_span = 100 if default_w == 'full' else 50
     card = DashboardCard.objects.create(
         user=request.user,
         card_type=card_type,
         position=max_pos + 1,
-        width=meta.get('default_width', 'half'),
+        width=default_w,
+        col_span=col_span,
+        row_span=280,
     )
     return JsonResponse({'id': card.id, 'card_type': card_type})
 
@@ -2723,6 +2745,112 @@ def dashboard_card_reorder(request):
 
 
 @login_required
+@require_POST
+def dashboard_card_resize(request, card_id):
+    import json
+    try:
+        body = json.loads(request.body)
+        col_span = max(25, min(100, int(body.get('col_span', 50))))   # width %
+        row_span = max(150, min(1200, int(body.get('row_span', 280))))  # height px
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return JsonResponse({'error': 'Bad request'}, status=400)
+    updates = {'col_span': col_span, 'row_span': row_span}
+    # Also accept x_pos / y_pos for free positioning
+    if 'x_pos' in body:
+        updates['x_pos'] = max(0, int(body['x_pos']))
+    if 'y_pos' in body:
+        updates['y_pos'] = max(0, int(body['y_pos']))
+    DashboardCard.objects.filter(id=card_id, user=request.user).update(**updates)
+    return JsonResponse({'ok': True, **updates})
+
+
+@login_required
+@require_POST
+def dashboard_card_style(request, card_id):
+    """Update per-card visual config (border radius, colours, text, etc.)."""
+    import json
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({'error': 'Bad request'}, status=400)
+    card = DashboardCard.objects.filter(id=card_id, user=request.user).first()
+    if not card:
+        return JsonResponse({'error': 'Not found'}, status=404)
+    cfg = card.config or {}
+    ALLOWED = {
+        'border_radius', 'border_color', 'bg_color', 'show_label',
+        'custom_text', 'text_align', 'font_color', 'image_mode',
+        'kpi_subtitle', 'kpi_font_size', 'kpi_font_color', 'hide_subtitle',
+    }
+    for key in ALLOWED:
+        if key in body:
+            cfg[key] = body[key]
+    card.config = cfg
+    card.save(update_fields=['config'])
+    return JsonResponse({'ok': True, 'config': cfg})
+
+
+@login_required
+@require_POST
+def dashboard_pref_update(request):
+    """Update dashboard-level preferences (background colour)."""
+    import json
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({'error': 'Bad request'}, status=400)
+    pref, _ = DashboardPreference.objects.get_or_create(user=request.user)
+    if 'bg_color' in body:
+        pref.bg_color = (body['bg_color'] or '')[:20]
+        pref.save(update_fields=['bg_color'])
+    return JsonResponse({'ok': True, 'bg_color': pref.bg_color})
+
+
+@login_required
+@require_POST
+def dashboard_card_image(request, card_id):
+    """Upload or remove an image for a dashboard card."""
+    card = DashboardCard.objects.filter(id=card_id, user=request.user).first()
+    if not card:
+        return JsonResponse({'error': 'Not found'}, status=404)
+    if 'remove' in request.POST:
+        if card.image:
+            card.image.delete(save=False)
+            card.image = ''
+            card.save(update_fields=['image'])
+        return JsonResponse({'ok': True, 'image_url': ''})
+    img = request.FILES.get('image')
+    if not img:
+        return JsonResponse({'error': 'No image provided'}, status=400)
+    if card.image:
+        card.image.delete(save=False)
+    card.image = img
+    card.save(update_fields=['image'])
+    return JsonResponse({'ok': True, 'image_url': card.image.url})
+
+
+@login_required
+@require_POST
+def dashboard_bg_image(request):
+    """Upload or remove the dashboard background image."""
+    pref, _ = DashboardPreference.objects.get_or_create(user=request.user)
+    if 'remove' in request.POST:
+        if pref.bg_image:
+            pref.bg_image.delete(save=False)
+            pref.bg_image = ''
+            pref.save(update_fields=['bg_image'])
+        return JsonResponse({'ok': True, 'image_url': ''})
+    img = request.FILES.get('image')
+    if not img:
+        return JsonResponse({'error': 'No image provided'}, status=400)
+    if pref.bg_image:
+        pref.bg_image.delete(save=False)
+    pref.bg_image = img
+    pref.save(update_fields=['bg_image'])
+    return JsonResponse({'ok': True, 'image_url': pref.bg_image.url})
+
+
+@login_required
 def dashboard_card_data(request):
     card_id = request.GET.get('card_id', '')
     if not card_id.isdigit():
@@ -2730,7 +2858,9 @@ def dashboard_card_data(request):
     card = DashboardCard.objects.filter(id=int(card_id), user=request.user).first()
     if not card:
         return JsonResponse({'error': 'Not found'}, status=404)
+    import json as _json2
     card.meta = CARD_CATALOG.get(card.card_type, {'label': card.card_type, 'desc': ''})
+    card.config_json = _json2.dumps(card.config or {})
     data = _compute_dashboard_data(request)
     data['card'] = card
     return render(request, 'workspaces/_dashboard_card.html', data)
@@ -2755,7 +2885,10 @@ def report_template_save(request):
     # Snapshot current dashboard card layout
     cards = DashboardCard.objects.filter(user=request.user).order_by('position')
     card_layout = [
-        {'card_type': c.card_type, 'position': c.position, 'width': c.width}
+        {'card_type': c.card_type, 'position': c.position, 'width': c.width,
+         'col_span': c.col_span, 'row_span': c.row_span,
+         'x_pos': c.x_pos, 'y_pos': c.y_pos,
+         'config': c.config or {}}
         for c in cards
     ]
 

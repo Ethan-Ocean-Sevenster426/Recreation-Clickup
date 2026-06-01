@@ -19,7 +19,7 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=15, blank=True)
     company_name = models.CharField(max_length=100, blank=True)
     position = models.CharField(max_length=100, blank=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user', help_text="User role in the system")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='employee', help_text="User role in the system")
     theme = models.CharField(max_length=10, choices=THEME_CHOICES, default='system', help_text="UI theme preference")
     can_login = models.BooleanField(default=True, help_text="Whether this user can log in to the system")
     created_at = models.DateTimeField(auto_now_add=True)
