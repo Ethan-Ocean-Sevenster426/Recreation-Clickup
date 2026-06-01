@@ -1891,7 +1891,7 @@ def settings_page(request):
 
 
 # Custom Fields
-DEFAULT_OPTION_COLORS = ['purple', 'pink', 'blue', 'green', 'orange', 'red', 'yellow', 'gray']
+DEFAULT_OPTION_COLORS = ['purple', 'pink', 'blue', 'green', 'orange', 'red', 'yellow', 'gray', 'teal', 'cyan', 'indigo', 'navy']
 
 
 @login_required
