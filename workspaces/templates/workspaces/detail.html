@@ -274,12 +274,31 @@
                         </div>
                         <!-- Priority -->
                         <div class="col-span-1">
-                            <select name="priority"
-                                    class="bg-transparent border-0 cursor-pointer text-xs appearance-none hover:bg-cu-panel px-1 py-0.5 rounded outline-none">
-                                {% for key, label in priority_choices %}
-                                <option value="{{ key }}" {% if key == 'normal' %}selected{% endif %} class="opt-priority-{{ key }}">{{ label }}</option>
-                                {% endfor %}
-                            </select>
+                            <div class="pri-dd" data-autosubmit="0">
+                                <button type="button" class="pri-dd-btn priority-flag priority-normal">
+                                    <span class="pri-dd-label">Normal</span>
+                                    <svg class="dd-arrow" width="8" height="8" viewBox="0 0 20 20" fill="currentColor"><path d="M5.25 7.5L10 12.25 14.75 7.5z"/></svg>
+                                </button>
+                                <div class="pri-dd-menu">
+                                    <div class="pri-dd-item" data-value="urgent">
+                                        <span class="pri-dot" style="background:#DC2626"></span>
+                                        <span class="pri-check"></span> Urgent
+                                    </div>
+                                    <div class="pri-dd-item" data-value="high">
+                                        <span class="pri-dot" style="background:#EA580C"></span>
+                                        <span class="pri-check"></span> High
+                                    </div>
+                                    <div class="pri-dd-item active" data-value="normal">
+                                        <span class="pri-dot" style="background:#2563EB"></span>
+                                        <span class="pri-check">&#10003;</span> Normal
+                                    </div>
+                                    <div class="pri-dd-item" data-value="low">
+                                        <span class="pri-dot" style="background:#6B7280"></span>
+                                        <span class="pri-check"></span> Low
+                                    </div>
+                                </div>
+                                <input type="hidden" name="priority" value="normal">
+                            </div>
                         </div>
                         <!-- Status (read-only pill) -->
                         <div class="col-span-2">
