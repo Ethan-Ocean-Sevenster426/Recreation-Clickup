@@ -271,13 +271,30 @@ for space_id, ws in space_to_workspace.items():
 
         # Fetch full list details for statuses
         list_detail = api(f"list/{lst['id']}")
+        seen_keys = set()
         for idx, st in enumerate(list_detail.get("statuses", [])):
+            raw_name = st["status"].lower().strip()
+            # Use STATUS_MAP key if available, otherwise generate from name
+            key = STATUS_MAP.get(raw_name, raw_name.replace(" ", "_").replace("/", ""))
+            if key in seen_keys:
+                continue  # skip duplicate (e.g. ClickUp sends both raw and mapped)
+            seen_keys.add(key)
+
+            # Map ClickUp hex colors to named colors
+            raw_color = st.get("color", "").lstrip("#").lower()
+            COLOR_HEX_MAP = {
+                "87909e": "gray", "5f55ee": "purple", "ab4aba": "pink",
+                "f76808": "orange", "e5484d": "red", "008844": "green",
+                "0078d4": "blue", "f59e0b": "yellow",
+            }
+            color = COLOR_HEX_MAP.get(raw_color, raw_color[:20] if raw_color else "gray")
+
             TaskStatus.objects.get_or_create(
                 task_list=tl,
-                key=st["status"].lower().replace(" ", "_").replace("/", ""),
+                key=key,
                 defaults={
                     "name": st["status"].title(),
-                    "color": st.get("color", "gray").lstrip("#")[:20],
+                    "color": color,
                     "position": idx,
                     "is_done": st.get("type") in ("closed", "done"),
                 },
