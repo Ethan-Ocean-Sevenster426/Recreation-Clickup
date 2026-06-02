@@ -175,6 +175,9 @@ def _columns(task_list, user=None):
 def _status_choices(task_list):
     return [(s.key, s.name) for s in task_list.statuses.all()]
 
+def _status_choices_with_color(task_list):
+    return [(s.key, s.name, s.color) for s in task_list.statuses.all()]
+
 
 # Workspaces
 @login_required
@@ -574,6 +577,7 @@ def _task_list_context(tl, user=None):
         'priority_choices': Task.PRIORITY_CHOICES,
         'category_choices': _category_choices(tl.workspace),
         'status_choices': _status_choices(tl),
+        'status_choices_with_color': _status_choices_with_color(tl),
         'status_colors': STATUS_COLORS,
         'users': User.objects.all().order_by('username'),
         'custom_fields_for_list': _custom_fields_for_list(tl),

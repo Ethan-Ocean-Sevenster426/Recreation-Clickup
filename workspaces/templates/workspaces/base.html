@@ -362,6 +362,20 @@
         body.theme-light .pri-dd-menu { background: #fff; border-color: rgba(0,0,0,0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
         body.theme-light .pri-dd-item { color: #333; }
         body.theme-light .pri-dd-item:hover { background: rgba(0,0,0,0.05); }
+        /* Custom status dropdown (mirrors pri-dd pattern) */
+        .stat-dd { position: relative; display: inline-block; }
+        .stat-dd-btn { cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; border: none; }
+        .stat-dd-btn svg.dd-arrow { margin-left: 0.125rem; opacity: 0.8; }
+        .stat-dd-menu { display: none; position: absolute; top: 100%; left: 0; z-index: 50; min-width: 170px; margin-top: 4px; background: #1A1639; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 4px 0; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .stat-dd.open .stat-dd-menu { display: block; }
+        .stat-dd-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.75rem; font-weight: 500; color: rgba(255,255,255,0.85); transition: background 0.1s; }
+        .stat-dd-item:hover { background: rgba(255,255,255,0.08); }
+        .stat-dd-item.active { background: rgba(255,255,255,0.05); }
+        .stat-dd-item .stat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .stat-dd-item .stat-check { width: 14px; text-align: center; flex-shrink: 0; font-size: 0.625rem; }
+        body.theme-light .stat-dd-menu { background: #fff; border-color: rgba(0,0,0,0.1); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+        body.theme-light .stat-dd-item { color: #333; }
+        body.theme-light .stat-dd-item:hover { background: rgba(0,0,0,0.05); }
         .avatar { width: 1.75rem; height: 1.75rem; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff; }
         /* Rail buttons — white icon chip over purple rail */
         .rail-btn { width: 4rem; padding: 0.5rem 0; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; color: rgba(255,255,255,0.9); font-size: 0.6875rem; cursor: pointer; transition: all 0.15s; position: relative; text-decoration: none; border: none; background: transparent; }
@@ -2298,6 +2312,62 @@
     // Auto-init all on page load
     document.addEventListener('DOMContentLoaded', function(){
         document.querySelectorAll('.pri-dd').forEach(window.initPriorityDropdown);
+    });
+})();
+
+/* ── Status custom dropdown ── */
+(function(){
+    var STATUS_HEX = {
+        gray:'#87909e', purple:'#5f55ee', pink:'#ab4aba', orange:'#f76808',
+        red:'#e5484d', green:'#008844', blue:'#0078D4', yellow:'#F59E0B',
+        navy:'#064b70', teal:'#1e8197', cyan:'#0891b2', indigo:'#4e6fb6'
+    };
+
+    window.initStatusDropdown = function(el){
+        var btn = el.querySelector('.stat-dd-btn');
+        var menu = el.querySelector('.stat-dd-menu');
+        var input = el.querySelector('input[type=hidden]');
+        if(!btn||!menu) return;
+
+        btn.addEventListener('click', function(e){
+            e.preventDefault(); e.stopPropagation();
+            document.querySelectorAll('.stat-dd.open').forEach(function(d){ if(d!==el) d.classList.remove('open'); });
+            document.querySelectorAll('.pri-dd.open').forEach(function(d){ d.classList.remove('open'); });
+            el.classList.toggle('open');
+        });
+
+        menu.querySelectorAll('.stat-dd-item').forEach(function(item){
+            item.addEventListener('click', function(e){
+                e.preventDefault(); e.stopPropagation();
+                var val = item.dataset.value;
+                var color = item.dataset.color || 'gray';
+                var label = item.dataset.label || val;
+                // Update button pill
+                btn.className = btn.className.replace(/status-c-\S+/g, '') + ' status-c-' + color;
+                var lbl = btn.querySelector('.stat-dd-label');
+                if(lbl) lbl.textContent = label;
+                // Update hidden input
+                if(input) input.value = val;
+                // Update active + checks
+                menu.querySelectorAll('.stat-dd-item').forEach(function(i){ i.classList.remove('active'); });
+                item.classList.add('active');
+                menu.querySelectorAll('.stat-check').forEach(function(c){ c.textContent = ''; });
+                var chk = item.querySelector('.stat-check');
+                if(chk) chk.textContent = '\u2713';
+                el.classList.remove('open');
+                // Auto-submit
+                if(el.dataset.autosubmit === '1'){
+                    var form = el.closest('form');
+                    if(form) form.submit();
+                }
+            });
+        });
+    };
+
+    document.addEventListener('click', function(){ document.querySelectorAll('.stat-dd.open').forEach(function(d){ d.classList.remove('open'); }); });
+
+    document.addEventListener('DOMContentLoaded', function(){
+        document.querySelectorAll('.stat-dd').forEach(window.initStatusDropdown);
     });
 })();
 </script>
